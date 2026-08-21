@@ -2,25 +2,23 @@
 
 ## Active task
 
-**T004 — Photo upload, crop and export**
+**T006 — Signature upload and drawing**
 
-See `tasks/T004-photo-flow.md`.
+See `tasks/T006-signature-flow.md`.
 
 ## Goal
 
-Wire the T002 primitives and T003 optimizer into the Photo flow: file intake (upload + drag-and-drop), requirement selection (preset-style data plus custom), fixed-aspect crop UI, optimize action, validation summary, and client-side download.
+Build the signature flow on top of the shared primitives: upload intake, draw-signature canvas (pen size, clear, undo), automatic whitespace trimming, resize/compression via the optimizer, validation summary, and download.
 
 ## Required output
 
-- File picker and drag-and-drop intake using `decodeImage`/`assertDecodableFile`
-- Data-driven requirement selection driving crop ratio, dimensions, format, and size limits
-- Fixed-aspect-ratio crop with pan/zoom and reset
-- "Make it fit" optimization via `optimizeEncoding` with progress/result feedback
-- Validation summary (dimensions, aspect ratio, format, bytes) before download
-- Download without any server involvement
-- Privacy messaging visible near intake
-- Mobile-first layout per `design/UI_UX_SPEC.md`
+- Upload intake reusing the T004 intake pattern
+- Drawing canvas with pen size, clear/reset, undo support (FR-08)
+- Automatic whitespace trim before export (per PROCESSING_ENGINE signature order)
+- Resize + file-size optimization via `optimizeEncoding`
+- Validation summary and client-side download
+- Mobile-first layout; drawing must work with touch input
 
 ## Handoff expectation
 
-When complete, update this file to point at T005/T006 and describe any deviations.
+When complete, update this file to point at T007 and describe any deviations.

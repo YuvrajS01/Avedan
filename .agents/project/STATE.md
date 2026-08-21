@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Optimizer done / photo flow next  
+**Stage:** Photo flow done / signature flow next  
 **Last updated:** 2026-08-21  
-**Status:** T001–T003 complete; T004 active
+**Status:** T001–T004 complete; T006 active
 
 ## Product goal
 
@@ -19,20 +19,18 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Placeholder feature views under `src/features/` and module boundaries scaffolded (`src/processing/`, `src/workers/`, `src/domain/requirements/types.ts`).
 - Typed `ImageRequirements` domain model defined (data-driven requirements, FR-01).
 - Framework-independent processing primitives under `src/processing/`: decode (ImageBitmap + img fallback), aspect-ratio crop with focus point, exact resize with stepped halving, JPEG/PNG/WebP encode, physical mm/DPI → pixel math, typed `ProcessingError`, injectable canvas factory for testability.
-- Constraint-based file-size optimizer (`src/processing/optimize.ts`): bounded binary search over encode quality with optional allowed dimension scales; supports max/range/target byte modes with `ok`/`too-large`/`too-small` outcomes. 61 unit tests passing.
+- Constraint-based file-size optimizer (`src/processing/optimize.ts`): bounded binary search over encode quality with optional allowed dimension scales; supports max/range/target byte modes with `ok`/`too-large`/`too-small` outcomes.
+- End-to-end photo flow (`src/features/photo/`): upload/drag-drop intake, data-driven requirement profiles + custom settings, fixed-aspect crop with pan/zoom (pure math in `cropMath.ts`), processing orchestrator (`processPhoto.ts`), result view with metadata, validation checks and download. 83 unit tests passing.
 
 ## Not implemented yet
 
-- Photo upload flow — T004
-- Camera capture — T005
-- Signature drawing — T006
-- Validation UI — T007
+- Signature drawing flow — T006
 - Preset registry — T008
 - PWA/offline packaging — T009
 
 ## Current focus
 
-Implement the constraint-based file-size optimizer (`src/processing/optimize/`) on top of the T002 primitives.
+Implement the signature flow (draw canvas + whitespace trim + export) reusing the shared primitives and the T004 flow patterns.
 
 ## Current risks
 
@@ -44,7 +42,7 @@ Implement the constraint-based file-size optimizer (`src/processing/optimize/`) 
 
 ## Next recommended task
 
-`tasks/T004-photo-flow.md`
+`tasks/T006-signature-flow.md`
 
 ## Continuity rule
 

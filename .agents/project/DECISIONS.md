@@ -71,3 +71,15 @@
 **Decision:** `optimizeEncoding` receives an `EncodeAt(quality, scale)` callback instead of touching canvases directly; `createCanvasEncoder` is a thin adapter.
 
 **Reason:** The search logic is unit-testable with deterministic fake codecs, the same optimizer serves any encoder (canvas now, OffscreenCanvas in a worker later), and dimension-reduction policy stays explicit via `allowedScales` rather than hidden inside the loop.
+
+## D013 — T004 ships generic example profiles, not form presets
+
+**Decision:** The photo flow's requirement selector offers a few generic example profiles (portrait 3:4, square 1:1, small exam photo) plus custom fields, explicitly labeled as unverified examples. Authority-backed presets with source/verification metadata remain T008.
+
+**Reason:** The photo flow needs data-driven targets now (FR-01/D002), but shipping unverified "presets" would violate D003/D004. Generic templates avoid implying official endorsement.
+
+## D014 — Crop state maps viewport to source pixels via pure math
+
+**Decision:** The cropper renders pan/zoom as CSS transforms over a cover-fit image and derives the source-pixel crop rect with pure functions (`cropMath.ts`) only at confirm time.
+
+**Reason:** Keeps per-frame interaction cheap (no canvas redraws while dragging), keeps all geometry unit-testable without a DOM canvas, and produces an exact source rect for the engine pipeline.

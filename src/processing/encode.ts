@@ -1,8 +1,10 @@
 import { ProcessingError } from './errors'
 import type { CanvasLike } from './crop'
+import type { OutputFormat } from '../domain/requirements/types'
+
+export type { OutputFormat }
 
 export const OUTPUT_FORMATS = ['jpeg', 'png', 'webp'] as const
-export type OutputFormat = (typeof OUTPUT_FORMATS)[number]
 
 export const MIME_BY_FORMAT: Record<OutputFormat, string> = {
   jpeg: 'image/jpeg',
