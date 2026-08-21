@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampPan, coverScale, sourceCropRect } from '../features/photo/cropMath'
+import { clampPan, coverScale, cropBoxStyle, sourceCropRect } from '../features/photo/cropMath'
 
 const BOX = { boxWidth: 300, boxHeight: 400 }
 const IMAGE = { imageWidth: 1200, imageHeight: 1600 }
@@ -40,6 +40,42 @@ describe('clampPan', () => {
     const scale = coverScale(300, 400, 1200, 1600) * 2
     expect(clamped.offsetX).toBe(-((1200 * scale - 300) / 2))
     expect(clamped.offsetY).toBe((1600 * scale - 400) / 2)
+  })
+})
+
+describe('cropBoxStyle', () => {
+  it('preserves the target aspect ratio even when height-capped', () => {
+    // Regression: previously the box was width:100% + max-height:60vh, so a
+    // portrait target got clamped into a wider box and exports were distorted.
+    for (const aspectRatio of [3 / 4, 1, 35 / 45, 413 / 531]) {
+      const style = cropBoxStyle(aspectRatio)
+      expect(style.aspectRatio).toBe(String(aspectRatio))
+
+      // At the cap boundary: width = 60vh * ratio, height = width / ratio = 60vh.
+      const capPx = 500 // pretend 60vh === 500px
+      const box = {
+        boxWidth: Math.round(capPx * aspectRatio),
+        boxHeight: capPx,
+        imageWidth: 1200,
+        imageHeight: 1600,
+        zoom: 2,
+        offsetX: 0,
+        offsetY: 0,
+      }
+      const rect = sourceCropRect({ ...box, ...clampPan(box) })
+      expect(rect.width / rect.height).toBeCloseTo(aspectRatio, 2)
+    }
+  })
+
+  it('caps width at the viewport height times the ratio', () => {
+    expect(cropBoxStyle(2).width).toBe('min(100%, calc(60vh * 2))')
+    expect(cropBoxStyle(0.5).width).toBe('min(100%, calc(60vh * 0.5))')
+  })
+
+  it('falls back to portrait 3:4 for invalid ratios', () => {
+    expect(cropBoxStyle(Number.NaN)).toEqual(cropBoxStyle(3 / 4))
+    expect(cropBoxStyle(0)).toEqual(cropBoxStyle(3 / 4))
+    expect(cropBoxStyle(-1)).toEqual(cropBoxStyle(3 / 4))
   })
 })
 

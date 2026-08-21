@@ -10,6 +10,23 @@ export interface CropViewState {
   offsetY: number
 }
 
+/**
+ * Inline sizing for the crop box. Width is capped so the derived height
+ * (`width / aspectRatio`) never exceeds the viewport cap — otherwise a CSS
+ * max-height clamp would break the target aspect ratio and the exported
+ * photo would come out distorted.
+ */
+export function cropBoxStyle(aspectRatio: number): {
+  aspectRatio: string
+  width: string
+} {
+  const ratio = Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 3 / 4
+  return {
+    aspectRatio: String(ratio),
+    width: `min(100%, calc(60vh * ${ratio}))`,
+  }
+}
+
 /** Scale at which the image fully covers the box (CSS "cover"). */
 export function coverScale(
   boxWidth: number,

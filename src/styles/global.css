@@ -382,8 +382,6 @@ a.button:focus-visible {
 
 .crop-box {
   position: relative;
-  width: 100%;
-  max-height: 60vh;
   overflow: hidden;
   background: #26261f;
   border-radius: var(--radius);

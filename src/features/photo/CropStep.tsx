@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent } from 'react'
-import { clampPan, coverScale, sourceCropRect } from './cropMath'
+import { clampPan, coverScale, cropBoxStyle, sourceCropRect } from './cropMath'
 import type { Rect } from '../../processing/geometry'
 
 interface CropStepProps {
@@ -55,6 +55,8 @@ export function CropStep({
     offsetX: offset.x,
     offsetY: offset.y,
   }
+
+  const boxStyle = cropBoxStyle(aspectRatio)
 
   const applyPan = (dx: number, dy: number) => {
     setOffset((current) => {
@@ -123,7 +125,7 @@ export function CropStep({
       <div
         ref={boxRef}
         className="crop-box"
-        style={{ aspectRatio: String(aspectRatio) }}
+        style={boxStyle}
         tabIndex={0}
         role="application"
         aria-label={`Crop area for a ${summary} photo. Use arrow keys to adjust the framing.`}

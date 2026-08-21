@@ -125,3 +125,9 @@
 **Decision:** The service worker precaches the app shell and uses stale-while-revalidate for same-origin GET requests only; cross-origin and non-GET requests bypass caching entirely.
 
 **Reason:** Guarantees no user image data can ever enter a cache while keeping the full client-side flow available offline after first load.
+
+## D022 — Crop box sizing lives in pure math, not CSS width/max-height
+
+**Decision:** The crop box is sized via `cropBoxStyle()` in `cropMath.ts` (`aspect-ratio` plus `width: min(100%, calc(60vh * ratio))`); `.crop-box` CSS no longer sets `width` or `max-height`.
+
+**Reason:** `width: 100%` combined with `max-height: 60vh` silently broke the target aspect ratio whenever the derived height exceeded the viewport cap (typical for portrait targets on desktop). The visible box then had a different ratio than the export target, and exact-dimension resize distorted faces. Sizing in pure math keeps FR-04 (cropper maintains target aspect ratio) testable and layout-independent.

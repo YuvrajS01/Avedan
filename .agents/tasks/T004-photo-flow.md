@@ -20,7 +20,7 @@ Build the end-to-end photo workflow using the processing engine.
 - Flow state machine in `src/features/photo/PhotoView.tsx`: intake → crop → result, with full reset (object URLs revoked) back to intake.
 - `IntakeStep`: file picker (`accept` limited to JPEG/PNG/WebP) plus drag-and-drop; privacy message shown at intake; pre-flight errors surfaced via `ProcessingError` messages.
 - Requirement selection is data-driven (`src/domain/requirements/profiles.ts`): three generic example profiles + a Custom option (width/height/max KB/format). Profiles are explicitly labeled as examples pending the verified preset registry (T008) — see DECISIONS D013.
-- `CropStep`: fixed-aspect box (CSS aspect-ratio), pointer-drag panning with clamping, zoom slider (1–3×), keyboard arrow nudging, reset framing. Pure math lives in `cropMath.ts` (`coverScale`, `clampPan`, `sourceCropRect`) mapping the visible box back to source-pixel rect.
+- `CropStep`: fixed-aspect box (sized via `cropBoxStyle()` so the target aspect ratio survives viewport height caps — see DECISIONS D022), pointer-drag panning with clamping, zoom slider (1–3×), keyboard arrow nudging, reset framing. Pure math lives in `cropMath.ts` (`coverScale`, `clampPan`, `sourceCropRect`) mapping the visible box back to source-pixel rect.
 - `processPhoto.ts` orchestrates engine calls only: decode → crop rect → exact resize → `optimizeEncoding` → object URL + metadata + lightweight validation checks. No UI imports.
 - `ResultStep`: metadata grid (dimensions/format/size), check list (✓/✗), download anchor with generated filename, "Start over" reset, no-acceptance-guarantee note (D004).
 
