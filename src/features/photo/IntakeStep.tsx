@@ -4,10 +4,12 @@ import type { DragEvent, ChangeEvent } from 'react'
 interface IntakeStepProps {
   busy: boolean
   error: string | null
+  cameraAvailable?: boolean
   onFile: (file: File) => void
+  onCamera: () => void
 }
 
-export function IntakeStep({ busy, error, onFile }: IntakeStepProps) {
+export function IntakeStep({ busy, error, cameraAvailable = false, onFile, onCamera }: IntakeStepProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -57,6 +59,16 @@ export function IntakeStep({ busy, error, onFile }: IntakeStepProps) {
             >
               Upload photo
             </button>
+            {cameraAvailable && (
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={busy}
+                onClick={onCamera}
+              >
+                Take photo
+              </button>
+            )}
             <p className="intake-alt">or drag and drop an image here</p>
           </>
         )}

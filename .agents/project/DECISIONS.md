@@ -101,3 +101,9 @@
 **Decision:** `validateOutput` emits the exact check/result shape from `.agents/specs/VALIDATION.md` (`pass`/`attention`/`not-run`), reports all four categories deterministically (unconstrained ones as `not-run`), and supports `exact` vs `within` dimension modes.
 
 **Reason:** A single deterministic engine keeps photo/signature semantics explicit, makes the no-guarantee language testable, and gives T010's advisory checks a ready-made place to land.
+
+## D018 — Camera capture reuses the file intake path
+
+**Decision:** Captured camera frames are encoded locally to a JPEG `File` and passed through the same intake function as uploads, rather than introducing a separate camera pipeline.
+
+**Reason:** One processing path means one set of guarantees (crop → optimize → validate → download), simpler tests, and zero new privacy surface: frames only ever exist in local canvases/blobs.

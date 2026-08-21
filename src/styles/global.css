@@ -571,3 +571,16 @@ a.button:focus-visible {
   touch-action: none;
   cursor: crosshair;
 }
+
+.camera-stage {
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: #26261f;
+}
+
+.camera-video {
+  display: block;
+  width: 100%;
+  height: auto;
+}

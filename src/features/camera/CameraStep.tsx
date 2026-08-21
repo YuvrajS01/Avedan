@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { CameraFacing, CameraHandle } from './camera'
+import {
+  attachStream,
+  captureFrame,
+  describeCameraError,
+  frameToFile,
+  isCameraSupported,
+  startCamera,
+} from './camera'
+
+type CameraStatus = 'starting' | 'ready' | 'denied' | 'not-found' | 'unsupported' | 'error'
+
+interface CameraStepProps {
+  onCaptured: (file: File) => void
+  onUseUpload: () => void
+}
+
+export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const handleRef = useRef<CameraHandle | null>(null)
+  const facingRef = useRef<CameraFacing>('user')
+  const [status, setStatus] = useState<CameraStatus>(() =>
+    isCameraSupported() ? 'starting' : 'unsupported',
+  )
+  const [busy, setBusy] = useState(false)
+  const [captureError, setCaptureError] = useState<string | null>(null)
+
+  const begin = useCallback(async () => {
+    setStatus('starting')
+    try {
+      const handle = await startCamera(facingRef.current)
+      handleRef.current = handle
+      if (videoRef.current) {
+        attachStream(videoRef.current, handle.stream)
+        await videoRef.current.play().catch(() => undefined)
+      }
+      setStatus('ready')
+    } catch (cause) {
+      const kind = describeCameraError(cause)
+      if (kind === 'denied') setStatus('denied')
+      else if (kind === 'not-found') setStatus('not-found')
+      else setStatus('error')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isCameraSupported()) {
+      begin()
+    }
+    return () => {
+      handleRef.current?.stop()
+    }
+  }, [begin])
+
+  const switchCamera = async () => {
+    handleRef.current?.stop()
+    facingRef.current = facingRef.current === 'user' ? 'environment' : 'user'
+    await begin()
+  }
+
+  const capture = async () => {
+    const video = videoRef.current
+    if (!video || status !== 'ready') return
+    setBusy(true)
+    try {
+      const frame = captureFrame(video)
+      const file = await frameToFile(frame.canvas)
+      handleRef.current?.stop()
+      onCaptured(file)
+    } catch (cause) {
+      setCaptureError(cause instanceof Error ? cause.message : 'The photo could not be captured.')
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="view" aria-labelledby="camera-title">
+      <h1 id="camera-title">Take a photo</h1>
+      {status === 'ready' && (
+        <>
+          <p className="lede">
+            Face the camera with a plain background. Keep your head and shoulders inside the
+            frame — the preview stays on this device.
+          </p>
+          <div className="camera-stage">
+            <video ref={videoRef} autoPlay playsInline muted className="camera-video" />
+          </div>
+          {busy && (
+            <p className="busy-note" role="status">
+              Saving your photo…
+            </p>
+          )}
+          {captureError && (
+            <p className="error-note" role="alert">
+              {captureError}
+            </p>
+          )}
+          <div className="step-actions">
+            <button type="button" className="button button-secondary" onClick={switchCamera}>
+              Switch camera
+            </button>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={capture}
+              disabled={busy}
+            >
+              Capture
+            </button>
+          </div>
+        </>
+      )}
+      {status === 'starting' && (
+        <p className="busy-note" role="status">
+          Starting the camera…
+        </p>
+      )}
+      {status === 'denied' && (
+        <>
+          <p className="error-note" role="alert">
+            Camera access was blocked. Allow camera permission in your browser settings, or
+            upload a photo instead.
+          </p>
+          <FallbackActions onUseUpload={onUseUpload} />
+        </>
+      )}
+      {status === 'not-found' && (
+        <>
+          <p className="error-note" role="alert">
+            No usable camera was found on this device. Upload a photo instead.
+          </p>
+          <FallbackActions onUseUpload={onUseUpload} />
+        </>
+      )}
+      {status === 'unsupported' && (
+        <>
+          <p className="error-note" role="alert">
+            This browser does not support camera capture. Upload a photo instead.
+          </p>
+          <FallbackActions onUseUpload={onUseUpload} />
+        </>
+      )}
+      {status === 'error' && (
+        <>
+          <p className="error-note" role="alert">
+            The camera could not be started. You can try again or upload a photo.
+          </p>
+          <FallbackActions onUseUpload={onUseUpload} onRetry={begin} />
+        </>
+      )}
+    </section>
+  )
+}
+
+function FallbackActions({
+  onUseUpload,
+  onRetry,
+}: {
+  onUseUpload: () => void
+  onRetry?: () => void
+}) {
+  return (
+    <div className="step-actions">
+      {onRetry ? (
+        <button type="button" className="button button-secondary" onClick={onRetry}>
+          Try again
+        </button>
+      ) : (
+        <span />
+      )}
+      <button type="button" className="button button-primary" onClick={onUseUpload}>
+        Use upload instead
+      </button>
+    </div>
+  )
+}

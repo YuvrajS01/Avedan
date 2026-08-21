@@ -11,8 +11,10 @@ import { IntakeStep } from './IntakeStep'
 import { CropStep } from './CropStep'
 import { ProcessedResult } from '../../components/ProcessedResult'
 import { loadPhotoSource, processPhoto, revokeObjectUrl, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
+import { isCameraSupported } from '../camera/camera'
+import { CameraStep } from '../camera/CameraStep'
 
-type Step = 'intake' | 'crop' | 'result'
+type Step = 'intake' | 'camera' | 'crop' | 'result'
 
 interface CustomSettings {
   width: string
@@ -61,6 +63,7 @@ export function PhotoView() {
   const [result, setResult] = useState<ProcessedPhoto | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cameraAvailable] = useState(() => isCameraSupported())
 
   const loadedRef = useRef<LoadedPhoto | null>(null)
   const resultRef = useRef<ProcessedPhoto | null>(null)
@@ -194,7 +197,18 @@ export function PhotoView() {
         <p className="profile-note">{PROFILE_NOTE}</p>
       </div>
 
-      {step === 'intake' && <IntakeStep busy={busy} error={error} onFile={handleFile} />}
+      {step === 'intake' && (
+        <IntakeStep
+          busy={busy}
+          error={error}
+          cameraAvailable={cameraAvailable}
+          onFile={handleFile}
+          onCamera={() => setStep('camera')}
+        />
+      )}
+      {step === 'camera' && (
+        <CameraStep onCaptured={handleFile} onUseUpload={() => setStep('intake')} />
+      )}
       {step === 'crop' && loaded && (
         <CropStep
           imageUrl={loaded.previewUrl}

@@ -2,19 +2,18 @@
 
 ## Active task
 
-**T005 — Guided camera capture**
+**T008 — Form preset registry**
 
-See `tasks/T005-camera-capture.md`.
+See `tasks/T008-presets.md`.
 
 ## Goal
 
-Add first-class camera intake to the photo flow using `navigator.mediaDevices.getUserMedia()`: permission handling, unsupported-browser fallback, camera switching where supported, and capture from the video frame to the existing crop pipeline.
+Introduce verified form presets with authority, official source reference, and last-verified date (D003), surfaced through a browsable Forms view that feeds photo/signature flows with requirement data.
 
 ## Required output
 
-- Camera button in the photo intake step where supported
-- Permission prompt/denied states with actionable copy
-- Fallback to upload when the API or device is unavailable
-- Capture produces a source image entering the normal crop → optimize → validate flow
-- No camera frames ever leave the device
-- Tests for state machine logic; manual browser verification for live capture
+- Preset schema extending requirements with verification metadata
+- Small seed registry of well-known presets (each with source + verified date)
+- Forms browse/search view with constraint summaries and no-guarantee language
+- Flow from a preset card into the photo/signature flows
+- Data-integrity tests for the registry

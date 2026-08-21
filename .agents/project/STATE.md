@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Validation engine done / camera capture next  
+**Stage:** Camera capture done / preset registry next  
 **Last updated:** 2026-08-21  
-**Status:** T001–T004, T006, T007 complete; T005 active
+**Status:** T001–T007 complete; T008 active
 
 ## Product goal
 
@@ -22,17 +22,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Constraint-based file-size optimizer (`src/processing/optimize.ts`): bounded binary search over encode quality with optional allowed dimension scales; supports max/range/target byte modes with `ok`/`too-large`/`too-small` outcomes.
 - End-to-end photo flow (`src/features/photo/`): upload/drag-drop intake, data-driven requirement profiles + custom settings, fixed-aspect crop with pan/zoom (pure math in `cropMath.ts`), processing orchestrator (`processPhoto.ts`), result view with metadata, validation checks and download.
 - Signature flow (`src/features/signature/`): pointer/touch drawing canvas with pen sizes and undo/clear, upload intake, whitespace trim (`processing/trim.ts`), fit-resize without upscaling, same optimizer/validation/download pipeline. Shared result view (`components/ProcessedResult.tsx`) and shared asset types (`domain/jobs/result.ts`).
-- Validation engine (`domain/validation/engine.ts`) implementing the VALIDATION spec shape (`pass`/`attention`/`not-run` checks) with exact/within dimension modes; both flows delegate to it. 119 unit tests passing.
+- Validation engine (`domain/validation/engine.ts`) implementing the VALIDATION spec shape (`pass`/`attention`/`not-run` checks) with exact/within dimension modes; both flows delegate to it.
+- Guided camera capture (`features/camera/`): getUserMedia lifecycle with permission/denied/not-found/unsupported states, front/back switching, local frame capture feeding the standard photo pipeline. Frames never leave the device. 131 unit tests passing.
 
 ## Not implemented yet
 
-- Camera capture — T005
 - Preset registry — T008
 - PWA/offline packaging — T009
 
 ## Current focus
 
-Add guided camera capture (T005) to the photo flow's intake step.
+Build the verified form preset registry and Forms browse view (T008).
 
 ## Current risks
 
@@ -44,7 +44,7 @@ Add guided camera capture (T005) to the photo flow's intake step.
 
 ## Next recommended task
 
-`tasks/T007-validation.md`
+`tasks/T008-presets.md`
 
 ## Continuity rule
 
