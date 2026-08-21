@@ -9,7 +9,7 @@ import {
 import type { ImageRequirements } from '../../domain/requirements/types'
 import { IntakeStep } from './IntakeStep'
 import { CropStep } from './CropStep'
-import { ResultStep } from './ResultStep'
+import { ProcessedResult } from '../../components/ProcessedResult'
 import { loadPhotoSource, processPhoto, revokeObjectUrl, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
 
 type Step = 'intake' | 'crop' | 'result'
@@ -209,7 +209,7 @@ export function PhotoView() {
         />
       )}
       {step === 'result' && result && (
-        <ResultStep result={result} summary={summary} onReset={reset} />
+        <ProcessedResult result={result} summary={summary} noun="photo" onReset={reset} />
       )}
     </>
   )

@@ -3,6 +3,7 @@ import { ProcessingError } from '../processing/errors'
 import {
   computeCropRect,
   computeResizeDimensions,
+  computeFitDimensions,
   dimensionsFromPhysical,
 } from '../processing/geometry'
 
@@ -126,8 +127,7 @@ describe('computeResizeDimensions', () => {
   })
 })
 
-describe('dimensionsFromPhysical', () => {
-  it('converts millimeters at 300 DPI deterministically', () => {
+describe('dimensionsFromPhysical', () => {  it('converts millimeters at 300 DPI deterministically', () => {
     expect(dimensionsFromPhysical({ widthMm: 25.4, heightMm: 25.4 }, 300)).toEqual({
       width: 300,
       height: 300,
@@ -154,5 +154,51 @@ describe('dimensionsFromPhysical', () => {
     expect(() => dimensionsFromPhysical({ widthMm: 35, heightMm: 45 }, 0)).toThrow(ProcessingError)
     expect(() => dimensionsFromPhysical({}, 300)).toThrow(ProcessingError)
     expect(() => dimensionsFromPhysical({ widthMm: 35 }, 300)).toThrow(ProcessingError)
+  })
+})
+
+describe('computeFitDimensions', () => {
+  it('keeps sources that already fit', () => {
+    expect(computeFitDimensions({ width: 200, height: 80 }, { width: 300, height: 100 })).toEqual({
+      width: 200,
+      height: 80,
+    })
+  })
+
+  it('shrinks to fit while preserving the aspect ratio', () => {
+    const fit = computeFitDimensions({ width: 900, height: 300 }, { width: 300, height: 100 })
+    expect(fit).toEqual({ width: 300, height: 100 })
+
+    const tall = computeFitDimensions({ width: 600, height: 400 }, { width: 300, height: 100 })
+    expect(tall.width).toBeLessThanOrEqual(300)
+    expect(tall.height).toBeLessThanOrEqual(100)
+    expect(tall.width / tall.height).toBeCloseTo(600 / 400, 2)
+  })
+
+  it('constrains by the tighter axis', () => {
+    const fit = computeFitDimensions({ width: 1000, height: 100 }, { width: 300, height: 100 })
+    expect(fit).toEqual({ width: 300, height: 30 })
+  })
+
+  it('never upscales small sources', () => {
+    expect(computeFitDimensions({ width: 50, height: 20 }, { width: 300, height: 100 })).toEqual({
+      width: 50,
+      height: 20,
+    })
+  })
+
+  it('never produces zero dimensions', () => {
+    const fit = computeFitDimensions({ width: 10000, height: 3 }, { width: 10, height: 10 })
+    expect(fit.width).toBeGreaterThanOrEqual(1)
+    expect(fit.height).toBeGreaterThanOrEqual(1)
+  })
+
+  it('rejects invalid inputs', () => {
+    expect(() => computeFitDimensions({ width: 0, height: 5 }, { width: 10, height: 10 })).toThrow(
+      ProcessingError,
+    )
+    expect(() => computeFitDimensions({ width: 5, height: 5 }, { width: -1, height: 10 })).toThrow(
+      ProcessingError,
+    )
   })
 })

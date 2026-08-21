@@ -2,11 +2,18 @@ export { ProcessingError, type ProcessingErrorCode } from './errors'
 export {
   computeCropRect,
   computeResizeDimensions,
+  computeFitDimensions,
   dimensionsFromPhysical,
   type FocusPoint,
   type Rect,
   type Size,
 } from './geometry'
+export {
+  computeInkBounds,
+  trimToCanvas,
+  type InkBounds,
+  type TrimOptions,
+} from './trim'
 export {
   cropToAspectRatio,
   cropToCanvas,

@@ -83,3 +83,15 @@
 **Decision:** The cropper renders pan/zoom as CSS transforms over a cover-fit image and derives the source-pixel crop rect with pure functions (`cropMath.ts`) only at confirm time.
 
 **Reason:** Keeps per-frame interaction cheap (no canvas redraws while dragging), keeps all geometry unit-testable without a DOM canvas, and produces an exact source rect for the engine pipeline.
+
+## D015 — Signatures fit within dimensions; never upscaled
+
+**Decision:** Signature outputs are resized to fit *within* the required box while preserving their natural post-trim aspect ratio, and small sources are never enlarged.
+
+**Reason:** Trimmed signatures have unpredictable aspect ratios; forcing exact dimensions would distort strokes, and upscaling degrades quality. Photo outputs keep exact-dimension semantics because portals mandate them there.
+
+## D016 — Shared result model for all asset flows
+
+**Decision:** `ProcessedAsset`/`ValidationCheck` live in `domain/jobs/result.ts` and one shared result component renders metadata, checks, and download for every asset type.
+
+**Reason:** Photo and signature flows must stay consistent (FR-07) without duplicating UI, and future asset types (thumb impressions, documents) plug into the same contract.

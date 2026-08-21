@@ -1,33 +1,10 @@
-import { assertDecodableFile, decodeImage } from '../../processing/decode'
-import { cropToCanvas, type DrawableSource } from '../../processing/crop'
+import { trimToCanvas } from '../../processing/trim'
 import { resizeToCanvas } from '../../processing/resize'
+import type { DrawableSource } from '../../processing/crop'
+import { computeFitDimensions } from '../../processing/geometry'
 import { createCanvasEncoder, optimizeEncoding, type EncodableCanvas } from '../../processing/optimize'
-import type { Rect } from '../../processing/geometry'
 import type { ImageRequirements } from '../../domain/requirements/types'
 import type { ProcessedAsset, ValidationCheck } from '../../domain/jobs/result'
-
-export type ProcessedPhoto = ProcessedAsset
-export type { ValidationCheck }
-
-export interface LoadedPhoto {
-  source: DrawableSource
-  previewUrl: string
-  fileName: string
-}
-
-export function revokeObjectUrl(url: string): void {
-  if (url && typeof URL.revokeObjectURL === 'function') {
-    URL.revokeObjectURL(url)
-  }
-}
-
-export async function loadPhotoSource(file: File): Promise<LoadedPhoto> {
-  assertDecodableFile(file)
-  const source = await decodeImage(file)
-  const previewUrl =
-    typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : ''
-  return { source, previewUrl, fileName: file.name }
-}
 
 function buildChecks(
   profile: ImageRequirements,
@@ -39,18 +16,10 @@ function buildChecks(
 
   if (profile.dimensions) {
     const pass =
-      width === profile.dimensions.width && height === profile.dimensions.height
+      width <= profile.dimensions.width && height <= profile.dimensions.height
     checks.push({
-      label: `${width} × ${height} px`,
+      label: `${width} × ${height} px — within ${profile.dimensions.width} × ${profile.dimensions.height}`,
       pass,
-    })
-  }
-
-  if (profile.aspectRatio !== undefined) {
-    const actual = width / height
-    checks.push({
-      label: `Aspect ratio ${profile.aspectRatio.toFixed(2).replace(/\.?0+$/, '')}`,
-      pass: Math.abs(actual - profile.aspectRatio) < 0.02,
     })
   }
 
@@ -75,20 +44,26 @@ function buildChecks(
   return checks
 }
 
-export async function processPhoto(input: {
+/**
+ * Signature pipeline per PROCESSING_ENGINE order:
+ * trim empty margins → fit resize → encode → optimize → validate.
+ */
+export async function processSignature(input: {
   source: DrawableSource
-  cropRect: Rect
   profile: ImageRequirements
   fileName: string
-}): Promise<ProcessedPhoto> {
-  const cropped = cropToCanvas(input.source, input.cropRect)
+}): Promise<ProcessedAsset> {
+  const trimmed = trimToCanvas(input.source)
 
-  const target = input.profile.dimensions ?? {
-    width: cropped.width,
-    height: cropped.height,
-  }
-  const resized = resizeToCanvas(cropped as unknown as DrawableSource, target)
-  const format = input.profile.format ?? 'jpeg'
+  const target = input.profile.dimensions
+    ? computeFitDimensions(
+        { width: trimmed.width, height: trimmed.height },
+        input.profile.dimensions,
+      )
+    : { width: trimmed.width, height: trimmed.height }
+
+  const resized = resizeToCanvas(trimmed as unknown as DrawableSource, target)
+  const format = input.profile.format ?? 'png'
 
   const optimization = await optimizeEncoding(
     createCanvasEncoder(resized as unknown as EncodableCanvas, format),
@@ -101,7 +76,7 @@ export async function processPhoto(input: {
       : ''
 
   const extension = format === 'jpeg' ? 'jpg' : format
-  const baseName = input.fileName.replace(/\.[^.]+$/, '') || 'photo'
+  const baseName = input.fileName.replace(/\.[^.]+$/, '') || 'signature'
 
   return {
     blob: optimization.blob,

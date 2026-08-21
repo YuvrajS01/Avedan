@@ -41,6 +41,29 @@ export function findProfile(id: string): RequirementProfile | undefined {
   return PHOTO_PROFILES.find((profile) => profile.id === id)
 }
 
+export const SIGNATURE_PROFILES: RequirementProfile[] = [
+  {
+    id: 'signature-standard',
+    label: 'Standard (≤ 20 KB)',
+    description: 'Fits within 300 × 100 px, JPG under 20 KB.',
+    dimensions: { width: 300, height: 100 },
+    format: 'jpeg',
+    fileSize: { maxBytes: 20 * 1024 },
+  },
+  {
+    id: 'signature-wide-png',
+    label: 'Wide PNG (≤ 40 KB)',
+    description: 'Fits within 400 × 120 px, PNG under 40 KB.',
+    dimensions: { width: 400, height: 120 },
+    format: 'png',
+    fileSize: { maxBytes: 40 * 1024 },
+  },
+]
+
+export function findSignatureProfile(id: string): RequirementProfile | undefined {
+  return SIGNATURE_PROFILES.find((profile) => profile.id === id)
+}
+
 export function describeRequirements(profile: ImageRequirements): string {
   const parts: string[] = []
 

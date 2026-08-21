@@ -2,23 +2,21 @@
 
 ## Active task
 
-**T006 — Signature upload and drawing**
+**T007 — Technical validation UI**
 
-See `tasks/T006-signature-flow.md`.
+See `tasks/T007-validation.md`.
 
 ## Goal
 
-Build the signature flow on top of the shared primitives: upload intake, draw-signature canvas (pen size, clear, undo), automatic whitespace trimming, resize/compression via the optimizer, validation summary, and download.
+Unify validation across photo and signature flows into a consistent pre-download checklist (FR-07): dimensions, aspect ratio, format, file size, with clear pass/attention states and actionable failure copy.
 
 ## Required output
 
-- Upload intake reusing the T004 intake pattern
-- Drawing canvas with pen size, clear/reset, undo support (FR-08)
-- Automatic whitespace trim before export (per PROCESSING_ENGINE signature order)
-- Resize + file-size optimization via `optimizeEncoding`
-- Validation summary and client-side download
-- Mobile-first layout; drawing must work with touch input
+- Shared validation module fed by requirement profiles and processed output
+- Consistent check rendering in the shared result view
+- Actionable next-step messaging when a check fails
+- Unit tests covering pass/fail/borderline cases
 
 ## Handoff expectation
 
-When complete, update this file to point at T007 and describe any deviations.
+When complete, update this file to point at T005 and describe any deviations.

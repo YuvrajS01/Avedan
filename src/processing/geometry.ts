@@ -117,6 +117,27 @@ export function computeResizeDimensions(
 const MM_PER_INCH = 25.4
 
 /**
+ * Largest version of `source` that fits inside `max` while preserving the
+ * source aspect ratio. Never upscales beyond the source size.
+ */
+export function computeFitDimensions(source: Size, max: Size): Size {
+  assertPositiveInt(source.width, 'source.width')
+  assertPositiveInt(source.height, 'source.height')
+  assertPositiveInt(max.width, 'max.width')
+  assertPositiveInt(max.height, 'max.height')
+
+  if (source.width <= max.width && source.height <= max.height) {
+    return { width: source.width, height: source.height }
+  }
+
+  const ratio = Math.min(max.width / source.width, max.height / source.height)
+  return {
+    width: Math.max(1, Math.floor(source.width * ratio)),
+    height: Math.max(1, Math.floor(source.height * ratio)),
+  }
+}
+
+/**
  * Derive pixel dimensions from physical millimeter sizes at a DPI.
  * Deterministic rounding so identical inputs always produce identical pixels.
  */

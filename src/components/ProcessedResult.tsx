@@ -1,21 +1,22 @@
-import type { ProcessedPhoto } from './processPhoto'
+import type { ProcessedAsset } from '../domain/jobs/result'
 
-interface ResultStepProps {
-  result: ProcessedPhoto
+interface ProcessedResultProps {
+  result: ProcessedAsset
   summary: string
+  noun: string
   onReset: () => void
 }
 
-export function ResultStep({ result, summary, onReset }: ResultStepProps) {
+export function ProcessedResult({ result, summary, noun, onReset }: ProcessedResultProps) {
   const allPass = result.checks.every((check) => check.pass)
 
   return (
     <section className="view" aria-labelledby="result-title">
-      <h1 id="result-title">Your photo is ready</h1>
+      <h1 id="result-title">Your {noun} is ready</h1>
       <p className="lede">
         Target: <strong>{summary}</strong>
       </p>
-      <img className="result-preview" src={result.url} alt="Processed photo preview" />
+      <img className="result-preview" src={result.url} alt={`Processed ${noun} preview`} />
       <dl className="meta-list">
         <div>
           <dt>Dimensions</dt>

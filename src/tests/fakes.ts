@@ -30,6 +30,39 @@ export function createRecordingFactory() {
   return { factory, canvases }
 }
 
+/**
+ * Fake canvas whose 2D context returns a solid-color (or custom) RGBA
+ * buffer from getImageData, for exercising pixel-reading code paths.
+ */
+export function createPixelCanvas(
+  width: number,
+  height: number,
+  isWhite: (x: number, y: number) => boolean,
+): CanvasLike {
+  const data = new Uint8ClampedArray(width * height * 4)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4
+      const white = isWhite(x, y)
+      data[i] = white ? 255 : 20
+      data[i + 1] = white ? 255 : 20
+      data[i + 2] = white ? 255 : 20
+      data[i + 3] = 255
+    }
+  }
+  const ctx = {
+    drawImage: vi.fn(),
+    getImageData: vi.fn(() => ({ data, width, height })),
+    imageSmoothingEnabled: false,
+  }
+  return {
+    width,
+    height,
+    getContext: vi.fn(() => ctx),
+    ctx,
+  } as unknown as FakeCanvas
+}
+
 export function fakeSource(width: number, height: number): DrawableSource {
   return { width, height } as unknown as DrawableSource
 }
