@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Foundation implemented / processing engine next  
+**Stage:** Processing primitives done / optimizer next  
 **Last updated:** 2026-08-21  
-**Status:** T001 complete; T002 active
+**Status:** T001 + T002 complete; T003 active
 
 ## Product goal
 
@@ -18,11 +18,11 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Responsive application shell with dependency-free hash navigation across Home, Photo, Signature, Forms, and Custom views.
 - Placeholder feature views under `src/features/` and module boundaries scaffolded (`src/processing/`, `src/workers/`, `src/domain/requirements/types.ts`).
 - Typed `ImageRequirements` domain model defined (data-driven requirements, FR-01).
+- Framework-independent processing primitives under `src/processing/`: decode (ImageBitmap + img fallback), aspect-ratio crop with focus point, exact resize with stepped halving, JPEG/PNG/WebP encode, physical mm/DPI → pixel math, typed `ProcessingError`, injectable canvas factory for testability. 48 unit tests passing.
 
 ## Not implemented yet
 
-- Image processing engine (decode/crop/resize/encode) — T002
-- Constraint-based size optimizer — T003
+- Constraint-based file-size optimizer — T003
 - Photo upload flow — T004
 - Camera capture — T005
 - Signature drawing — T006
@@ -32,7 +32,7 @@ Create a browser-based tool that prepares application photos and signatures to e
 
 ## Current focus
 
-Implement the framework-independent image processing primitives (`src/processing/`) before building the polished UI.
+Implement the constraint-based file-size optimizer (`src/processing/optimize/`) on top of the T002 primitives.
 
 ## Current risks
 
@@ -44,7 +44,7 @@ Implement the framework-independent image processing primitives (`src/processing
 
 ## Next recommended task
 
-`tasks/T002-processing-primitives.md`
+`tasks/T003-size-optimizer.md`
 
 ## Continuity rule
 

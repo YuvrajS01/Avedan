@@ -53,3 +53,15 @@
 **Decision:** Build with Vite 7/TypeScript strict, test with Vitest + jsdom + Testing Library, style with plain mobile-first CSS custom properties (no Tailwind/component library).
 
 **Reason:** Matches the recommended stack in the technical architecture, keeps dependencies minimal, and keeps processing code free to be framework-independent.
+
+## D010 — Canvas creation is injectable in processing code
+
+**Decision:** All canvas-creating processing functions accept a `CanvasFactory` parameter (defaulting to `document.createElement('canvas')`).
+
+**Reason:** Unit tests can verify crop/resize/encode behavior without a real canvas implementation (jsdom has none), and the same seam will allow OffscreenCanvas inside a Web Worker later without rewriting the engine.
+
+## D011 — Processing errors are typed codes, not raw exceptions
+
+**Decision:** The processing layer throws `ProcessingError` with stable machine codes (`unsupported-type`, `empty-file`, `decode-failed`, `encode-failed`, `invalid-input`, `canvas-unavailable`) and user-actionable messages.
+
+**Reason:** Keeps error UX (per UI spec: tell users what to do next) decoupled from failure mechanics, and lets the UI layer map codes to copy without parsing messages.
