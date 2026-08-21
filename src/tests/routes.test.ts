@@ -28,3 +28,30 @@ describe('hashForRoute', () => {
     }
   })
 })
+
+import { parseHash } from '../app/routes'
+
+describe('parseHash', () => {
+  it('extracts the preset query parameter', () => {
+    expect(parseHash('#/photo?preset=example-exam')).toEqual({
+      route: 'photo',
+      presetId: 'example-exam',
+    })
+  })
+
+  it('omits presetId when absent or empty', () => {
+    expect(parseHash('#/photo')).toEqual({ route: 'photo', presetId: undefined })
+    expect(parseHash('#/photo?preset=')).toEqual({ route: 'photo', presetId: undefined })
+  })
+
+  it('encodes and decodes preset ids safely', () => {
+    expect(parseHash(hashForRoute('photo', 'example exam'))).toEqual({
+      route: 'photo',
+      presetId: 'example exam',
+    })
+  })
+
+  it('still falls back to home for unknown paths with queries', () => {
+    expect(parseHash('#/nope?preset=x').route).toBe('home')
+  })
+})

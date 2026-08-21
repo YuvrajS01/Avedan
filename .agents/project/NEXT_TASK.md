@@ -2,18 +2,19 @@
 
 ## Active task
 
-**T008 — Form preset registry**
+**T009 — PWA and privacy hardening**
 
-See `tasks/T008-presets.md`.
+See `tasks/T009-pwa-privacy.md`.
 
 ## Goal
 
-Introduce verified form presets with authority, official source reference, and last-verified date (D003), surfaced through a browsable Forms view that feeds photo/signature flows with requirement data.
+Make the app installable/offline-capable and tighten privacy guarantees: service worker for static assets, web app manifest, EXIF/metadata stripping on export where practical, session reset that releases image data, and clear privacy messaging.
 
 ## Required output
 
-- Preset schema extending requirements with verification metadata
-- Small seed registry of well-known presets (each with source + verified date)
-- Forms browse/search view with constraint summaries and no-guarantee language
-- Flow from a preset card into the photo/signature flows
-- Data-integrity tests for the registry
+- Web app manifest + icons
+- Service worker caching static shell assets (no image data persisted)
+- Metadata stripping on export where practical
+- Reset/reload releases object URLs and in-memory sources
+- Privacy messaging reviewed against PRIVACY spec
+- P0 flows still fully functional offline after first load

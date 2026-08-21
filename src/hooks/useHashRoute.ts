@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
-import { hashForRoute, routeFromHash, type Route } from '../app/routes'
+import { hashForRoute, parseHash, type Route } from '../app/routes'
 
-function readRoute(): Route {
-  return routeFromHash(window.location.hash)
+function readState() {
+  return parseHash(window.location.hash)
 }
 
 export function useHashRoute() {
-  const [route, setRoute] = useState<Route>(readRoute)
+  const [state, setState] = useState(readState)
 
   useEffect(() => {
-    const onHashChange = () => setRoute(readRoute())
+    const onHashChange = () => setState(readState())
     window.addEventListener('hashchange', onHashChange)
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [])
 
-  const navigate = useCallback((next: Route) => {
-    window.location.hash = hashForRoute(next)
-  }, [])
+  const navigate = useCallback(
+    (route: Route, options?: { presetId?: string }) => {
+      window.location.hash = hashForRoute(route, options?.presetId)
+    },
+    [],
+  )
 
-  return { route, navigate }
+  return { route: state.route, presetId: state.presetId, navigate }
 }

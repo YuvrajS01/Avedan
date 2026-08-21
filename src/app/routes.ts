@@ -18,11 +18,23 @@ const PATH_BY_ROUTE: Record<Route, string> = {
   custom: '#/custom',
 }
 
-export function routeFromHash(hash: string): Route {
-  const path = hash.replace(/^#/, '')
-  return ROUTE_BY_PATH[path] ?? 'home'
+export interface RouteState {
+  route: Route
+  presetId?: string
 }
 
-export function hashForRoute(route: Route): string {
-  return PATH_BY_ROUTE[route]
+export function parseHash(hash: string): RouteState {
+  const [pathPart, queryPart] = hash.replace(/^#/, '').split('?')
+  const route = ROUTE_BY_PATH[pathPart || '/'] ?? 'home'
+  const presetId = new URLSearchParams(queryPart ?? '').get('preset') ?? undefined
+  return { route, presetId: presetId || undefined }
+}
+
+export function hashForRoute(route: Route, presetId?: string): string {
+  const base = PATH_BY_ROUTE[route]
+  return presetId ? `${base}?preset=${encodeURIComponent(presetId)}` : base
+}
+
+export function routeFromHash(hash: string): Route {
+  return parseHash(hash).route
 }

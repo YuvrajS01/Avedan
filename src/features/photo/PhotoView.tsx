@@ -6,7 +6,9 @@ import {
   describeRequirements,
   findProfile,
 } from '../../domain/requirements/profiles'
+import { findFormPreset, requirementsFromPreset } from '../../domain/presets/registry'
 import type { ImageRequirements } from '../../domain/requirements/types'
+import { useHashRoute } from '../../hooks/useHashRoute'
 import { IntakeStep } from './IntakeStep'
 import { CropStep } from './CropStep'
 import { ProcessedResult } from '../../components/ProcessedResult'
@@ -56,6 +58,7 @@ function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
 }
 
 export function PhotoView() {
+  const { presetId, navigate } = useHashRoute()
   const [step, setStep] = useState<Step>('intake')
   const [profileId, setProfileId] = useState(PHOTO_PROFILES[0].id)
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
@@ -70,7 +73,15 @@ export function PhotoView() {
   loadedRef.current = loaded
   resultRef.current = result
 
-  const profile = useMemo(() => resolveProfile(profileId, custom), [profileId, custom])
+  const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
+  const presetProfile = useMemo(
+    () => (activePreset ? requirementsFromPreset(activePreset, 'photo') : undefined),
+    [activePreset],
+  )
+  const profile = useMemo(
+    () => presetProfile ?? resolveProfile(profileId, custom),
+    [presetProfile, profileId, custom],
+  )
   const summary = describeRequirements(profile)
 
   const reset = useCallback(() => {
@@ -130,6 +141,35 @@ export function PhotoView() {
 
   return (
     <>
+      {activePreset ? (
+        <div className="profile-picker">
+          <p className="target-summary">
+            Form preset: <strong>{activePreset.name}</strong> · {activePreset.authority}
+          </p>
+          <p className="target-summary">
+            Target: <strong>{summary}</strong>
+          </p>
+          <p className="profile-note">
+            Last verified {activePreset.lastVerified}
+            {activePreset.sourceUrl && (
+              <>
+                {' · '}
+                <a href={activePreset.sourceUrl} target="_blank" rel="noreferrer">
+                  Official source
+                </a>
+              </>
+            )}{' '}
+            — always confirm against the official source.
+          </p>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={() => navigate('photo')}
+          >
+            Use generic settings instead
+          </button>
+        </div>
+      ) : (
       <div className="profile-picker">
         <label className="field">
           <span>Target requirements</span>
@@ -196,6 +236,7 @@ export function PhotoView() {
         </p>
         <p className="profile-note">{PROFILE_NOTE}</p>
       </div>
+      )}
 
       {step === 'intake' && (
         <IntakeStep

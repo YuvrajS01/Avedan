@@ -23,16 +23,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - End-to-end photo flow (`src/features/photo/`): upload/drag-drop intake, data-driven requirement profiles + custom settings, fixed-aspect crop with pan/zoom (pure math in `cropMath.ts`), processing orchestrator (`processPhoto.ts`), result view with metadata, validation checks and download.
 - Signature flow (`src/features/signature/`): pointer/touch drawing canvas with pen sizes and undo/clear, upload intake, whitespace trim (`processing/trim.ts`), fit-resize without upscaling, same optimizer/validation/download pipeline. Shared result view (`components/ProcessedResult.tsx`) and shared asset types (`domain/jobs/result.ts`).
 - Validation engine (`domain/validation/engine.ts`) implementing the VALIDATION spec shape (`pass`/`attention`/`not-run` checks) with exact/within dimension modes; both flows delegate to it.
-- Guided camera capture (`features/camera/`): getUserMedia lifecycle with permission/denied/not-found/unsupported states, front/back switching, local frame capture feeding the standard photo pipeline. Frames never leave the device. 131 unit tests passing.
+- Guided camera capture (`features/camera/`): getUserMedia lifecycle with permission/denied/not-found/unsupported states, front/back switching, local frame capture feeding the standard photo pipeline. Frames never leave the device.
+- Form preset registry (`domain/presets/`): typed schema with runtime validation, load-time-validated seed registry with authority/source/last-verified metadata, freshness badges (verified/stale), `requirementsFromPreset` mapping, Forms browse/search view, and hash-based preset selection feeding the photo flow. 150 unit tests passing.
 
 ## Not implemented yet
 
-- Preset registry — T008
 - PWA/offline packaging — T009
 
 ## Current focus
 
-Build the verified form preset registry and Forms browse view (T008).
+Add PWA packaging and privacy hardening (T009).
 
 ## Current risks
 
@@ -44,7 +44,7 @@ Build the verified form preset registry and Forms browse view (T008).
 
 ## Next recommended task
 
-`tasks/T008-presets.md`
+`tasks/T009-pwa-privacy.md`
 
 ## Continuity rule
 

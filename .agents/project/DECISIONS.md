@@ -107,3 +107,9 @@
 **Decision:** Captured camera frames are encoded locally to a JPEG `File` and passed through the same intake function as uploads, rather than introducing a separate camera pipeline.
 
 **Reason:** One processing path means one set of guarantees (crop → optimize → validate → download), simpler tests, and zero new privacy surface: frames only ever exist in local canvases/blobs.
+
+## D019 — Seed presets are illustrative until manually verified
+
+**Decision:** The preset registry ships only clearly-labeled illustrative templates with full verification metadata (authority, source URL, last-verified date). Real exam/recruitment entries are added only after manual verification against official sources.
+
+**Reason:** Shipping plausible-looking but unverified "official" values would violate D003/D004 and could cause real submission failures. The schema and freshness UI make stale or unverified data visible instead of authoritative.

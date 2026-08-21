@@ -144,3 +144,14 @@ describe('PhotoView flow', () => {
     expect(screen.getByText(/Target:/i)).toHaveTextContent('413 × 531 px')
   })
 })
+
+describe('PhotoView with form presets', () => {
+  it('uses the preset requirements when the hash carries a preset id', () => {
+    window.location.hash = '#/photo?preset=example-exam-413x531'
+    render(<PhotoView />)
+    expect(screen.getByText(/form preset:/i)).toHaveTextContent('Example exam form (35 × 45 mm)')
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('413 × 531 px · JPEG · ≥ 20 KB · ≤ 50 KB')
+    expect(screen.getByRole('button', { name: /use generic settings instead/i })).toBeInTheDocument()
+    window.location.hash = '#/'
+  })
+})
