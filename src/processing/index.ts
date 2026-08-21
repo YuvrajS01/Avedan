@@ -31,3 +31,11 @@ export {
   type DecodedImage,
 } from './decode'
 export { dimensionsOf, inspectImage, type ImageMetadata } from './metadata'
+export {
+  createCanvasEncoder,
+  optimizeEncoding,
+  type EncodeAt,
+  type OptimizationOutcome,
+  type OptimizationResult,
+  type OptimizeOptions,
+} from './optimize'

@@ -2,23 +2,25 @@
 
 ## Active task
 
-**T003 — Constraint-based file size optimizer**
+**T004 — Photo upload, crop and export**
 
-See `tasks/T003-size-optimizer.md`.
+See `tasks/T004-photo-flow.md`.
 
 ## Goal
 
-Implement the optimizer loop that searches encode quality (and dimensions only when allowed) to satisfy min/max/target file-size constraints while maximizing visual quality, building on the T002 primitives.
+Wire the T002 primitives and T003 optimizer into the Photo flow: file intake (upload + drag-and-drop), requirement selection (preset-style data plus custom), fixed-aspect crop UI, optimize action, validation summary, and client-side download.
 
 ## Required output
 
-- Bounded search over encode quality (binary or step search) using `encodeCanvas`
-- Respect mandatory dimensions; never shrink when exact dimensions are required
-- Support max-only, range, and target file-size modes from `FileSizeRange`
-- Deterministic best-candidate selection within browser/codec variance
-- Edge-case coverage: unreachable minimum, unreachable maximum, tiny images
-- Optimizer remains framework-independent and worker-ready (no UI imports)
+- File picker and drag-and-drop intake using `decodeImage`/`assertDecodableFile`
+- Data-driven requirement selection driving crop ratio, dimensions, format, and size limits
+- Fixed-aspect-ratio crop with pan/zoom and reset
+- "Make it fit" optimization via `optimizeEncoding` with progress/result feedback
+- Validation summary (dimensions, aspect ratio, format, bytes) before download
+- Download without any server involvement
+- Privacy messaging visible near intake
+- Mobile-first layout per `design/UI_UX_SPEC.md`
 
 ## Handoff expectation
 
-When complete, update this file to point at T004 and describe any deviations.
+When complete, update this file to point at T005/T006 and describe any deviations.

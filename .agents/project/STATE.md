@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Processing primitives done / optimizer next  
+**Stage:** Optimizer done / photo flow next  
 **Last updated:** 2026-08-21  
-**Status:** T001 + T002 complete; T003 active
+**Status:** T001–T003 complete; T004 active
 
 ## Product goal
 
@@ -18,11 +18,11 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Responsive application shell with dependency-free hash navigation across Home, Photo, Signature, Forms, and Custom views.
 - Placeholder feature views under `src/features/` and module boundaries scaffolded (`src/processing/`, `src/workers/`, `src/domain/requirements/types.ts`).
 - Typed `ImageRequirements` domain model defined (data-driven requirements, FR-01).
-- Framework-independent processing primitives under `src/processing/`: decode (ImageBitmap + img fallback), aspect-ratio crop with focus point, exact resize with stepped halving, JPEG/PNG/WebP encode, physical mm/DPI → pixel math, typed `ProcessingError`, injectable canvas factory for testability. 48 unit tests passing.
+- Framework-independent processing primitives under `src/processing/`: decode (ImageBitmap + img fallback), aspect-ratio crop with focus point, exact resize with stepped halving, JPEG/PNG/WebP encode, physical mm/DPI → pixel math, typed `ProcessingError`, injectable canvas factory for testability.
+- Constraint-based file-size optimizer (`src/processing/optimize.ts`): bounded binary search over encode quality with optional allowed dimension scales; supports max/range/target byte modes with `ok`/`too-large`/`too-small` outcomes. 61 unit tests passing.
 
 ## Not implemented yet
 
-- Constraint-based file-size optimizer — T003
 - Photo upload flow — T004
 - Camera capture — T005
 - Signature drawing — T006
@@ -44,7 +44,7 @@ Implement the constraint-based file-size optimizer (`src/processing/optimize/`) 
 
 ## Next recommended task
 
-`tasks/T003-size-optimizer.md`
+`tasks/T004-photo-flow.md`
 
 ## Continuity rule
 
