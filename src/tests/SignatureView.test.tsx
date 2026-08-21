@@ -29,7 +29,13 @@ function fakeResult(overrides: Partial<ProcessedAsset> = {}): ProcessedAsset {
     sizeBytes: 10240,
     quality: 0.8,
     outcome: 'ok',
-    checks: [{ label: '10 KB — under the 20 KB limit', pass: true }],
+    validation: {
+      status: 'pass',
+      checks: [
+        { id: 'dimensions', label: '280 × 93 px', status: 'pass', details: 'Within 300 × 100 px' },
+        { id: 'file-size-max', label: '10 KB — limit 20 KB', status: 'pass' },
+      ],
+    },
     ...overrides,
   }
 }

@@ -95,3 +95,9 @@
 **Decision:** `ProcessedAsset`/`ValidationCheck` live in `domain/jobs/result.ts` and one shared result component renders metadata, checks, and download for every asset type.
 
 **Reason:** Photo and signature flows must stay consistent (FR-07) without duplicating UI, and future asset types (thumb impressions, documents) plug into the same contract.
+
+## D017 — Validation engine follows the spec result shape verbatim
+
+**Decision:** `validateOutput` emits the exact check/result shape from `.agents/specs/VALIDATION.md` (`pass`/`attention`/`not-run`), reports all four categories deterministically (unconstrained ones as `not-run`), and supports `exact` vs `within` dimension modes.
+
+**Reason:** A single deterministic engine keeps photo/signature semantics explicit, makes the no-guarantee language testable, and gives T010's advisory checks a ready-made place to land.

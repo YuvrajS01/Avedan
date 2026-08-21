@@ -4,10 +4,10 @@ import { resizeToCanvas } from '../../processing/resize'
 import { createCanvasEncoder, optimizeEncoding, type EncodableCanvas } from '../../processing/optimize'
 import type { Rect } from '../../processing/geometry'
 import type { ImageRequirements } from '../../domain/requirements/types'
-import type { ProcessedAsset, ValidationCheck } from '../../domain/jobs/result'
+import type { ProcessedAsset } from '../../domain/jobs/result'
+import { validateOutput } from '../../domain/validation/engine'
 
 export type ProcessedPhoto = ProcessedAsset
-export type { ValidationCheck }
 
 export interface LoadedPhoto {
   source: DrawableSource
@@ -27,52 +27,6 @@ export async function loadPhotoSource(file: File): Promise<LoadedPhoto> {
   const previewUrl =
     typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : ''
   return { source, previewUrl, fileName: file.name }
-}
-
-function buildChecks(
-  profile: ImageRequirements,
-  width: number,
-  height: number,
-  sizeBytes: number,
-): ValidationCheck[] {
-  const checks: ValidationCheck[] = []
-
-  if (profile.dimensions) {
-    const pass =
-      width === profile.dimensions.width && height === profile.dimensions.height
-    checks.push({
-      label: `${width} × ${height} px`,
-      pass,
-    })
-  }
-
-  if (profile.aspectRatio !== undefined) {
-    const actual = width / height
-    checks.push({
-      label: `Aspect ratio ${profile.aspectRatio.toFixed(2).replace(/\.?0+$/, '')}`,
-      pass: Math.abs(actual - profile.aspectRatio) < 0.02,
-    })
-  }
-
-  if (profile.format) {
-    checks.push({ label: profile.format.toUpperCase(), pass: true })
-  }
-
-  if (profile.fileSize?.maxBytes !== undefined) {
-    checks.push({
-      label: `${(sizeBytes / 1024).toFixed(0)} KB — under the ${Math.round(profile.fileSize.maxBytes / 1024)} KB limit`,
-      pass: sizeBytes <= profile.fileSize.maxBytes,
-    })
-  }
-
-  if (profile.fileSize?.minBytes !== undefined) {
-    checks.push({
-      label: `${(sizeBytes / 1024).toFixed(0)} KB — above the ${Math.round(profile.fileSize.minBytes / 1024)} KB minimum`,
-      pass: sizeBytes >= profile.fileSize.minBytes,
-    })
-  }
-
-  return checks
 }
 
 export async function processPhoto(input: {
@@ -113,11 +67,11 @@ export async function processPhoto(input: {
     sizeBytes: optimization.sizeBytes,
     quality: optimization.quality,
     outcome: optimization.outcome,
-    checks: buildChecks(
-      input.profile,
-      resized.width,
-      resized.height,
-      optimization.sizeBytes,
-    ),
+    validation: validateOutput(input.profile, {
+      width: resized.width,
+      height: resized.height,
+      format,
+      sizeBytes: optimization.sizeBytes,
+    }),
   }
 }

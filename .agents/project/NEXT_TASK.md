@@ -2,21 +2,19 @@
 
 ## Active task
 
-**T007 — Technical validation UI**
+**T005 — Guided camera capture**
 
-See `tasks/T007-validation.md`.
+See `tasks/T005-camera-capture.md`.
 
 ## Goal
 
-Unify validation across photo and signature flows into a consistent pre-download checklist (FR-07): dimensions, aspect ratio, format, file size, with clear pass/attention states and actionable failure copy.
+Add first-class camera intake to the photo flow using `navigator.mediaDevices.getUserMedia()`: permission handling, unsupported-browser fallback, camera switching where supported, and capture from the video frame to the existing crop pipeline.
 
 ## Required output
 
-- Shared validation module fed by requirement profiles and processed output
-- Consistent check rendering in the shared result view
-- Actionable next-step messaging when a check fails
-- Unit tests covering pass/fail/borderline cases
-
-## Handoff expectation
-
-When complete, update this file to point at T005 and describe any deviations.
+- Camera button in the photo intake step where supported
+- Permission prompt/denied states with actionable copy
+- Fallback to upload when the API or device is unavailable
+- Capture produces a source image entering the normal crop → optimize → validate flow
+- No camera frames ever leave the device
+- Tests for state machine logic; manual browser verification for live capture

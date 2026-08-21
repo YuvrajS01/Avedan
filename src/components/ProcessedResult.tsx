@@ -7,8 +7,15 @@ interface ProcessedResultProps {
   onReset: () => void
 }
 
+const STATUS_MARK: Record<string, string> = {
+  pass: '✓',
+  attention: '!',
+  'not-run': '–',
+}
+
 export function ProcessedResult({ result, summary, noun, onReset }: ProcessedResultProps) {
-  const allPass = result.checks.every((check) => check.pass)
+  const { validation } = result
+  const allPass = validation.status === 'pass'
 
   return (
     <section className="view" aria-labelledby="result-title">
@@ -43,10 +50,18 @@ export function ProcessedResult({ result, summary, noun, onReset }: ProcessedRes
           </div>
         )}
       </dl>
+      <p
+        className={allPass ? 'validation-banner pass' : 'validation-banner attention'}
+        role="status"
+      >
+        {allPass ? 'Technical checks passed' : 'Attention needed on some checks'}
+      </p>
       <ul className="check-list" aria-label="Technical checks">
-        {result.checks.map((check) => (
-          <li key={check.label} className={check.pass ? 'pass' : 'fail'}>
-            {check.pass ? '✓' : '✗'} {check.label}
+        {validation.checks.map((check) => (
+          <li key={check.id} className={check.status}>
+            <span aria-hidden="true">{STATUS_MARK[check.status]}</span>{' '}
+            {check.label}
+            {check.details && <span className="check-details"> — {check.details}</span>}
           </li>
         ))}
       </ul>

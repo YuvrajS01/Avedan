@@ -25,10 +25,13 @@ function fakeResult(overrides: Partial<ProcessedPhoto> = {}): ProcessedPhoto {
     sizeBytes: 20480,
     quality: 0.82,
     outcome: 'ok',
-    checks: [
-      { label: '300 × 400 px', pass: true },
-      { label: '20 KB — under the 50 KB limit', pass: true },
-    ],
+    validation: {
+      status: 'pass',
+      checks: [
+        { id: 'dimensions', label: '300 × 400 px', status: 'pass', details: 'Required 300 × 400 px' },
+        { id: 'file-size-max', label: '20 KB — limit 50 KB', status: 'pass' },
+      ],
+    },
     ...overrides,
   }
 }
@@ -98,7 +101,7 @@ describe('PhotoView flow', () => {
     await user.click(await screen.findByRole('button', { name: 'Continue' }))
 
     expect(await screen.findByRole('heading', { name: 'Your photo is ready' })).toBeInTheDocument()
-    expect(screen.getByText('300 × 400 px')).toBeInTheDocument()
+    expect(screen.getAllByText('300 × 400 px').length).toBeGreaterThan(0)
     expect(screen.getByText('20.0 KB')).toBeInTheDocument()
     const download = screen.getByRole('link', { name: /download/i })
     expect(download).toHaveAttribute('download', 'photo-avedan.jpg')

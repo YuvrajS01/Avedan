@@ -4,45 +4,8 @@ import type { DrawableSource } from '../../processing/crop'
 import { computeFitDimensions } from '../../processing/geometry'
 import { createCanvasEncoder, optimizeEncoding, type EncodableCanvas } from '../../processing/optimize'
 import type { ImageRequirements } from '../../domain/requirements/types'
-import type { ProcessedAsset, ValidationCheck } from '../../domain/jobs/result'
-
-function buildChecks(
-  profile: ImageRequirements,
-  width: number,
-  height: number,
-  sizeBytes: number,
-): ValidationCheck[] {
-  const checks: ValidationCheck[] = []
-
-  if (profile.dimensions) {
-    const pass =
-      width <= profile.dimensions.width && height <= profile.dimensions.height
-    checks.push({
-      label: `${width} × ${height} px — within ${profile.dimensions.width} × ${profile.dimensions.height}`,
-      pass,
-    })
-  }
-
-  if (profile.format) {
-    checks.push({ label: profile.format.toUpperCase(), pass: true })
-  }
-
-  if (profile.fileSize?.maxBytes !== undefined) {
-    checks.push({
-      label: `${(sizeBytes / 1024).toFixed(0)} KB — under the ${Math.round(profile.fileSize.maxBytes / 1024)} KB limit`,
-      pass: sizeBytes <= profile.fileSize.maxBytes,
-    })
-  }
-
-  if (profile.fileSize?.minBytes !== undefined) {
-    checks.push({
-      label: `${(sizeBytes / 1024).toFixed(0)} KB — above the ${Math.round(profile.fileSize.minBytes / 1024)} KB minimum`,
-      pass: sizeBytes >= profile.fileSize.minBytes,
-    })
-  }
-
-  return checks
-}
+import type { ProcessedAsset } from '../../domain/jobs/result'
+import { validateOutput } from '../../domain/validation/engine'
 
 /**
  * Signature pipeline per PROCESSING_ENGINE order:
@@ -88,11 +51,15 @@ export async function processSignature(input: {
     sizeBytes: optimization.sizeBytes,
     quality: optimization.quality,
     outcome: optimization.outcome,
-    checks: buildChecks(
+    validation: validateOutput(
       input.profile,
-      resized.width,
-      resized.height,
-      optimization.sizeBytes,
+      {
+        width: resized.width,
+        height: resized.height,
+        format,
+        sizeBytes: optimization.sizeBytes,
+      },
+      { dimensionMode: 'within' },
     ),
   }
 }

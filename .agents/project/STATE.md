@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Signature flow done / validation UI next  
+**Stage:** Validation engine done / camera capture next  
 **Last updated:** 2026-08-21  
-**Status:** T001–T004 + T006 complete; T007 active
+**Status:** T001–T004, T006, T007 complete; T005 active
 
 ## Product goal
 
@@ -21,18 +21,18 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Framework-independent processing primitives under `src/processing/`: decode (ImageBitmap + img fallback), aspect-ratio crop with focus point, exact resize with stepped halving, JPEG/PNG/WebP encode, physical mm/DPI → pixel math, typed `ProcessingError`, injectable canvas factory for testability.
 - Constraint-based file-size optimizer (`src/processing/optimize.ts`): bounded binary search over encode quality with optional allowed dimension scales; supports max/range/target byte modes with `ok`/`too-large`/`too-small` outcomes.
 - End-to-end photo flow (`src/features/photo/`): upload/drag-drop intake, data-driven requirement profiles + custom settings, fixed-aspect crop with pan/zoom (pure math in `cropMath.ts`), processing orchestrator (`processPhoto.ts`), result view with metadata, validation checks and download.
-- Signature flow (`src/features/signature/`): pointer/touch drawing canvas with pen sizes and undo/clear, upload intake, whitespace trim (`processing/trim.ts`), fit-resize without upscaling, same optimizer/validation/download pipeline. Shared result view (`components/ProcessedResult.tsx`) and shared asset types (`domain/jobs/result.ts`). 109 unit tests passing.
+- Signature flow (`src/features/signature/`): pointer/touch drawing canvas with pen sizes and undo/clear, upload intake, whitespace trim (`processing/trim.ts`), fit-resize without upscaling, same optimizer/validation/download pipeline. Shared result view (`components/ProcessedResult.tsx`) and shared asset types (`domain/jobs/result.ts`).
+- Validation engine (`domain/validation/engine.ts`) implementing the VALIDATION spec shape (`pass`/`attention`/`not-run` checks) with exact/within dimension modes; both flows delegate to it. 119 unit tests passing.
 
 ## Not implemented yet
 
-- Unified technical validation UI — T007
 - Camera capture — T005
 - Preset registry — T008
 - PWA/offline packaging — T009
 
 ## Current focus
 
-Unify validation across photo and signature flows into a consistent pre-download checklist (T007).
+Add guided camera capture (T005) to the photo flow's intake step.
 
 ## Current risks
 

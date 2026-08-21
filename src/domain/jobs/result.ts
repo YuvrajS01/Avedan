@@ -1,11 +1,7 @@
 import type { OutputFormat } from '../requirements/types'
+import type { ValidationResult } from '../validation/engine'
 
 export type AssetOutcome = 'ok' | 'too-large' | 'too-small'
-
-export interface ValidationCheck {
-  label: string
-  pass: boolean
-}
 
 export interface ProcessedAsset {
   blob: Blob
@@ -17,5 +13,5 @@ export interface ProcessedAsset {
   sizeBytes: number
   quality: number
   outcome: AssetOutcome
-  checks: ValidationCheck[]
+  validation: ValidationResult
 }
