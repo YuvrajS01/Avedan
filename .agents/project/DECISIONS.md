@@ -113,3 +113,15 @@
 **Decision:** The preset registry ships only clearly-labeled illustrative templates with full verification metadata (authority, source URL, last-verified date). Real exam/recruitment entries are added only after manual verification against official sources.
 
 **Reason:** Shipping plausible-looking but unverified "official" values would violate D003/D004 and could cause real submission failures. The schema and freshness UI make stale or unverified data visible instead of authoritative.
+
+## D020 — Canvas re-encode is the EXIF stripping mechanism
+
+**Decision:** All exports are produced by decoding the source, drawing it to a canvas and re-encoding via `toBlob`; original file bytes are never copied to output.
+
+**Reason:** Browser canvas re-encoding does not carry EXIF/GPS metadata into the result, satisfying the privacy spec's metadata-stripping goal with zero extra dependencies or code paths.
+
+## D021 — Service worker caches static shell only
+
+**Decision:** The service worker precaches the app shell and uses stale-while-revalidate for same-origin GET requests only; cross-origin and non-GET requests bypass caching entirely.
+
+**Reason:** Guarantees no user image data can ever enter a cache while keeping the full client-side flow available offline after first load.

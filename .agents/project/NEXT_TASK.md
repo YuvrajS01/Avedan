@@ -2,19 +2,16 @@
 
 ## Active task
 
-**T009 — PWA and privacy hardening**
+**T010 — Optional local intelligence**
 
-See `tasks/T009-pwa-privacy.md`.
+See `tasks/T010-advanced-intelligence.md`.
 
 ## Goal
 
-Make the app installable/offline-capable and tighten privacy guarantees: service worker for static assets, web app manifest, EXIF/metadata stripping on export where practical, session reset that releases image data, and clear privacy messaging.
+Optional advisory enhancements on top of the now-complete MVP: capture-quality heuristics (blur/lighting), face-position guidance, and background uniformity hints — all client-side, progressive enhancement only (D007), never blocking the core flow.
 
 ## Required output
 
-- Web app manifest + icons
-- Service worker caching static shell assets (no image data persisted)
-- Metadata stripping on export where practical
-- Reset/reload releases object URLs and in-memory sources
-- Privacy messaging reviewed against PRIVACY spec
-- P0 flows still fully functional offline after first load
+- Advisory checks surfaced through the existing validation engine as `not-run`/advisory entries
+- Client-side only; no model downloads unless explicitly opted in
+- Core flows remain fully functional without these features

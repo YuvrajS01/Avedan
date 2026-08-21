@@ -12,7 +12,8 @@ import { useHashRoute } from '../../hooks/useHashRoute'
 import { IntakeStep } from './IntakeStep'
 import { CropStep } from './CropStep'
 import { ProcessedResult } from '../../components/ProcessedResult'
-import { loadPhotoSource, processPhoto, revokeObjectUrl, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
+import { loadPhotoSource, processPhoto, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
+import { releaseSessionAssets } from '../../utils/session'
 import { isCameraSupported } from '../camera/camera'
 import { CameraStep } from '../camera/CameraStep'
 
@@ -85,8 +86,7 @@ export function PhotoView() {
   const summary = describeRequirements(profile)
 
   const reset = useCallback(() => {
-    revokeObjectUrl(loaded?.previewUrl ?? '')
-    revokeObjectUrl(result?.url ?? '')
+    releaseSessionAssets({ loaded, result })
     setLoaded(null)
     setResult(null)
     setBusy(false)
@@ -96,8 +96,10 @@ export function PhotoView() {
 
   useEffect(() => {
     return () => {
-      revokeObjectUrl(loadedRef.current?.previewUrl ?? '')
-      revokeObjectUrl(resultRef.current?.url ?? '')
+      releaseSessionAssets({
+        loaded: loadedRef.current,
+        result: resultRef.current,
+      })
     }
   }, [])
 

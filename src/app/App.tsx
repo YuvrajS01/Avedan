@@ -35,7 +35,10 @@ export function App() {
         <View />
       </main>
       <footer className="shell-footer">
-        <p>Your image stays on this device while you process it.</p>
+        <p>
+          Your image stays on this device while you process it. Avedan works
+          offline after its first load and never sends your files anywhere.
+        </p>
       </footer>
     </div>
   )

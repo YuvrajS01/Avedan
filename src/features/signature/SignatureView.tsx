@@ -13,9 +13,9 @@ import { ProcessedResult } from '../../components/ProcessedResult'
 import { DrawCanvas } from './DrawCanvas'
 import {
   loadPhotoSource,
-  revokeObjectUrl,
   type LoadedPhoto,
 } from '../photo/processPhoto'
+import { releaseSessionAssets } from '../../utils/session'
 import { processSignature } from './processSignature'
 
 type Step = 'choose' | 'draw' | 'preview' | 'result'
@@ -57,8 +57,7 @@ export function SignatureView() {
   const summary = describeRequirements(profile)
 
   const reset = useCallback(() => {
-    revokeObjectUrl(loaded?.previewUrl ?? '')
-    revokeObjectUrl(result?.url ?? '')
+    releaseSessionAssets({ loaded, result })
     setLoaded(null)
     setResult(null)
     setBusy(false)
