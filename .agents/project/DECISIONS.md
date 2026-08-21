@@ -41,3 +41,15 @@
 **Decision:** Face guidance, background removal, and ML-based checks should not block basic photo preparation.
 
 **Reason:** Core utility should remain fast and broadly compatible.
+
+## D008 — Hash-based navigation without a router library
+
+**Decision:** The shell uses a small hash router (`src/app/routes.ts` + `useHashRoute`) instead of React Router or similar.
+
+**Reason:** The MVP has five flat views; a router dependency adds bundle weight without UX benefit. Browser back/forward still works via `hashchange`. Revisit only if nested routes or URL state are needed.
+
+## D009 — Toolchain: Vite + React 19 + Vitest, no UI framework
+
+**Decision:** Build with Vite 7/TypeScript strict, test with Vitest + jsdom + Testing Library, style with plain mobile-first CSS custom properties (no Tailwind/component library).
+
+**Reason:** Matches the recommended stack in the technical architecture, keeps dependencies minimal, and keeps processing code free to be framework-independent.

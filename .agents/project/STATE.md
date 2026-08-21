@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** Product definition / implementation setup  
+**Stage:** Foundation implemented / processing engine next  
 **Last updated:** 2026-08-21  
-**Status:** Not yet implemented
+**Status:** T001 complete; T002 active
 
 ## Product goal
 
@@ -13,31 +13,26 @@ Create a browser-based tool that prepares application photos and signatures to e
 
 ## Current capabilities
 
-- Product concept defined.
-- MVP scope defined.
-- Client-side architecture direction defined.
-- Agent operating rules defined.
-- Requirements/configuration model defined.
-- UX direction defined.
+- Product concept, MVP scope, and UX direction defined.
+- Vite + React 19 + TypeScript (strict) project with ESLint 9, Vitest 3 (jsdom), typecheck, and production build.
+- Responsive application shell with dependency-free hash navigation across Home, Photo, Signature, Forms, and Custom views.
+- Placeholder feature views under `src/features/` and module boundaries scaffolded (`src/processing/`, `src/workers/`, `src/domain/requirements/types.ts`).
+- Typed `ImageRequirements` domain model defined (data-driven requirements, FR-01).
 
 ## Not implemented yet
 
-- Application shell
-- Photo upload flow
-- Camera capture
-- Cropper
-- Image processing engine
-- Compression optimizer
-- Signature drawing
-- Signature cleanup
-- Validation engine
-- Preset registry
-- PWA/offline packaging
-- Automated tests
+- Image processing engine (decode/crop/resize/encode) — T002
+- Constraint-based size optimizer — T003
+- Photo upload flow — T004
+- Camera capture — T005
+- Signature drawing — T006
+- Validation UI — T007
+- Preset registry — T008
+- PWA/offline packaging — T009
 
 ## Current focus
 
-Set up the technical foundation and implement the processing engine before building the polished UI.
+Implement the framework-independent image processing primitives (`src/processing/`) before building the polished UI.
 
 ## Current risks
 
@@ -49,7 +44,7 @@ Set up the technical foundation and implement the processing engine before build
 
 ## Next recommended task
 
-`tasks/T001-project-foundation.md`
+`tasks/T002-processing-primitives.md`
 
 ## Continuity rule
 

@@ -2,25 +2,23 @@
 
 ## Active task
 
-**T001 — Project foundation and application shell**
+**T002 — Image processing primitives**
 
-See `tasks/T001-project-foundation.md`.
+See `tasks/T002-processing-primitives.md`.
 
 ## Goal
 
-Create the base web project, establish lint/type/test/build tooling, implement the top-level shell, and create clean module boundaries for processing, requirements, camera, signature, validation, and downloads.
+Implement tested, framework-independent operations for decode, crop, resize, format conversion, and metadata extraction under `src/processing/`, with no React/UI dependencies.
 
 ## Required output
 
-- Working local dev server
-- Production build
-- Type checking
-- Linting
-- Test runner
-- Initial responsive application shell
-- Placeholder routes/views for Photo, Signature, Forms, and Custom
-- No backend dependency for core functionality
+- Decode of supported local images (JPEG/PNG at minimum)
+- Crop calculations producing the requested aspect ratio
+- Resize producing exact requested pixel dimensions
+- Format conversion for MVP formats (JPEG/PNG; WebP where supported)
+- Edge-case test coverage
+- Processing functions remain pure/framework-free (DECISIONS D005)
 
 ## Handoff expectation
 
-When complete, update this file to point at T002 and describe any deviations.
+When complete, update this file to point at T003 and describe any deviations.
