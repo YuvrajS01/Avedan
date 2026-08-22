@@ -2,12 +2,14 @@ import { assertDecodableFile, decodeImage } from '../../processing/decode'
 import { cropToCanvas, type DrawableSource } from '../../processing/crop'
 import { resizeToCanvas } from '../../processing/resize'
 import { createCanvasEncoder, optimizeEncoding, type EncodableCanvas } from '../../processing/optimize'
+import { assessCanvasQuality, type QualityCheck } from '../../processing/quality'
 import type { Rect } from '../../processing/geometry'
 import type { ImageRequirements } from '../../domain/requirements/types'
 import type { ProcessedAsset } from '../../domain/jobs/result'
 import { validateOutput } from '../../domain/validation/engine'
 
 export type ProcessedPhoto = ProcessedAsset
+export type { QualityCheck as PhotoQualityCheck }
 
 export interface LoadedPhoto {
   source: DrawableSource
@@ -73,5 +75,6 @@ export async function processPhoto(input: {
       format,
       sizeBytes: optimization.sizeBytes,
     }),
+    advisory: assessCanvasQuality(resized as unknown as DrawableSource),
   }
 }

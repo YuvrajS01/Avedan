@@ -91,6 +91,27 @@ export function ProcessedResult({ result, summary, noun, onReset }: ProcessedRes
               </li>
             ))}
           </ul>
+          {result.advisory && result.advisory.length > 0 && (
+            <>
+              <h2 className="advisory-title">Optional quality hints</h2>
+              <p className="profile-note">
+                Advisory only — your file can still be used even if a hint is flagged.
+              </p>
+              <ul className="check-list" aria-label="Optional quality hints">
+                {result.advisory.map((hint) => (
+                  <li key={hint.id} className={hint.status === 'ok' ? 'pass' : 'attention'}>
+                    <span className="check-mark" aria-hidden="true">
+                      {hint.status === 'ok' ? '✓' : '!'}
+                    </span>
+                    <span>
+                      {hint.label}
+                      {hint.details && <span className="check-details"> — {hint.details}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           <p className="privacy-note">
             Technical checks passed does not guarantee acceptance by an authority.
           </p>

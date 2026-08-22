@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** MVP complete / visual redesign + SaaS shell complete / optional intelligence next  
+**Stage:** All planned tasks complete (T001–T010)  
 **Last updated:** 2026-08-22  
-**Status:** T001–T009 complete; UI/UX redesign + SaaS single-column shell + manual-first requirements + trimmed signature preview complete; T010 (optional) active
+**Status:** T001–T010 complete; pre-release manual verification recommended
 
 ## Product goal
 
@@ -30,14 +30,15 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Visual identity pass (2026-08-21, see DECISIONS D024): "Document Desk" editorial aesthetic on OKLCH tokens (warm paper / green ink / postage-stamp accent), self-hosted Fraunces Variable + Public Sans Variable via Fontsource, home as numbered hairline index, Add → Frame → Ready stepper, printed-photo matte result preview. Fonts are the only new dependencies; 160 tests passing.
 - SaaS shell + single-column content (2026-08-21, see DECISIONS D025/D026/D030): 2-column desktop shell (272px sidebar + flexible main) collapsing to single column on mobile; sidebar nav with outline icons and SaaS active states; every page is sidebar + single column (like the signature page: one large card + two cards below) — Home is single-column, Forms has top search + stacked cards, Photo and Signature are manual-first (Width/Height/Max size/Format always visible with a controlled "Load preset" dropdown that autofills them and retains the selection, no separate Custom mode). The Custom route was removed (ROUTES = Home/Photo/Signature/Forms). Preview/result mattes use `var(--surface)` so bounds match the page background, not paper-white. 160 tests passing.
 - Signature preview/result are WYSIWYG (2026-08-22, see DECISIONS D027–D029/D032): upload preview renders the trimmed canvas (not the raw scan) so small signatures no longer float in white; the result matte is capped to the displayed image width (`max-width: min(340px,100%)` + caption removed) and now blends with the background. The draw canvas is opaque white and the pipeline flattens to white, fixing black-on-black in dark mode. 160 tests passing.
+- Optional quality intelligence (2026-08-22, see DECISIONS D033/D034): advisory blur/lighting/contrast hints via deterministic pixel heuristics (`processing/quality.ts`, downscaled render ≤256px, fail-safe → undefined); attached as `ProcessedAsset.advisory` for the photo flow only; rendered in a separate "Optional quality hints" section that never affects validation status or download; no ML models downloaded; face detection deferred pending an opt-in client-side model.
 
 ## Not implemented yet
 
-- Optional local intelligence (blur/lighting/face advisory checks) — T010
+- Nothing planned — all indexed tasks (T001–T010) are done. New work needs new task definitions (see NEXT_TASK.md).
 
 ## Current focus
 
-MVP scope is complete. T010 is optional progressive enhancement.
+Pre-release manual verification (camera, crop, offline/install in real browsers) and the verified-presets workflow.
 
 ## Current risks
 
@@ -49,7 +50,7 @@ MVP scope is complete. T010 is optional progressive enhancement.
 
 ## Next recommended task
 
-`tasks/T010-advanced-intelligence.md` (optional)
+None — define new tasks in `.agents/tasks/` and index them in `TASK_INDEX.md`.
 
 ## Continuity rule
 

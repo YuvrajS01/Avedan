@@ -2,25 +2,17 @@
 
 ## Active task
 
-**T010 — Optional local intelligence**
+None — all planned tasks are complete (T001–T010).
 
-See `tasks/T010-advanced-intelligence.md`.
+## Suggested next steps
 
-> Note (2026-08-22): a crop-distortion bug was fixed first (crop box no longer
-> breaks the target aspect ratio under `max-height` clamping — see
-> DECISIONS D022). A full UI/UX visual redesign, an editorial identity
-> ("Document Desk"), a SaaS sidebar + single-column shell, manual-first
-> requirements for Photo and Signature with controlled preset autofill
-> (Custom route removed), trimmed signature previews, and background-matched
-> mattes also shipped (see D023–D032); core engine only gained opaque-white
-> handling for signatures. T010 remains the active task.
+The full planned scope (MVP + post-MVP phases from the task index) is implemented. Candidate follow-up work requires new task definitions:
 
-## Goal
+1. Manual browser verification pass (camera capture, live crop, offline reload/install) before any public release.
+2. Replace illustrative seed presets with manually verified official requirements (D003/D019 workflow).
+3. Signature-flow preset wiring via `requirementsFromPreset(preset, 'signature')`.
+4. New tasks should be added to `.agents/tasks/` and indexed in `TASK_INDEX.md`.
 
-Optional advisory enhancements on top of the now-complete MVP: capture-quality heuristics (blur/lighting), face-position guidance, and background uniformity hints — all client-side, progressive enhancement only (D007), never blocking the core flow.
+## Handoff expectation
 
-## Required output
-
-- Advisory checks surfaced through the existing validation engine as `not-run`/advisory entries
-- Client-side only; no model downloads unless explicitly opted in
-- Core flows remain fully functional without these features
+Update this file whenever a new task is defined and started.

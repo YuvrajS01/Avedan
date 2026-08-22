@@ -211,3 +211,15 @@
 **Reason:** The screenshots showed a wide white card around a narrow signature (the figcaption's intrinsic width stretched the matte, and `fit-content` used the image's intrinsic width). With the caption removed in D028 and the matte capped to the displayed image width in D029, the remaining white was the matte's own background. Matching it to the page makes the image's white determine the bounds.
 
 **Consequence:** Visual only, in both themes. Draw preview already used trimmed PNGs (D027), so preview and download are now identical.
+
+## D033 — Quality intelligence uses deterministic heuristics; face detection deferred
+
+**Decision:** Advisory blur/lighting/contrast hints come from deterministic pixel statistics (Rec.709 luma, mean/stddev, Laplacian variance) computed on a downscaled render — no ML model is downloaded. Face-position guidance remains future work requiring an explicit opt-in client-side model per the PRIVACY spec.
+
+**Reason:** Satisfies T010's optionality/no-blocking/no-external-inference criteria by construction: nothing to load lazily, nothing that can fail the core flow (assessment is wrapped and returns undefined on any failure), zero new dependencies. Skin-tone-based face heuristics were rejected as unreliable and biased.
+
+## D034 — Advisory hints are separate from technical validation
+
+**Decision:** Quality hints attach to `ProcessedAsset.advisory` and render in their own "Optional quality hints" section, never merged into the pass/fail `ValidationResult` nor affecting the download action.
+
+**Reason:** Keeps FR-07 technical checks objective and deterministic, while still giving users actionable guidance (per VALIDATION spec: advisory unless objectively required).
