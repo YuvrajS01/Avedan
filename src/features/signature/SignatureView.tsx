@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
-  CUSTOM_PROFILE_ID,
   SIGNATURE_PROFILES,
   PROFILE_NOTE,
   describeRequirements,
@@ -25,8 +24,17 @@ import { processSignature } from './processSignature'
 type Step = 'choose' | 'draw' | 'preview' | 'result'
 
 interface CustomSettings {
+  width: string
+  height: string
   maxKb: string
   format: ImageRequirements['format']
+}
+
+const DEFAULT_CUSTOM: CustomSettings = {
+  width: '300',
+  height: '100',
+  maxKb: '20',
+  format: 'jpeg',
 }
 
 function toPositiveInt(value: string): number | undefined {
@@ -34,14 +42,17 @@ function toPositiveInt(value: string): number | undefined {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
 }
 
-function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
-  if (id !== CUSTOM_PROFILE_ID) {
-    return findSignatureProfile(id) ?? SIGNATURE_PROFILES[0]
-  }
+function profileFromCustom(custom: CustomSettings): ImageRequirements {
+  const width = toPositiveInt(custom.width)
+  const height = toPositiveInt(custom.height)
+  const dimensions =
+    width !== undefined && height !== undefined ? { width, height } : undefined
   const maxBytes = toPositiveInt(custom.maxKb)
   return {
-    id: CUSTOM_PROFILE_ID,
-    label: 'Custom',
+    id: 'manual',
+    label: 'Manual',
+    dimensions,
+    aspectRatio: width !== undefined && height !== undefined ? width / height : 3,
     format: custom.format,
     fileSize: maxBytes !== undefined ? { maxBytes: maxBytes * 1024 } : undefined,
   }
@@ -49,15 +60,15 @@ function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
 
 export function SignatureView() {
   const [step, setStep] = useState<Step>('choose')
-  const [profileId, setProfileId] = useState(SIGNATURE_PROFILES[0].id)
-  const [custom, setCustom] = useState<CustomSettings>({ maxKb: '', format: 'png' })
+  const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
+  const [presetSelect, setPresetSelect] = useState('')
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
   const [result, setResult] = useState<ProcessedAsset | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const profile = useMemo(() => resolveProfile(profileId, custom), [profileId, custom])
+  const profile = useMemo(() => profileFromCustom(custom), [custom])
   const summary = describeRequirements(profile)
 
   const reset = useCallback(() => {
@@ -75,9 +86,6 @@ export function SignatureView() {
     setError(null)
     try {
       const next = await loadPhotoSource(file)
-      // Preview is WYSIWYG: show the trimmed signature, not the raw scan
-      // with its surrounding white paper. If no ink can be found yet, keep
-      // the raw preview — Continue will surface a friendly error.
       let previewUrl = next.previewUrl
       try {
         const trimmed = trimToCanvas(next.source)
@@ -139,50 +147,80 @@ export function SignatureView() {
     }
   }
 
+  const handlePresetSelect = (id: string) => {
+    setPresetSelect(id)
+    if (!id) return
+    const p = findSignatureProfile(id)
+    if (!p) return
+    setCustom({
+      width: p.dimensions ? String(p.dimensions.width) : '',
+      height: p.dimensions ? String(p.dimensions.height) : '',
+      maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
+      format: p.format ?? 'png',
+    })
+  }
+
   const requirementsPanel = (
     <div className="requirements-panel panel">
       <div className="panel-body">
         <label className="field">
-          <span>Target requirements</span>
+          <span>Load preset</span>
           <select
-            value={profileId}
-            onChange={(event) => setProfileId(event.target.value)}
+            aria-label="Load preset"
+            value={presetSelect}
+            onChange={(event) => handlePresetSelect(event.target.value)}
           >
+            <option value="">— Choose a preset to autofill —</option>
             {SIGNATURE_PROFILES.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
             ))}
-            <option value={CUSTOM_PROFILE_ID}>Custom…</option>
           </select>
         </label>
-        {profileId === CUSTOM_PROFILE_ID && (
-          <div className="custom-fields">
-            <label className="field">
-              <span>Max size (KB)</span>
-              <input
-                type="number"
-                min={0}
-                value={custom.maxKb}
-                placeholder="none"
-                onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Format</span>
-              <select
-                value={custom.format}
-                onChange={(event) =>
-                  setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
-                }
-              >
-                <option value="png">PNG</option>
-                <option value="jpeg">JPG</option>
-                <option value="webp">WebP</option>
-              </select>
-            </label>
-          </div>
-        )}
+        <div className="custom-fields">
+          <label className="field">
+            <span>Width (px)</span>
+            <input
+              type="number"
+              min={1}
+              value={custom.width}
+              onChange={(event) => setCustom({ ...custom, width: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Height (px)</span>
+            <input
+              type="number"
+              min={1}
+              value={custom.height}
+              onChange={(event) => setCustom({ ...custom, height: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Max size (KB)</span>
+            <input
+              type="number"
+              min={0}
+              value={custom.maxKb}
+              placeholder="none"
+              onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Format</span>
+            <select
+              value={custom.format}
+              onChange={(event) =>
+                setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
+              }
+            >
+              <option value="png">PNG</option>
+              <option value="jpeg">JPG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+        </div>
         <p className="target-summary">
           Target: <strong>{summary}</strong>
         </p>
@@ -277,9 +315,9 @@ export function SignatureView() {
               className="result-preview"
               src={loaded.previewUrl}
               alt="Uploaded signature preview"
-              style={{ background: '#ffffff' }}
             />
-          </div>          {busy && (
+          </div>
+          {busy && (
             <p className="busy-note" role="status">
               <span className="spinner" aria-hidden="true" />
               Processing your signature…

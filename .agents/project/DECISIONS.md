@@ -187,3 +187,27 @@
 **Reason:** Screenshots showed white side-fill in both the preview (raw upload) and the result (narrow signature 231×100 inside a 278px matte). The matte should match the downloaded file, which has no padding.
 
 **Consequence:** Visual only; no processing change. Preview and result now show identical tight bounds.
+
+## D030 — Signature manual-first requirements
+
+**Decision:** The signature page now mirrors the photo page: a "Load preset" dropdown sits above always-visible manual fields (Width, Height, Max size KB, Format). Selecting a preset autofills those fields; there is no separate "Custom…" mode. Default manual values are 300×100, 20KB, JPEG (matching the Standard profile).
+
+**Reason:** Consistency — every requirements editor is sidebar + single column with one large card on top and smaller cards below; manual fields are always editable and presets are shortcuts, not hidden modes.
+
+**Consequence:** `SignatureView.tsx` now uses `profileFromCustom` like `PhotoView`; tests still expect the initial "300 × 100 px · JPEG · ≤ 20 KB" summary, which the new defaults preserve.
+
+## D031 — Preset loader shows the selected preset
+
+**Decision:** The "Load preset" `<select>` in both Photo and Signature is now controlled (`value={presetSelect}` / `onChange={setPresetSelect}`) and retains the chosen preset label after autofill. Previously it used `defaultValue=""` and reset to `""` on every change, so the placeholder "— Choose a preset to autofill —" remained visible even after a preset had been applied.
+
+**Reason:** Users reported the loader appeared stuck on the placeholder. A preset loader should read as an action that leaves a visible selection.
+
+**Consequence:** No test change needed; the new PhotoView test asserts the autofill via the controlled select.
+
+## D032 — Preview and result mattes match the page background
+
+**Decision:** `.result-figure` (used for both the "Check your signature" preview and the "Your signature/photo is ready" result) now uses `background: var(--surface)` and `border: 1px solid var(--border)` instead of paper-white `oklch(99.2% ...)`. The image itself remains opaque white (draw canvas fills `#FFFEFB`, pipeline `flattenToWhite()`), so the signature's white paper is the image data, while the matte's padding matches the page.
+
+**Reason:** The screenshots showed a wide white card around a narrow signature (the figcaption's intrinsic width stretched the matte, and `fit-content` used the image's intrinsic width). With the caption removed in D028 and the matte capped to the displayed image width in D029, the remaining white was the matte's own background. Matching it to the page makes the image's white determine the bounds.
+
+**Consequence:** Visual only, in both themes. Draw preview already used trimmed PNGs (D027), so preview and download are now identical.

@@ -1412,14 +1412,14 @@ input[type='range']::-moz-range-thumb {
   max-width: none;
 }
 
-/* Printed-photo matte — always paper-white so signatures stay legible in dark mode */
+/* Preview matte — matches page background so the image's own white determines the bounds */
 .result-figure {
   margin: 0 auto 1.5rem;
   width: fit-content;
   max-width: min(340px, 100%);
   padding: 0.625rem;
-  background: oklch(99.2% 0.004 100);
-  border: 1px solid oklch(88% 0.012 100);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 4px;
   box-shadow: var(--shadow-photo);
 }

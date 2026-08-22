@@ -58,6 +58,7 @@ export function PhotoView() {
   const { presetId, navigate } = useHashRoute()
   const [step, setStep] = useState<Step>('intake')
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
+  const [presetSelect, setPresetSelect] = useState('')
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
   const [result, setResult] = useState<ProcessedPhoto | null>(null)
   const [busy, setBusy] = useState(false)
@@ -152,6 +153,7 @@ export function PhotoView() {
   }
 
   const handlePresetSelect = (id: string) => {
+    setPresetSelect(id)
     if (!id) return
     const p = findProfile(id)
     if (!p) return
@@ -197,11 +199,8 @@ export function PhotoView() {
           <span>Load preset</span>
           <select
             aria-label="Load preset"
-            defaultValue=""
-            onChange={(event) => {
-              handlePresetSelect(event.target.value)
-              event.target.value = ''
-            }}
+            value={presetSelect}
+            onChange={(event) => handlePresetSelect(event.target.value)}
           >
             <option value="">— Choose a preset to autofill —</option>
             {PHOTO_PROFILES.map((option) => (

@@ -10,10 +10,10 @@ See `tasks/T010-advanced-intelligence.md`.
 > breaks the target aspect ratio under `max-height` clamping — see
 > DECISIONS D022). A full UI/UX visual redesign, an editorial identity
 > ("Document Desk"), a SaaS sidebar + single-column shell, manual-first
-> requirements with preset autofill (Custom route removed), trimmed signature
-> previews, and a hugging result matte also shipped (see D023–D028); no
-> processing changes to the core engine beyond opaque-white handling for
-> signatures. T010 remains the active task.
+> requirements for Photo and Signature with controlled preset autofill
+> (Custom route removed), trimmed signature previews, and background-matched
+> mattes also shipped (see D023–D032); core engine only gained opaque-white
+> handling for signatures. T010 remains the active task.
 
 ## Goal
 
