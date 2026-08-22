@@ -179,3 +179,11 @@
 **Reason:** The screenshots showed white side-fill that was not in the downloaded file. The caption duplicated data already shown in the meta tiles and, via `fit-content`, stretched the matte. Removing it makes the preview and the download visually identical.
 
 **Consequence:** No processing change; purely presentational. The matte now matches the image exactly.
+
+## D029 — Result matte width is capped to displayed image
+
+**Decision:** `.result-figure` now has `max-width: min(340px, 100%)` and `width: fit-content`; `.result-preview` uses `max-width: 100%` instead of `min(300px, 100%)`. The caption was already removed in D028, but the figure's `fit-content` still used the image's intrinsic width (e.g., 1200px scan) while the image was displayed at 300px, leaving hundreds of pixels of white matte to the right. Capping the figure to the displayed width makes the matte hug the preview on all viewports.
+
+**Reason:** Screenshots showed white side-fill in both the preview (raw upload) and the result (narrow signature 231×100 inside a 278px matte). The matte should match the downloaded file, which has no padding.
+
+**Consequence:** Visual only; no processing change. Preview and result now show identical tight bounds.

@@ -1416,7 +1416,8 @@ input[type='range']::-moz-range-thumb {
 .result-figure {
   margin: 0 auto 1.5rem;
   width: fit-content;
-  padding: 0.625rem 0.625rem 0.875rem;
+  max-width: min(340px, 100%);
+  padding: 0.625rem;
   background: oklch(99.2% 0.004 100);
   border: 1px solid oklch(88% 0.012 100);
   border-radius: 4px;
@@ -1426,7 +1427,8 @@ input[type='range']::-moz-range-thumb {
 .result-preview {
   display: block;
   width: auto;
-  max-width: min(300px, 100%);
+  height: auto;
+  max-width: 100%;
   max-height: 21rem;
   border-radius: 1px;
 }
