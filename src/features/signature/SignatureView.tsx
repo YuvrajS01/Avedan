@@ -26,6 +26,7 @@ type Step = 'choose' | 'draw' | 'preview' | 'result'
 interface CustomSettings {
   width: string
   height: string
+  minKb: string
   maxKb: string
   format: ImageRequirements['format']
 }
@@ -33,6 +34,7 @@ interface CustomSettings {
 const DEFAULT_CUSTOM: CustomSettings = {
   width: '300',
   height: '100',
+  minKb: '',
   maxKb: '20',
   format: 'jpeg',
 }
@@ -48,13 +50,21 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
   const dimensions =
     width !== undefined && height !== undefined ? { width, height } : undefined
   const maxBytes = toPositiveInt(custom.maxKb)
+  const minBytes = toPositiveInt(custom.minKb)
+  const fileSize =
+    minBytes !== undefined || maxBytes !== undefined
+      ? {
+          ...(minBytes !== undefined ? { minBytes: minBytes * 1024 } : {}),
+          ...(maxBytes !== undefined ? { maxBytes: maxBytes * 1024 } : {}),
+        }
+      : undefined
   return {
     id: 'manual',
     label: 'Manual',
     dimensions,
     aspectRatio: width !== undefined && height !== undefined ? width / height : 3,
     format: custom.format,
-    fileSize: maxBytes !== undefined ? { maxBytes: maxBytes * 1024 } : undefined,
+    fileSize,
   }
 }
 
@@ -155,6 +165,7 @@ export function SignatureView() {
     setCustom({
       width: p.dimensions ? String(p.dimensions.width) : '',
       height: p.dimensions ? String(p.dimensions.height) : '',
+      minKb: p.fileSize?.minBytes ? String(Math.round(p.fileSize.minBytes / 1024)) : '',
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
       format: p.format ?? 'png',
     })
@@ -195,6 +206,16 @@ export function SignatureView() {
               min={1}
               value={custom.height}
               onChange={(event) => setCustom({ ...custom, height: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Min size (KB)</span>
+            <input
+              type="number"
+              min={0}
+              value={custom.minKb}
+              placeholder="none"
+              onChange={(event) => setCustom({ ...custom, minKb: event.target.value })}
             />
           </label>
           <label className="field">

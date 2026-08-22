@@ -223,3 +223,23 @@
 **Decision:** Quality hints attach to `ProcessedAsset.advisory` and render in their own "Optional quality hints" section, never merged into the pass/fail `ValidationResult` nor affecting the download action.
 
 **Reason:** Keeps FR-07 technical checks objective and deterministic, while still giving users actionable guidance (per VALIDATION spec: advisory unless objectively required).
+
+## D035 — Manual edits take precedence over an active form preset
+
+**Decision:** In the photo flow, editing any manual requirement field (width, height, min/max size, format) while a form preset is active via `#/photo?preset=…` now switches the job to the edited manual settings (`manualEdited` flag). Previously `profile` always used the preset profile in that state, so visible edits silently had no effect on the processed output.
+
+**Reason:** Found in the 2026-08-22 MVP release audit (blocker B1). Editable controls that do not affect the result can produce files that differ from what the user configured — unacceptable for a compliance tool.
+
+**Consequence:** Preset context (source link, verification date) remains visible; the target summary now reflects edits immediately. Regression-tested in `PhotoView.test.tsx`.
+
+## D036 — Minimum file size is a first-class manual field
+
+**Decision:** Both photo and signature flows expose an optional "Min size (KB)" field alongside Max. Ranged presets (e.g. exam photo 20–50 KB) autofill both bounds, and switching to generic settings preserves the full range instead of collapsing it to the max.
+
+**Reason:** Found in the MVP release audit (blocker B2). The engine and validation already supported `minBytes`; only the UI dropped it, so outputs below a form's real minimum could pass validation unchecked — PRD §5 lists minimum/maximum bytes under MVP custom requirements.
+
+**Consequence:** The optimizer reports `too-small` with an explanatory note when the minimum cannot be reached naturally. 177/177 tests pass.
+
+## MVP release checkpoint (2026-08-22)
+
+MVP scope (T001–T010) audited against the PRD, specs, and implementation; declared **release-ready**. Engineering gates: typecheck ✓, lint ✓, tests 177/177 ✓, production build ✓. Privacy claims verified against source (no network calls, no analytics). Audit details: `.agents/project/MVP_RELEASE_AUDIT.md`. Two blockers found during audit were fixed (D035/D036). V2 begins at T011 (manual on-device verification gate).

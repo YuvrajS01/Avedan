@@ -21,6 +21,7 @@ type Step = 'intake' | 'camera' | 'crop' | 'result'
 interface CustomSettings {
   width: string
   height: string
+  minKb: string
   maxKb: string
   format: ImageRequirements['format']
 }
@@ -28,6 +29,7 @@ interface CustomSettings {
 const DEFAULT_CUSTOM: CustomSettings = {
   width: '300',
   height: '400',
+  minKb: '',
   maxKb: '',
   format: 'jpeg',
 }
@@ -43,6 +45,14 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
   const dimensions =
     width !== undefined && height !== undefined ? { width, height } : undefined
   const maxBytes = toPositiveInt(custom.maxKb)
+  const minBytes = toPositiveInt(custom.minKb)
+  const fileSize =
+    minBytes !== undefined || maxBytes !== undefined
+      ? {
+          ...(minBytes !== undefined ? { minBytes: minBytes * 1024 } : {}),
+          ...(maxBytes !== undefined ? { maxBytes: maxBytes * 1024 } : {}),
+        }
+      : undefined
 
   return {
     id: 'manual',
@@ -50,7 +60,7 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
     dimensions,
     aspectRatio: width !== undefined && height !== undefined ? width / height : 3 / 4,
     format: custom.format,
-    fileSize: maxBytes !== undefined ? { maxBytes: maxBytes * 1024 } : undefined,
+    fileSize,
   }
 }
 
@@ -59,6 +69,7 @@ export function PhotoView() {
   const [step, setStep] = useState<Step>('intake')
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
   const [presetSelect, setPresetSelect] = useState('')
+  const [manualEdited, setManualEdited] = useState(false)
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
   const [result, setResult] = useState<ProcessedPhoto | null>(null)
   const [busy, setBusy] = useState(false)
@@ -76,22 +87,29 @@ export function PhotoView() {
     [activePreset],
   )
   const profile = useMemo(
-    () => presetProfile ?? profileFromCustom(custom),
-    [presetProfile, custom],
+    () => (presetProfile && !manualEdited ? presetProfile : profileFromCustom(custom)),
+    [presetProfile, manualEdited, custom],
   )
   const summary = describeRequirements(profile)
+
+  const updateCustom = useCallback((patch: Partial<CustomSettings>) => {
+    setManualEdited(true)
+    setCustom((current) => ({ ...current, ...patch }))
+  }, [])
 
   // When navigating from Forms with a preset, autofill the manual fields for editing
   useEffect(() => {
     if (!presetProfile) return
+    setManualEdited(false)
     setCustom({
       width: presetProfile.dimensions ? String(presetProfile.dimensions.width) : DEFAULT_CUSTOM.width,
       height: presetProfile.dimensions ? String(presetProfile.dimensions.height) : DEFAULT_CUSTOM.height,
+      minKb: presetProfile.fileSize?.minBytes
+        ? String(Math.round(presetProfile.fileSize.minBytes / 1024))
+        : '',
       maxKb: presetProfile.fileSize?.maxBytes
         ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
-        : presetProfile.fileSize?.minBytes
-          ? String(Math.round(presetProfile.fileSize.minBytes / 1024))
-          : '',
+        : '',
       format: presetProfile.format ?? 'jpeg',
     })
   }, [presetProfile])
@@ -157,9 +175,11 @@ export function PhotoView() {
     if (!id) return
     const p = findProfile(id)
     if (!p) return
+    setManualEdited(false)
     setCustom({
       width: p.dimensions ? String(p.dimensions.width) : '',
       height: p.dimensions ? String(p.dimensions.height) : '',
+      minKb: p.fileSize?.minBytes ? String(Math.round(p.fileSize.minBytes / 1024)) : '',
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
       format: p.format ?? 'jpeg',
     })
@@ -217,7 +237,7 @@ export function PhotoView() {
               type="number"
               min={1}
               value={custom.width}
-              onChange={(event) => setCustom({ ...custom, width: event.target.value })}
+              onChange={(event) => updateCustom({ width: event.target.value })}
             />
           </label>
           <label className="field">
@@ -226,7 +246,17 @@ export function PhotoView() {
               type="number"
               min={1}
               value={custom.height}
-              onChange={(event) => setCustom({ ...custom, height: event.target.value })}
+              onChange={(event) => updateCustom({ height: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Min size (KB)</span>
+            <input
+              type="number"
+              min={0}
+              value={custom.minKb}
+              placeholder="none"
+              onChange={(event) => updateCustom({ minKb: event.target.value })}
             />
           </label>
           <label className="field">
@@ -236,7 +266,7 @@ export function PhotoView() {
               min={0}
               value={custom.maxKb}
               placeholder="none"
-              onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
+              onChange={(event) => updateCustom({ maxKb: event.target.value })}
             />
           </label>
           <label className="field">
@@ -244,7 +274,7 @@ export function PhotoView() {
             <select
               value={custom.format}
               onChange={(event) =>
-                setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
+                updateCustom({ format: event.target.value as CustomSettings['format'] })
               }
             >
               <option value="jpeg">JPG</option>

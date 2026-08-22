@@ -12,9 +12,12 @@
 | T008 | Form preset registry | T007 | P1 |
 | T009 | PWA and privacy hardening | T004, T006 | P1 |
 | T010 | Optional local intelligence | T005, T007 | P2 |
+| T011 | Pre-release manual verification pass (V2 gate) | MVP complete | P0 |
 
 ## Recommended sequence
 
-T001 → T002 → T003 → T004/T006 → T007 → T005 → T008 → T009 → T010
+T001 → T002 → T003 → T004/T006 → T007 → T005 → T008 → T009 → T010 → T011
 
 T004 and T006 can be developed independently after the shared processing primitives exist.
+
+MVP (T001–T010) is complete as of 2026-08-22; V2 starts at T011.

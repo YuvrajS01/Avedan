@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** All planned tasks complete (T001–T010)  
+**Stage:** MVP release-ready (checkpoint 2026-08-22); V2 starts at T011  
 **Last updated:** 2026-08-22  
-**Status:** T001–T010 complete; pre-release manual verification recommended
+**Status:** T001–T010 complete + MVP audit passed; two audit blockers fixed (D035/D036); manual on-device verification (T011) is the remaining pre-public-deployment gate
 
 ## Product goal
 
@@ -31,14 +31,18 @@ Create a browser-based tool that prepares application photos and signatures to e
 - SaaS shell + single-column content (2026-08-21, see DECISIONS D025/D026/D030): 2-column desktop shell (272px sidebar + flexible main) collapsing to single column on mobile; sidebar nav with outline icons and SaaS active states; every page is sidebar + single column (like the signature page: one large card + two cards below) — Home is single-column, Forms has top search + stacked cards, Photo and Signature are manual-first (Width/Height/Max size/Format always visible with a controlled "Load preset" dropdown that autofills them and retains the selection, no separate Custom mode). The Custom route was removed (ROUTES = Home/Photo/Signature/Forms). Preview/result mattes use `var(--surface)` so bounds match the page background, not paper-white. 160 tests passing.
 - Signature preview/result are WYSIWYG (2026-08-22, see DECISIONS D027–D029/D032): upload preview renders the trimmed canvas (not the raw scan) so small signatures no longer float in white; the result matte is capped to the displayed image width (`max-width: min(340px,100%)` + caption removed) and now blends with the background. The draw canvas is opaque white and the pipeline flattens to white, fixing black-on-black in dark mode. 160 tests passing.
 - Optional quality intelligence (2026-08-22, see DECISIONS D033/D034): advisory blur/lighting/contrast hints via deterministic pixel heuristics (`processing/quality.ts`, downscaled render ≤256px, fail-safe → undefined); attached as `ProcessedAsset.advisory` for the photo flow only; rendered in a separate "Optional quality hints" section that never affects validation status or download; no ML models downloaded; face detection deferred pending an opt-in client-side model.
+- MVP release audit (2026-08-22, `.agents/project/MVP_RELEASE_AUDIT.md`): all MVP features verified against the PRD; privacy claims verified against source (zero network calls/analytics); typecheck/lint/tests/build all pass. Two blockers fixed: manual edits now take precedence over an active form preset (D035), and minimum file size is a first-class field on both flows (D036). 177 tests passing.
 
-## Not implemented yet
+## Not implemented yet (V2 backlog)
 
-- Nothing planned — all indexed tasks (T001–T010) are done. New work needs new task definitions (see NEXT_TASK.md).
+- T011 — Pre-release manual verification pass (real-device camera/offline checks; release gate).
+- Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring.
+- Manually verified official presets (D003/D019 workflow).
+- Physical-size (mm/DPI) UI inputs; worker offload of encode/optimize.
 
 ## Current focus
 
-Pre-release manual verification (camera, crop, offline/install in real browsers) and the verified-presets workflow.
+V2 starting at T011 (see NEXT_TASK.md).
 
 ## Current risks
 
@@ -50,7 +54,7 @@ Pre-release manual verification (camera, crop, offline/install in real browsers)
 
 ## Next recommended task
 
-None — define new tasks in `.agents/tasks/` and index them in `TASK_INDEX.md`.
+T011 — Pre-release manual verification pass (`.agents/tasks/T011-manual-release-verification.md`).
 
 ## Continuity rule
 

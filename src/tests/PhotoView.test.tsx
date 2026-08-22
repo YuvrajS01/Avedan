@@ -151,4 +151,33 @@ describe('PhotoView with form presets', () => {
     expect(screen.getByRole('button', { name: /use generic settings instead/i })).toBeInTheDocument()
     window.location.hash = '#/'
   })
+
+  it('autofills both size bounds from a ranged preset', () => {
+    window.location.hash = '#/photo?preset=example-exam-413x531'
+    render(<PhotoView />)
+    expect(screen.getByLabelText('Min size (KB)')).toHaveValue(20)
+    expect(screen.getByLabelText('Max size (KB)')).toHaveValue(50)
+    window.location.hash = '#/'
+  })
+
+  it('keeps the full size range when switching to generic settings', async () => {
+    const user = userEvent.setup()
+    window.location.hash = '#/photo?preset=example-exam-413x531'
+    render(<PhotoView />)
+    await user.click(screen.getByRole('button', { name: /use generic settings instead/i }))
+    expect(await screen.findByText(/Target:/i)).toHaveTextContent(
+      '413 × 531 px · JPEG · ≥ 20 KB · ≤ 50 KB',
+    )
+    window.location.hash = '#/'
+  })
+
+  it('applies manual edits while a form preset is active', async () => {
+    const user = userEvent.setup()
+    window.location.hash = '#/photo?preset=example-exam-413x531'
+    render(<PhotoView />)
+    await user.clear(screen.getByLabelText('Width (px)'))
+    await user.type(screen.getByLabelText('Width (px)'), '350')
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('350 × 531 px')
+    window.location.hash = '#/'
+  })
 })
