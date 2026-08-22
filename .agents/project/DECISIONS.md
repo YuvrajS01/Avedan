@@ -131,3 +131,51 @@
 **Decision:** The crop box is sized via `cropBoxStyle()` in `cropMath.ts` (`aspect-ratio` plus `width: min(100%, calc(60vh * ratio))`); `.crop-box` CSS no longer sets `width` or `max-height`.
 
 **Reason:** `width: 100%` combined with `max-height: 60vh` silently broke the target aspect ratio whenever the derived height exceeded the viewport cap (typical for portrait targets on desktop). The visible box then had a different ratio than the export target, and exact-dimension resize distorted faces. Sizing in pure math keeps FR-04 (cropper maintains target aspect ratio) testable and layout-independent.
+
+## D023 — Visual redesign: token system, real dark theme, step-scoped chrome
+
+**Decision:** All UI styling is driven by design tokens in `src/styles/global.css` (`:root` light values, `[data-theme="dark"]` overrides). Theme is a two-state toggle (light/dark) initialized from `prefers-color-scheme`, persisted in `localStorage` under `avedan-theme`, and applied pre-paint by an inline bootstrap script in `index.html` to avoid flashes. The requirements panel renders only on intake/choose steps; crop/camera/result screens carry the target in their own context instead. The signature draw canvas intentionally keeps a light "paper" surface in both themes because signature output must be dark ink on a light background.
+
+**Reason:** A single token source keeps both themes feeling like one product and makes contrast/hierarchy auditable. Step-scoped chrome follows the progressive-disclosure principle (only controls relevant to the current step) and fixes the hierarchy problem of a settings panel appearing above the page heading. The paper canvas avoids an invisible-ink failure in dark mode without complicating the processing pipeline. Two-state theme (instead of a three-state system option) was chosen for simplicity; first visit still respects the OS preference.
+
+**Consequence:** Test copy updated in two places only — the result-screen reset button was renamed from "Start over" to "Make another" (PhotoView.test, SignatureView.test assert the new name); all other tested labels, roles, and flows are unchanged.
+
+## D024 — Visual identity: "Document Desk" editorial aesthetic
+
+**Decision:** The UI commits to a paper-and-ink identity: OKLCH tokens tinted toward green ink (light = warm paper, dark = deep green-charcoal), Fraunces Variable for display type and Public Sans Variable (a typeface designed for government use) for UI text, self-hosted via Fontsource so the PWA stays fully offline. The home screen is an editorial numbered index with hairline rules instead of card grids; the photo flow gains an Add → Frame → Ready stepper; the result preview is presented as a printed photograph (matte frame + caption). One orchestrated staggered entrance per view (`rise`, ease-out-quint), disabled under `prefers-reduced-motion`.
+
+**Reason:** The redesign brief asked for a calm, trustworthy document tool that still feels deliberately designed. A serif display face gives quiet authority without marketing energy; Public Sans reinforces the civic-document context; hairline-index navigation removes the generic "SaaS card grid" look. Fonts are the only new dependencies and are static assets, not code.
+
+**Consequence:** No behavior, processing, or accessibility changes — all 160 tests pass unchanged. `color-mix`/OKLCH require a modern browser (2023+), matching the existing canvas/getUserMedia baseline.
+
+## D025 — SaaS application shell: 2-column desktop, single-column mobile
+
+**Decision:** The app shell is a CSS grid with a persistent 272px sidebar + flexible main column on desktop (`--sidebar-width` / `--content-max`), collapsing to a single column on mobile where the sidebar becomes a top bar with horizontal nav. Inside the main, workspaces are also 2-column on desktop: `home-layout` (intro left sticky, index right), `intake-grid` (requirements left, drop zone right), `workspace` (crop stage left sticky, controls right), `forms-layout` (search left, 2-col preset grid right), `result-layout` (figure left sticky, metadata right). The sidebar nav uses outline icons with SaaS active state (soft accent background on desktop, underline on mobile). The main footer is hidden on desktop (sidebar bottom carries the privacy note) to avoid duplication.
+
+**Reason:** The brief asked for a proper SaaS-style webapp that is 2-column on desktop and single-column on mobile. A sidebar + main shell gives the SaaS information architecture while the inner 2-column workspaces keep the primary task (prepare → validate → download) obvious and reduce scrolling on desktop. Sticky panels keep context visible.
+
+**Consequence:** No routing, processing, or test changes — only layout. `160/160` tests still pass; the single brand link / single NavBar avoids duplicate accessible names.
+
+## D026 — Sidebar + single-column content; manual-first requirements with preset autofill
+
+**Decision:** All pages render as sidebar + single column (the 2-col inner workspace grids from D025 were removed). The Photo page leads with a "Load preset" dropdown that autofills the always-visible manual fields (Width, Height, Max size KB, Format) — the fields are the default state and there is no separate "Custom…" mode. The Custom route was removed entirely (`ROUTES` is now Home/Photo/Signature/Forms); the preset dropdown resets to its placeholder after selection so it reads as an autofill action, not a mode switch. Forms page keeps the search bar on top with preset cards stacked below in the body.
+
+**Reason:** Consistency: every page shares the sidebar + single-column rhythm like the signature page (one large card + smaller cards below). Requirement-first editing means the manual fields are always visible and editable; presets are shortcuts that fill them rather than hidden modes. Removing the placeholder Custom route eliminates a dead end.
+
+**Consequence:** `routes.ts`, `NavBar.tsx`, `HomeView.tsx` updated; `src/features/custom/` deleted. Tests updated where they asserted the old flows (routes test dropped `#/custom`; App test uses Forms for the brand-return path; PhotoView custom-dimensions test replaced by a "load preset autofills fields" test). 160/160 tests pass.
+
+## D027 — Signature preview is WYSIWYG (trimmed)
+
+**Decision:** When a signature image is uploaded, the "Check your signature" preview now renders the *trimmed* result (`trimToCanvas` → PNG blob URL) instead of the raw uploaded file; the original file object URL is revoked immediately. If no ink is found at preview time, the raw preview is kept and the friendly `invalid-input` error still surfaces on Continue.
+
+**Reason:** Previously the preview showed the untouched scan/photo — a small signature appeared as a tiny mark floating inside large white paper margins, which read as if the app had padded the canvas with white. Showing the trimmed output makes the preview match the exported file exactly.
+
+**Consequence:** Preview object URL lifecycle unchanged for cleanup (`releaseSessionAssets` still revokes `loaded.previewUrl`, which now points at the trimmed blob). 160/160 tests pass.
+
+## D028 — Result matte hugs the image; caption removed
+
+**Decision:** The result preview no longer renders a `<figcaption>` inside `.result-figure`. The filename and size remain in the meta tiles below. `.result-figure` stays `width: fit-content` + paper-white (`oklch(99.2% 0.004 100)`) with light border and shadow, so the matte always hugs the image. The previous caption's intrinsic width was wider than small signatures and forced the white card to grow, which read as artificial side padding.
+
+**Reason:** The screenshots showed white side-fill that was not in the downloaded file. The caption duplicated data already shown in the meta tiles and, via `fit-content`, stretched the matte. Removing it makes the preview and the download visually identical.
+
+**Consequence:** No processing change; purely presentational. The matte now matches the image exactly.

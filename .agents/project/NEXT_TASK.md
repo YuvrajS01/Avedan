@@ -6,9 +6,14 @@
 
 See `tasks/T010-advanced-intelligence.md`.
 
-> Note (2026-08-21): a crop-distortion bug was fixed first (crop box no longer
+> Note (2026-08-22): a crop-distortion bug was fixed first (crop box no longer
 > breaks the target aspect ratio under `max-height` clamping — see
-> DECISIONS D022). T010 remains the active task.
+> DECISIONS D022). A full UI/UX visual redesign, an editorial identity
+> ("Document Desk"), a SaaS sidebar + single-column shell, manual-first
+> requirements with preset autofill (Custom route removed), trimmed signature
+> previews, and a hugging result matte also shipped (see D023–D028); no
+> processing changes to the core engine beyond opaque-white handling for
+> signatures. T010 remains the active task.
 
 ## Goal
 

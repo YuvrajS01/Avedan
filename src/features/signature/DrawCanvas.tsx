@@ -39,7 +39,8 @@ export function DrawCanvas({ onFinish, onCancel }: DrawCanvasProps) {
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = '#FFFEFB'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.strokeStyle = '#1c1c1a'
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -115,40 +116,44 @@ export function DrawCanvas({ onFinish, onCancel }: DrawCanvasProps) {
   return (
     <div className="draw-panel">
       <div className="draw-toolbar">
-        <div className="pen-picker" role="radiogroup" aria-label="Pen size">
+        <div className="segmented" role="radiogroup" aria-label="Pen size">
           {PEN_SIZES.map((pen) => (
             <button
               key={pen.id}
               type="button"
               role="radio"
               aria-checked={pen.id === penId}
-              className={pen.id === penId ? 'pen-option is-active' : 'pen-option'}
+              className={pen.id === penId ? 'segmented-option is-active' : 'segmented-option'}
               onClick={() => setPenId(pen.id)}
             >
               {pen.label}
             </button>
           ))}
         </div>
-        <button type="button" className="button button-secondary" onClick={undo} disabled={strokeCount === 0}>
+        <span style={{ flex: 1 }} />
+        <button type="button" className="button button-ghost" onClick={undo} disabled={strokeCount === 0}>
           Undo
         </button>
-        <button type="button" className="button button-secondary" onClick={clear} disabled={strokeCount === 0}>
+        <button type="button" className="button button-ghost" onClick={clear} disabled={strokeCount === 0}>
           Clear
         </button>
       </div>
-      <canvas
-        ref={canvasRef}
-        className="draw-canvas"
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        aria-label="Signature drawing area"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endStroke}
-        onPointerCancel={endStroke}
-        onPointerLeave={endStroke}
-      />
-      <p className="intake-alt">Draw your signature above the line using a finger, stylus or mouse.</p>
+      <div className="draw-surface">
+        <canvas
+          ref={canvasRef}
+          className="draw-canvas"
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          aria-label="Signature drawing area"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={endStroke}
+          onPointerCancel={endStroke}
+          onPointerLeave={endStroke}
+        />
+        <div className="draw-baseline" aria-hidden="true" />
+      </div>
+      <p className="draw-hint">Draw your signature above the line using a finger, stylus or mouse.</p>
       <div className="step-actions">
         <button type="button" className="button button-secondary" onClick={onCancel}>
           Back

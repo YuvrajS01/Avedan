@@ -16,7 +16,7 @@ describe('App shell', () => {
 
   it('renders navigation for all sections', () => {
     render(<App />)
-    for (const name of ['Home', 'Photo', 'Signature', 'Forms', 'Custom']) {
+    for (const name of ['Home', 'Photo', 'Signature', 'Forms']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
   })
@@ -49,11 +49,11 @@ describe('App shell', () => {
   })
 
   it('returns home from a section via the brand link', async () => {
-    window.location.hash = '#/custom'
+    window.location.hash = '#/forms'
     const user = userEvent.setup()
     render(<App />)
     expect(
-      screen.getByRole('heading', { name: 'Custom requirements' }),
+      screen.getByRole('heading', { name: 'Form requirements' }),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('link', { name: /avedan/i }))
     expect(

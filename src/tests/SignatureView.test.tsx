@@ -125,7 +125,7 @@ describe('SignatureView flow', () => {
     )
   })
 
-  it('returns to the start via Start over', async () => {
+  it('returns to the start via Make another', async () => {
     const user = userEvent.setup()
     mockedProcess.mockResolvedValue(fakeResult())
     render(<SignatureView />)
@@ -136,7 +136,7 @@ describe('SignatureView flow', () => {
     fireEvent.pointerUp(canvas, { pointerId: 1 })
 
     await user.click(screen.getByRole('button', { name: 'Continue' }))
-    await user.click(await screen.findByRole('button', { name: 'Start over' }))
+    await user.click(await screen.findByRole('button', { name: 'Make another' }))
 
     expect(
       await screen.findByRole('button', { name: /draw signature/i }),

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CameraFacing, CameraHandle } from './camera'
+import { FlowSteps } from '../../components/FlowSteps'
 import {
   attachStream,
   captureFrame,
@@ -76,6 +77,7 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
 
   return (
     <section className="view" aria-labelledby="camera-title">
+      <FlowSteps current="add" />
       <h1 id="camera-title">Take a photo</h1>
       {status === 'ready' && (
         <>
@@ -85,9 +87,13 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
           </p>
           <div className="camera-stage">
             <video ref={videoRef} autoPlay playsInline muted className="camera-video" />
+            <div className="camera-guide" aria-hidden="true">
+              <div className="camera-guide-oval" />
+            </div>
           </div>
           {busy && (
             <p className="busy-note" role="status">
+              <span className="spinner" aria-hidden="true" />
               Saving your photo…
             </p>
           )}
@@ -96,23 +102,35 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
               {captureError}
             </p>
           )}
-          <div className="step-actions">
-            <button type="button" className="button button-secondary" onClick={switchCamera}>
-              Switch camera
+          <div className="camera-capture-row">
+            <button
+              type="button"
+              className="button button-ghost"
+              onClick={switchCamera}
+              disabled={busy}
+            >
+              Switch
             </button>
             <button
               type="button"
-              className="button button-primary"
+              className="capture-button"
               onClick={capture}
               disabled={busy}
+              aria-label="Capture"
             >
-              Capture
+              <span className="capture-button-ring">
+                <span className="capture-button-core" />
+              </span>
             </button>
+            <span className="button button-ghost" style={{ visibility: 'hidden' }} aria-hidden="true">
+              Switch
+            </span>
           </div>
         </>
       )}
       {status === 'starting' && (
         <p className="busy-note" role="status">
+          <span className="spinner" aria-hidden="true" />
           Starting the camera…
         </p>
       )}

@@ -5,12 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f766e" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f6f2" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141511" />
     <meta
       name="description"
       content="Avedan prepares your photo and signature for application forms — cropped, resized and compressed entirely in your browser."
     />
     <title>Avedan — Form-ready photos &amp; signatures</title>
+    <script>
+      try {
+        var t = localStorage.getItem('avedan-theme')
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.dataset.theme = t
+      } catch (e) {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

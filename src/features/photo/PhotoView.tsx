@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  CUSTOM_PROFILE_ID,
   PHOTO_PROFILES,
   PROFILE_NOTE,
   describeRequirements,
@@ -38,10 +37,7 @@ function toPositiveInt(value: string): number | undefined {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
 }
 
-function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
-  if (id !== CUSTOM_PROFILE_ID) {
-    return findProfile(id) ?? PHOTO_PROFILES[0]
-  }
+function profileFromCustom(custom: CustomSettings): ImageRequirements {
   const width = toPositiveInt(custom.width)
   const height = toPositiveInt(custom.height)
   const dimensions =
@@ -49,8 +45,8 @@ function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
   const maxBytes = toPositiveInt(custom.maxKb)
 
   return {
-    id: CUSTOM_PROFILE_ID,
-    label: 'Custom',
+    id: 'manual',
+    label: 'Manual',
     dimensions,
     aspectRatio: width !== undefined && height !== undefined ? width / height : 3 / 4,
     format: custom.format,
@@ -61,7 +57,6 @@ function resolveProfile(id: string, custom: CustomSettings): ImageRequirements {
 export function PhotoView() {
   const { presetId, navigate } = useHashRoute()
   const [step, setStep] = useState<Step>('intake')
-  const [profileId, setProfileId] = useState(PHOTO_PROFILES[0].id)
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
   const [result, setResult] = useState<ProcessedPhoto | null>(null)
@@ -80,10 +75,25 @@ export function PhotoView() {
     [activePreset],
   )
   const profile = useMemo(
-    () => presetProfile ?? resolveProfile(profileId, custom),
-    [presetProfile, profileId, custom],
+    () => presetProfile ?? profileFromCustom(custom),
+    [presetProfile, custom],
   )
   const summary = describeRequirements(profile)
+
+  // When navigating from Forms with a preset, autofill the manual fields for editing
+  useEffect(() => {
+    if (!presetProfile) return
+    setCustom({
+      width: presetProfile.dimensions ? String(presetProfile.dimensions.width) : DEFAULT_CUSTOM.width,
+      height: presetProfile.dimensions ? String(presetProfile.dimensions.height) : DEFAULT_CUSTOM.height,
+      maxKb: presetProfile.fileSize?.maxBytes
+        ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
+        : presetProfile.fileSize?.minBytes
+          ? String(Math.round(presetProfile.fileSize.minBytes / 1024))
+          : '',
+      format: presetProfile.format ?? 'jpeg',
+    })
+  }, [presetProfile])
 
   const reset = useCallback(() => {
     releaseSessionAssets({ loaded, result })
@@ -141,105 +151,119 @@ export function PhotoView() {
     }
   }
 
-  return (
-    <>
-      {activePreset ? (
-        <div className="profile-picker">
-          <p className="target-summary">
-            Form preset: <strong>{activePreset.name}</strong> · {activePreset.authority}
-          </p>
-          <p className="target-summary">
-            Target: <strong>{summary}</strong>
-          </p>
-          <p className="profile-note">
-            Last verified {activePreset.lastVerified}
-            {activePreset.sourceUrl && (
-              <>
-                {' · '}
-                <a href={activePreset.sourceUrl} target="_blank" rel="noreferrer">
-                  Official source
-                </a>
-              </>
-            )}{' '}
-            — always confirm against the official source.
-          </p>
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => navigate('photo')}
-          >
-            Use generic settings instead
-          </button>
-        </div>
-      ) : (
-      <div className="profile-picker">
+  const handlePresetSelect = (id: string) => {
+    if (!id) return
+    const p = findProfile(id)
+    if (!p) return
+    setCustom({
+      width: p.dimensions ? String(p.dimensions.width) : '',
+      height: p.dimensions ? String(p.dimensions.height) : '',
+      maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
+      format: p.format ?? 'jpeg',
+    })
+  }
+
+  const requirementsPanel = (
+    <div className="requirements-panel panel">
+      <div className="panel-body">
+        {activePreset && (
+          <div className="preset-context">
+            <p>
+              Form preset: <strong>{activePreset.name}</strong> · {activePreset.authority}
+            </p>
+            <p className="profile-note">
+              Last verified {activePreset.lastVerified}
+              {activePreset.sourceUrl && (
+                <>
+                  {' · '}
+                  <a href={activePreset.sourceUrl} target="_blank" rel="noreferrer">
+                    Official source
+                  </a>
+                </>
+              )}{' '}
+              — always confirm against the official source.
+            </p>
+            <button
+              type="button"
+              className="button button-ghost"
+              onClick={() => navigate('photo')}
+              style={{ marginTop: '0.75rem' }}
+            >
+              Use generic settings instead
+            </button>
+          </div>
+        )}
         <label className="field">
-          <span>Target requirements</span>
+          <span>Load preset</span>
           <select
-            value={profileId}
-            onChange={(event) => setProfileId(event.target.value)}
-            disabled={step === 'crop' || step === 'result'}
+            aria-label="Load preset"
+            defaultValue=""
+            onChange={(event) => {
+              handlePresetSelect(event.target.value)
+              event.target.value = ''
+            }}
           >
+            <option value="">— Choose a preset to autofill —</option>
             {PHOTO_PROFILES.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
             ))}
-            <option value={CUSTOM_PROFILE_ID}>Custom…</option>
           </select>
         </label>
-        {profileId === CUSTOM_PROFILE_ID && step === 'intake' && (
-          <div className="custom-fields">
-            <label className="field">
-              <span>Width (px)</span>
-              <input
-                type="number"
-                min={1}
-                value={custom.width}
-                onChange={(event) => setCustom({ ...custom, width: event.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Height (px)</span>
-              <input
-                type="number"
-                min={1}
-                value={custom.height}
-                onChange={(event) => setCustom({ ...custom, height: event.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Max size (KB)</span>
-              <input
-                type="number"
-                min={0}
-                value={custom.maxKb}
-                placeholder="none"
-                onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
-              />
-            </label>
-            <label className="field">
-              <span>Format</span>
-              <select
-                value={custom.format}
-                onChange={(event) =>
-                  setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
-                }
-              >
-                <option value="jpeg">JPG</option>
-                <option value="png">PNG</option>
-                <option value="webp">WebP</option>
-              </select>
-            </label>
-          </div>
-        )}
+        <div className="custom-fields">
+          <label className="field">
+            <span>Width (px)</span>
+            <input
+              type="number"
+              min={1}
+              value={custom.width}
+              onChange={(event) => setCustom({ ...custom, width: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Height (px)</span>
+            <input
+              type="number"
+              min={1}
+              value={custom.height}
+              onChange={(event) => setCustom({ ...custom, height: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Max size (KB)</span>
+            <input
+              type="number"
+              min={0}
+              value={custom.maxKb}
+              placeholder="none"
+              onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
+            />
+          </label>
+          <label className="field">
+            <span>Format</span>
+            <select
+              value={custom.format}
+              onChange={(event) =>
+                setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
+              }
+            >
+              <option value="jpeg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+        </div>
         <p className="target-summary">
           Target: <strong>{summary}</strong>
         </p>
         <p className="profile-note">{PROFILE_NOTE}</p>
       </div>
-      )}
+    </div>
+  )
 
+  return (
+    <>
       {step === 'intake' && (
         <IntakeStep
           busy={busy}
@@ -247,7 +271,9 @@ export function PhotoView() {
           cameraAvailable={cameraAvailable}
           onFile={handleFile}
           onCamera={() => setStep('camera')}
-        />
+        >
+          {requirementsPanel}
+        </IntakeStep>
       )}
       {step === 'camera' && (
         <CameraStep onCaptured={handleFile} onUseUpload={() => setStep('intake')} />

@@ -33,6 +33,7 @@ export function FormsView() {
         <span>Search forms</span>
         <input
           type="search"
+          className="search-input"
           value={query}
           placeholder="Search by name or authority"
           onChange={(event) => setQuery(event.target.value)}
@@ -51,7 +52,7 @@ export function FormsView() {
                 onClick={() => navigate('photo', { presetId: preset.id })}
               >
                 <span className="preset-head">
-                  <span className="action-label">{preset.name}</span>
+                  <span className="preset-name">{preset.name}</span>
                   <span
                     className={
                       freshness === 'verified' ? 'badge badge-verified' : 'badge badge-stale'

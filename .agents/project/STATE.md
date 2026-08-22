@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** MVP complete / optional intelligence next  
-**Last updated:** 2026-08-21  
-**Status:** T001–T009 complete; T010 (optional) active
+**Stage:** MVP complete / visual redesign + SaaS shell complete / optional intelligence next  
+**Last updated:** 2026-08-22  
+**Status:** T001–T009 complete; UI/UX redesign + SaaS single-column shell + manual-first requirements + trimmed signature preview complete; T010 (optional) active
 
 ## Product goal
 
@@ -25,7 +25,11 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Validation engine (`domain/validation/engine.ts`) implementing the VALIDATION spec shape (`pass`/`attention`/`not-run` checks) with exact/within dimension modes; both flows delegate to it.
 - Guided camera capture (`features/camera/`): getUserMedia lifecycle with permission/denied/not-found/unsupported states, front/back switching, local frame capture feeding the standard photo pipeline. Frames never leave the device.
 - Form preset registry (`domain/presets/`): typed schema with runtime validation, load-time-validated seed registry with authority/source/last-verified metadata, freshness badges (verified/stale), `requirementsFromPreset` mapping, Forms browse/search view, and hash-based preset selection feeding the photo flow.
-- PWA + privacy hardening: installable manifest, versioned service worker (same-origin GET-only, stale-while-revalidate), production-only registration; centralized session release of object URLs; canvas re-encode strips EXIF/GPS by design; no analytics exist at all. 157 unit tests passing.
+- PWA + privacy hardening: installable manifest, versioned service worker (same-origin GET-only, stale-while-revalidate), production-only registration; centralized session release of object URLs; canvas re-encode strips EXIF/GPS by design; no analytics exist at all.
+- Visual redesign (2026-08-21, see DECISIONS D023): token-based design system in `src/styles/global.css` (spacing/radius/color primitives, light + dark themes via `[data-theme]`, single restrained teal accent), genuine dark theme with surface hierarchy, theme toggle persisted to localStorage with `prefers-color-scheme` default and no-flash bootstrap script in `index.html`, redesigned shell/home/intake drop zone/crop stage (rule-of-thirds guides + corner marks)/camera (framing oval + large capture button)/signature draw canvas (paper stays light in both themes, baseline guide, segmented pen control)/result screen (status icon, check list with icons, "Make another" + prominent download), requirements panel shown only on intake/choose steps for clearer hierarchy. No processing-engine changes; 160 tests passing.
+- Visual identity pass (2026-08-21, see DECISIONS D024): "Document Desk" editorial aesthetic on OKLCH tokens (warm paper / green ink / postage-stamp accent), self-hosted Fraunces Variable + Public Sans Variable via Fontsource, home as numbered hairline index, Add → Frame → Ready stepper, printed-photo matte result preview. Fonts are the only new dependencies; 160 tests passing.
+- SaaS shell + single-column content (2026-08-21, see DECISIONS D025/D026): 2-column desktop shell (272px sidebar + flexible main) collapsing to single column on mobile; sidebar nav with outline icons and SaaS active states; every page is sidebar + single column (like the signature page: one large card + two cards below) — Home is single-column, Forms has top search + stacked cards, Photo is manual-first (Width/Height/Max size/Format always visible with a "Load preset" dropdown that autofills them, no separate Custom mode). The Custom route was removed (ROUTES = Home/Photo/Signature/Forms). 160 tests passing.
+- Signature preview/result are WYSIWYG (2026-08-22, see DECISIONS D027/D028): upload preview renders the trimmed canvas (not the raw scan) so small signatures no longer float in white; the result matte no longer grows to the caption width (caption removed — filename/size already in the meta tiles), so the white card hugs the image and previews show no artificial side padding. The draw canvas is opaque white and the pipeline flattens to white, fixing black-on-black in dark mode. 160 tests passing.
 
 ## Not implemented yet
 

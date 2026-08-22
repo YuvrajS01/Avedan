@@ -13,8 +13,12 @@ import { ProcessedResult } from '../../components/ProcessedResult'
 import { DrawCanvas } from './DrawCanvas'
 import {
   loadPhotoSource,
+  revokeObjectUrl,
   type LoadedPhoto,
 } from '../photo/processPhoto'
+import { trimToCanvas } from '../../processing/trim'
+import { encodeCanvas } from '../../processing/encode'
+import type { EncodableCanvas } from '../../processing/optimize'
 import { releaseSessionAssets } from '../../utils/session'
 import { processSignature } from './processSignature'
 
@@ -71,7 +75,25 @@ export function SignatureView() {
     setError(null)
     try {
       const next = await loadPhotoSource(file)
-      setLoaded(next)
+      // Preview is WYSIWYG: show the trimmed signature, not the raw scan
+      // with its surrounding white paper. If no ink can be found yet, keep
+      // the raw preview — Continue will surface a friendly error.
+      let previewUrl = next.previewUrl
+      try {
+        const trimmed = trimToCanvas(next.source)
+        const blob = await encodeCanvas(
+          trimmed as unknown as EncodableCanvas,
+          'png',
+          0.92,
+        )
+        if (typeof URL.createObjectURL === 'function') {
+          previewUrl = URL.createObjectURL(blob)
+          revokeObjectUrl(next.previewUrl)
+        }
+      } catch {
+        // fall back to the raw preview
+      }
+      setLoaded({ ...next, previewUrl })
       setStep('preview')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'This image could not be opened.')
@@ -117,15 +139,14 @@ export function SignatureView() {
     }
   }
 
-  return (
-    <>
-      <div className="profile-picker">
+  const requirementsPanel = (
+    <div className="requirements-panel panel">
+      <div className="panel-body">
         <label className="field">
           <span>Target requirements</span>
           <select
             value={profileId}
             onChange={(event) => setProfileId(event.target.value)}
-            disabled={step === 'result'}
           >
             {SIGNATURE_PROFILES.map((option) => (
               <option key={option.id} value={option.id}>
@@ -135,7 +156,7 @@ export function SignatureView() {
             <option value={CUSTOM_PROFILE_ID}>Custom…</option>
           </select>
         </label>
-        {profileId === CUSTOM_PROFILE_ID && step !== 'result' && (
+        {profileId === CUSTOM_PROFILE_ID && (
           <div className="custom-fields">
             <label className="field">
               <span>Max size (KB)</span>
@@ -167,29 +188,37 @@ export function SignatureView() {
         </p>
         <p className="profile-note">{PROFILE_NOTE}</p>
       </div>
+    </div>
+  )
 
+  return (
+    <>
       {step === 'choose' && (
         <section className="view" aria-labelledby="signature-title">
           <h1 id="signature-title">Prepare a signature</h1>
-          <ul className="action-grid">
+          <p className="lede">
+            Upload a photo of a signed paper, or draw a new signature.
+          </p>
+          {requirementsPanel}
+          <ul className="option-grid">
             <li>
               <button
                 type="button"
-                className="card action-card"
+                className="card option-card"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <span className="action-label">Upload signature</span>
-                <span className="action-hint">Use a photo of a signed paper</span>
+                <span className="option-label">Upload signature</span>
+                <span className="option-hint">Use a photo of a signed paper</span>
               </button>
             </li>
             <li>
               <button
                 type="button"
-                className="card action-card"
+                className="card option-card"
                 onClick={() => setStep('draw')}
               >
-                <span className="action-label">Draw signature</span>
-                <span className="action-hint">Sign with finger, stylus or mouse</span>
+                <span className="option-label">Draw signature</span>
+                <span className="option-hint">Sign with finger, stylus or mouse</span>
               </button>
             </li>
           </ul>
@@ -206,6 +235,7 @@ export function SignatureView() {
           />
           {busy && (
             <p className="busy-note" role="status">
+              <span className="spinner" aria-hidden="true" />
               Opening your signature…
             </p>
           )}
@@ -223,6 +253,7 @@ export function SignatureView() {
           <DrawCanvas onFinish={finishDraw} onCancel={() => setStep('choose')} />
           {busy && (
             <p className="busy-note" role="status">
+              <span className="spinner" aria-hidden="true" />
               Processing your signature…
             </p>
           )}
@@ -238,16 +269,19 @@ export function SignatureView() {
         <section className="view" aria-labelledby="preview-title">
           <h1 id="preview-title">Check your signature</h1>
           <p className="lede">
-            Empty margins will be trimmed automatically. Target:{' '}
-            <strong>{summary}</strong>
+            Empty margins are trimmed automatically — this is what your
+            signature will look like. Target: <strong>{summary}</strong>
           </p>
-          <img
-            className="result-preview"
-            src={loaded.previewUrl}
-            alt="Uploaded signature preview"
-          />
-          {busy && (
+          <div className="result-figure" style={{ marginInline: 'auto' }}>
+            <img
+              className="result-preview"
+              src={loaded.previewUrl}
+              alt="Uploaded signature preview"
+              style={{ background: '#ffffff' }}
+            />
+          </div>          {busy && (
             <p className="busy-note" role="status">
+              <span className="spinner" aria-hidden="true" />
               Processing your signature…
             </p>
           )}

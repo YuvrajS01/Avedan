@@ -1,5 +1,6 @@
-import { useRef } from 'react'
-import type { DragEvent, ChangeEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { DragEvent, ChangeEvent, ReactNode } from 'react'
+import { FlowSteps } from '../../components/FlowSteps'
 
 interface IntakeStepProps {
   busy: boolean
@@ -7,10 +8,12 @@ interface IntakeStepProps {
   cameraAvailable?: boolean
   onFile: (file: File) => void
   onCamera: () => void
+  children?: ReactNode
 }
 
-export function IntakeStep({ busy, error, cameraAvailable = false, onFile, onCamera }: IntakeStepProps) {
+export function IntakeStep({ busy, error, cameraAvailable = false, onFile, onCamera, children }: IntakeStepProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -20,28 +23,38 @@ export function IntakeStep({ busy, error, cameraAvailable = false, onFile, onCam
 
   const handleDrop = (event: DragEvent<HTMLElement>) => {
     event.preventDefault()
+    setDragging(false)
     const file = event.dataTransfer.files?.[0]
     if (file) onFile(file)
   }
 
   return (
     <section className="view" aria-labelledby="photo-title">
+      <FlowSteps current="add" />
       <h1 id="photo-title">Prepare a photo</h1>
-      <div
-        className="intake-zone"
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={handleDrop}
-      >
+      <p className="lede">
+        Choose a photo from this device. It is opened locally and never uploaded.
+      </p>
+      <div className="intake-grid">
+        <div>{children}</div>
+        <div>
+          <div
+            className={dragging ? 'intake-zone is-dragging' : 'intake-zone'}
+            onDragOver={(event) => {
+              event.preventDefault()
+              setDragging(true)
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={handleDrop}
+          >
         {busy ? (
           <p className="busy-note" role="status">
+            <span className="spinner" aria-hidden="true" />
             Opening your photo…
           </p>
         ) : (
           <>
-            <p className="intake-hint">
-              Choose a photo from this device. It is opened locally and never
-              uploaded.
-            </p>
+            <p className="intake-title">Drop your photo here</p>
             <input
               ref={inputRef}
               id="photo-file-input"
@@ -59,19 +72,28 @@ export function IntakeStep({ busy, error, cameraAvailable = false, onFile, onCam
             >
               Upload photo
             </button>
+            <p className="intake-alt" aria-hidden="true">
+              or drag and drop an image here
+            </p>
             {cameraAvailable && (
-              <button
-                type="button"
-                className="button button-secondary"
-                disabled={busy}
-                onClick={onCamera}
-              >
-                Take photo
-              </button>
+              <>
+                <div className="intake-divider" aria-hidden="true">
+                  or
+                </div>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  disabled={busy}
+                  onClick={onCamera}
+                >
+                  Take a photo
+                </button>
+              </>
             )}
-            <p className="intake-alt">or drag and drop an image here</p>
           </>
         )}
+      </div>
+        </div>
       </div>
       {error && (
         <p className="error-note" role="alert">

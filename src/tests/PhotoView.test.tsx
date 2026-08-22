@@ -110,7 +110,7 @@ describe('PhotoView flow', () => {
     )
   })
 
-  it('returns to intake from the result via Start over', async () => {
+  it('returns to intake from the result via Make another', async () => {
     const user = userEvent.setup()
     mockedLoad.mockResolvedValue({
       source: { width: 1200, height: 1600 } as never,
@@ -125,23 +125,20 @@ describe('PhotoView flow', () => {
       new File(['image'], 'me.jpg', { type: 'image/jpeg' }),
     )
     await user.click(await screen.findByRole('button', { name: 'Continue' }))
-    await user.click(await screen.findByRole('button', { name: 'Start over' }))
+    await user.click(await screen.findByRole('button', { name: 'Make another' }))
 
     expect(
       await screen.findByRole('button', { name: 'Upload photo' }),
     ).toBeInTheDocument()
   })
 
-  it('supports custom dimensions in the target summary', async () => {
+  it('autofills manual fields when a preset is loaded', async () => {
     const user = userEvent.setup()
     render(<PhotoView />)
 
-    await user.selectOptions(screen.getByLabelText(/target requirements/i), 'custom')
-    await user.type(screen.getByLabelText(/width \(px\)/i), '413')
-    await user.clear(screen.getByLabelText(/height \(px\)/i))
-    await user.type(screen.getByLabelText(/height \(px\)/i), '531')
+    await user.selectOptions(screen.getByLabelText(/load preset/i), 'portrait-3x4')
 
-    expect(screen.getByText(/Target:/i)).toHaveTextContent('413 × 531 px')
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('300 × 400 px · JPEG')
   })
 })
 

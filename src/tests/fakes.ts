@@ -4,6 +4,18 @@ import type { CanvasFactory, CanvasLike, DrawableSource } from '../processing'
 export function createFakeContext() {
   return {
     drawImage: vi.fn(),
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 })),
+    fillStyle: '',
+    strokeStyle: '',
+    lineCap: 'round',
+    lineJoin: 'round',
+    lineWidth: 1,
     imageSmoothingEnabled: false,
   }
 }
@@ -52,7 +64,18 @@ export function createPixelCanvas(
   }
   const ctx = {
     drawImage: vi.fn(),
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
     getImageData: vi.fn(() => ({ data, width, height })),
+    fillStyle: '',
+    strokeStyle: '',
+    lineCap: 'round',
+    lineJoin: 'round',
+    lineWidth: 1,
     imageSmoothingEnabled: false,
   }
   return {

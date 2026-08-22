@@ -1,11 +1,21 @@
 import { trimToCanvas } from '../../processing/trim'
 import { resizeToCanvas } from '../../processing/resize'
-import type { DrawableSource } from '../../processing/crop'
+import { defaultCanvasFactory, type CanvasLike, type DrawableSource } from '../../processing/crop'
 import { computeFitDimensions } from '../../processing/geometry'
 import { createCanvasEncoder, optimizeEncoding, type EncodableCanvas } from '../../processing/optimize'
 import type { ImageRequirements } from '../../domain/requirements/types'
 import type { ProcessedAsset } from '../../domain/jobs/result'
 import { validateOutput } from '../../domain/validation/engine'
+
+function flattenToWhite(source: CanvasLike): CanvasLike {
+  const out = defaultCanvasFactory(source.width, source.height)
+  const ctx = out.getContext('2d')
+  if (!ctx) return source
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, source.width, source.height)
+  ctx.drawImage(source as unknown as CanvasImageSource, 0, 0)
+  return out as unknown as CanvasLike
+}
 
 /**
  * Signature pipeline per PROCESSING_ENGINE order:
@@ -26,10 +36,11 @@ export async function processSignature(input: {
     : { width: trimmed.width, height: trimmed.height }
 
   const resized = resizeToCanvas(trimmed as unknown as DrawableSource, target)
+  const flattened = flattenToWhite(resized)
   const format = input.profile.format ?? 'png'
 
   const optimization = await optimizeEncoding(
-    createCanvasEncoder(resized as unknown as EncodableCanvas, format),
+    createCanvasEncoder(flattened as unknown as EncodableCanvas, format),
     { fileSize: input.profile.fileSize },
   )
 

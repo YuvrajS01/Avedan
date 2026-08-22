@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent } from 'react'
+import { FlowSteps } from '../../components/FlowSteps'
 import { clampPan, coverScale, cropBoxStyle, sourceCropRect } from './cropMath'
 import type { Rect } from '../../processing/geometry'
 
@@ -117,84 +118,95 @@ export function CropStep({
 
   return (
     <section className="view" aria-labelledby="crop-title">
+      <FlowSteps current="frame" />
       <h1 id="crop-title">Crop your photo</h1>
       <p className="lede">
-        Drag to position and pinch/scroll-free zoom to frame. Target:{' '}
+        Drag to position your photo inside the frame. Target:{' '}
         <strong>{summary}</strong>
       </p>
-      <div
-        ref={boxRef}
-        className="crop-box"
-        style={boxStyle}
-        tabIndex={0}
-        role="application"
-        aria-label={`Crop area for a ${summary} photo. Use arrow keys to adjust the framing.`}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onKeyDown={handleKeyDown}
-      >
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt=""
-            draggable={false}
-            className="crop-image"
-            style={{
-              width: `${imageWidth * scale}px`,
-              transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
-            }}
-          />
-        ) : (
-          <div className="crop-image crop-image-missing" style={{ width: `${imageWidth * scale}px` }} aria-hidden="true" />
-        )}
-      </div>
-      <div className="crop-controls">
-        <label className="field">
-          <span>Zoom</span>
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.05}
-            value={zoom}
-            onChange={(event) => {
-              const nextZoom = Number(event.target.value)
-              setZoom(nextZoom)
-              setOffset((current) => {
-                const next = clampPan({ ...view, zoom: nextZoom, offsetX: current.x, offsetY: current.y })
-                return { x: next.offsetX, y: next.offsetY }
-              })
-            }}
-          />
-        </label>
-        <button type="button" className="button button-secondary" onClick={resetFraming}>
-          Reset framing
-        </button>
-      </div>
-      {busy && (
-        <p className="busy-note" role="status">
-          Processing your photo…
-        </p>
-      )}
-      {error && (
-        <p className="error-note" role="alert">
-          {error}
-        </p>
-      )}
-      <div className="step-actions">
-        <button type="button" className="button button-secondary" onClick={onCancel} disabled={busy}>
-          Back
-        </button>
-        <button
-          type="button"
-          className="button button-primary"
-          disabled={busy}
-          onClick={() => onConfirm(sourceCropRect(view))}
+      <div className="workspace">
+        <div
+          ref={boxRef}
+          className="crop-stage"
+          style={boxStyle}
+          tabIndex={0}
+          role="application"
+          aria-label={`Crop area for a ${summary} photo. Use arrow keys to adjust the framing.`}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onKeyDown={handleKeyDown}
         >
-          Continue
-        </button>
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt=""
+              draggable={false}
+              className="crop-image"
+              style={{
+                width: `${imageWidth * scale}px`,
+                transform: `translate(calc(-50% + ${offset.x}px), calc(-50% + ${offset.y}px))`,
+              }}
+            />
+          ) : (
+            <div className="crop-image crop-image-missing" style={{ width: `${imageWidth * scale}px` }} aria-hidden="true" />
+          )}
+          <div className="crop-guides" aria-hidden="true" />
+          <span className="crop-corner tl" aria-hidden="true" />
+          <span className="crop-corner tr" aria-hidden="true" />
+          <span className="crop-corner bl" aria-hidden="true" />
+          <span className="crop-corner br" aria-hidden="true" />
+        </div>
+        <div>
+          <div className="crop-controls">
+            <label className="field">
+              <span>Zoom</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.05}
+                value={zoom}
+                onChange={(event) => {
+                  const nextZoom = Number(event.target.value)
+                  setZoom(nextZoom)
+                  setOffset((current) => {
+                    const next = clampPan({ ...view, zoom: nextZoom, offsetX: current.x, offsetY: current.y })
+                    return { x: next.offsetX, y: next.offsetY }
+                  })
+                }}
+              />
+            </label>
+            <button type="button" className="button button-secondary" onClick={resetFraming}>
+              Reset
+            </button>
+          </div>
+          {busy && (
+            <p className="busy-note" role="status">
+              <span className="spinner" aria-hidden="true" />
+              Preparing your photo…
+            </p>
+          )}
+          {error && (
+            <p className="error-note" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="step-actions">
+            <button type="button" className="button button-secondary" onClick={onCancel} disabled={busy}>
+              Back
+            </button>
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={busy}
+              onClick={() => onConfirm(sourceCropRect(view))}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   )
