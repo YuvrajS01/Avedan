@@ -9,7 +9,15 @@ import {
   isCameraSupported,
   startCamera,
 } from './camera'
-import { sampleVideoFraming, type FramingHint } from './framing'
+import { sampleVideoFraming, type GuidanceHint } from './framing'
+import {
+  combineHints,
+  createNativeFaceDetector,
+  deriveFaceHint,
+  detectFaceBox,
+  isFaceDetectorSupported,
+  type FaceDetectorLike,
+} from './faceGuidance'
 
 type CameraStatus = 'starting' | 'ready' | 'denied' | 'not-found' | 'unsupported' | 'error'
 
@@ -30,7 +38,10 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
   )
   const [busy, setBusy] = useState(false)
   const [captureError, setCaptureError] = useState<string | null>(null)
-  const [hint, setHint] = useState<FramingHint | null>(null)
+  const [hint, setHint] = useState<GuidanceHint | null>(null)
+  const [faceSupported] = useState(() => isFaceDetectorSupported())
+  const [faceFramingOn, setFaceFramingOn] = useState(false)
+  const faceDetectorRef = useRef<FaceDetectorLike | null>(null)
 
   const begin = useCallback(async () => {
     setStatus('starting')
@@ -70,25 +81,51 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
 
   // Advisory framing loop: sample a small frame periodically while the
   // preview is live. Purely local, fail-safe, and never blocks capture.
+  // When face framing is enabled, the native FaceDetector refines the hint.
   useEffect(() => {
     if (status !== 'ready') {
       setHint(null)
       return
     }
     let cancelled = false
-    const sample = () => {
+    let inFlight = false
+
+    const sample = async () => {
       const video = videoRef.current
-      if (!video) return
-      const result = sampleVideoFraming(video)
-      if (!cancelled) setHint(result?.hint ?? null)
+      if (!video || inFlight) return
+      inFlight = true
+      try {
+        const qualityHint = sampleVideoFraming(video)?.hint ?? null
+
+        let faceHint: GuidanceHint | null = null
+        if (faceFramingOn) {
+          if (!faceDetectorRef.current) faceDetectorRef.current = createNativeFaceDetector()
+          const detector = faceDetectorRef.current
+          if (detector && video.videoWidth > 0) {
+            try {
+              const box = await detectFaceBox(detector, video)
+              if (!cancelled) {
+                faceHint = deriveFaceHint(box, video.videoWidth, video.videoHeight)
+              }
+            } catch {
+              // Detection failed this round — fall back to quality hints only.
+            }
+          }
+        }
+
+        if (!cancelled) setHint(combineHints(qualityHint, faceHint))
+      } finally {
+        inFlight = false
+      }
     }
+
     sample()
     const timer = window.setInterval(sample, FRAMING_INTERVAL_MS)
     return () => {
       cancelled = true
       window.clearInterval(timer)
     }
-  }, [status])
+  }, [status, faceFramingOn])
 
   const switchCamera = async () => {
     handleRef.current?.stop()
@@ -127,6 +164,23 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
               <div className="camera-guide-oval" />
             </div>
           </div>
+          {faceSupported && (
+            <div className="camera-options">
+              <button
+                type="button"
+                className={faceFramingOn ? 'button button-ghost is-active' : 'button button-ghost'}
+                aria-pressed={faceFramingOn}
+                disabled={busy}
+                onClick={() => setFaceFramingOn((on) => !on)}
+              >
+                {faceFramingOn ? 'Face framing: on' : 'Face framing: off'}
+              </button>
+              <p className="option-hint">
+                Uses this browser's built-in face detector — everything stays on
+                this device.
+              </p>
+            </div>
+          )}
           {busy && (
             <p className="busy-note" role="status">
               <span className="spinner" aria-hidden="true" />

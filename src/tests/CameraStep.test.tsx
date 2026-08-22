@@ -9,6 +9,10 @@ import {
   frameToFile,
 } from '../features/camera/camera'
 import { sampleVideoFraming } from '../features/camera/framing'
+import {
+  detectFaceBox,
+  isFaceDetectorSupported,
+} from '../features/camera/faceGuidance'
 
 vi.mock('../features/camera/camera', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../features/camera/camera')>()
@@ -29,11 +33,23 @@ vi.mock('../features/camera/framing', async (importOriginal) => {
   }
 })
 
+vi.mock('../features/camera/faceGuidance', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../features/camera/faceGuidance')>()
+  return {
+    ...actual,
+    isFaceDetectorSupported: vi.fn(() => false),
+    createNativeFaceDetector: vi.fn(() => ({ detect: async () => [] })),
+    detectFaceBox: vi.fn(async () => null),
+  }
+})
+
 const mockedIsSupported = vi.mocked(isCameraSupported)
 const mockedStart = vi.mocked(startCamera)
 const mockedCapture = vi.mocked(captureFrame)
 const mockedFrameToFile = vi.mocked(frameToFile)
 const mockedSample = vi.mocked(sampleVideoFraming)
+const mockedFaceSupported = vi.mocked(isFaceDetectorSupported)
+const mockedDetect = vi.mocked(detectFaceBox)
 
 function stubMediaDevices(getUserMedia?: ReturnType<typeof vi.fn>) {
   Object.defineProperty(navigator, 'mediaDevices', {
@@ -47,6 +63,8 @@ afterEach(() => {
   vi.clearAllMocks()
   mockedIsSupported.mockImplementation(() => false)
   mockedSample.mockImplementation(() => null)
+  mockedFaceSupported.mockImplementation(() => false)
+  mockedDetect.mockImplementation(async () => null)
 })
 
 describe('CameraStep', () => {
@@ -129,6 +147,45 @@ describe('CameraStep', () => {
     // The framing effect runs after the ready-state render — retry until then.
     await waitFor(() => expect(mockedSample).toHaveBeenCalled())
     expect(screen.queryByText(/looks good/i)).not.toBeInTheDocument()
+  })
+
+  it('offers opt-in face framing with positioning hints', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    mockedStart.mockResolvedValue({ stream: {} as MediaStream, stop: vi.fn() })
+    mockedFaceSupported.mockImplementation(() => true)
+    // A small, centered face → "move closer" guidance from real geometry math.
+    mockedDetect.mockResolvedValue({ x: 300, y: 200, width: 40, height: 40 })
+
+    const { container } = render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+
+    // jsdom reports no video dimensions; give the preview a real frame size.
+    const video = container.querySelector('video')
+    expect(video).not.toBeNull()
+    Object.defineProperty(video, 'videoWidth', { value: 640 })
+    Object.defineProperty(video, 'videoHeight', { value: 480 })
+
+    const user = userEvent.setup()
+    const toggle = screen.getByRole('button', { name: /face framing: off/i })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await user.click(toggle)
+
+    expect(await screen.findByText(/move closer/i)).toHaveAttribute('role', 'status')
+    expect(screen.getByRole('button', { name: /face framing: on/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+  })
+
+  it('never shows face framing when the platform has no detector', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    mockedFaceSupported.mockImplementation(() => false)
+    mockedStart.mockResolvedValue({ stream: {} as MediaStream, stop: vi.fn() })
+
+    render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+
+    expect(screen.queryByRole('button', { name: /face framing/i })).not.toBeInTheDocument()
   })
 
   it('shows a denied state with an upload fallback when permission is refused', async () => {

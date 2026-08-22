@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 underway — T011 (release gate) passed, T012 (camera framing guidance) done  
+**Stage:** V2 underway — T012 (framing guidance) and T013 (face positioning) done  
 **Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; V2 task 1 complete; next: T013 face detection/positioning
+**Status:** MVP released as `v0.1.0-mvp`; next: T014 background quality detection & whitening
 
 ## Product goal
 
@@ -35,18 +35,18 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Released as `v0.1.0-mvp` on GitHub (tag + release page). Post-release fix D037: camera preview now attaches the stream after the video mounts — the blank-preview defect is fixed; 178 tests passing. Candidate for a v0.1.1 patch tag.
 - T011 manual verification passed (2026-08-22): photo/signature flows, camera, offline, and privacy confirmed on real hardware. MVP release checkpoint cleared.
 - Camera framing guidance (2026-08-22, T012/D038): live advisory hints while the preview is ready — `features/camera/framing.ts` samples a 160 px frame every 700 ms through the existing quality heuristics; one actionable hint line (dark > bright > blurry > flat) above the shutter; never blocks capture, no models, no new dependencies. 187 tests passing.
+- Face positioning assistance (2026-08-22, T013/D039): opt-in "Face framing" toggle using the native `FaceDetector` API where available — no model downloads; bounding-box geometry drives absent/too-far/too-close/off-center hints merged with quality hints (light/blur > face > contrast). Head-angle guidance and auto-crop pre-positioning deferred. 203 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T013 — Face detection & positioning assistance (opt-in model per PRIVACY spec; task file defines approach).
-- Background quality detection; white-background processing.
+- T014 — Background quality detection + white-background processing (defined in task file).
 - Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring.
 - Manually verified official presets (D003/D019 workflow).
 - Physical-size (mm/DPI) UI inputs; worker offload of encode/optimize.
 
 ## Current focus
 
-V2 task 2: T013 face detection and positioning assistance.
+V2 task 3: T014 background quality detection and white-background processing.
 
 ## Current risks
 
@@ -58,7 +58,7 @@ V2 task 2: T013 face detection and positioning assistance.
 
 ## Next recommended task
 
-T013 — Face detection and positioning assistance (`.agents/tasks/T013-face-detection-guidance.md`).
+T014 — Background quality detection and white-background processing (`.agents/tasks/T014-background-quality-whitening.md`).
 
 ## Continuity rule
 

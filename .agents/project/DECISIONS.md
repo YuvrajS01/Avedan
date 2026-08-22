@@ -264,3 +264,11 @@ Manual verification passed on real hardware; MVP release checkpoint cleared;
 **Reason:** Highest-priority V2 item ("camera framing guidance") achievable with zero new dependencies, zero model downloads, and bounded CPU cost — consistent with D033 (no ML until opt-in) and D034 (advisory separate from validation).
 
 **Consequence:** Face-position guidance (T013) will extend the same hint surface once an opt-in detector is chosen.
+
+## D039 — Face guidance uses the native FaceDetector; bundled models deferred
+
+**Decision:** Face positioning assistance (T013) is a progressive enhancement over the browser-native `FaceDetector` API, behind an explicit opt-in toggle ("Face framing") shown only where the API exists. No model is downloaded and no new dependency is added. Guidance derives from bounding-box geometry only (absent / too far / too close / off-center). The bundled-WASM model path is deferred until native coverage proves insufficient; if ever added it must pass the PRIVACY opt-in gate with disclosed payload numbers.
+
+**Reason:** Satisfies V2 priorities 2/3 with zero privacy surface change and bounded CPU cost (detection piggybacks on the T012 700 ms sampling loop, guarded against overlapping runs). Hint priority merges as light/blur > face positioning > contrast, since poor light or blur also makes detection unreliable.
+
+**Consequence:** Head-angle (roll) guidance needs landmarks — deferred with the same privacy gate. Auto-crop pre-positioning from a detected face is deferred to a follow-up so this task changes no crop behavior.

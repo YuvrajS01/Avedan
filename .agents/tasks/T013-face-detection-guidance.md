@@ -1,5 +1,7 @@
 # T013 — Face detection and positioning assistance (V2)
 
+**Status:** DONE (2026-08-22)
+
 **Priority:** P1 (next V2 task after T012)
 **Depends on:** T005 camera capture, T012 framing guidance, PRIVACY spec
 **V2 objectives covered:** face detection (2), face positioning assistance (3), head-angle guidance (6), automatic crop suggestions (7 — partial).
@@ -48,7 +50,24 @@ dependencies without recording a DECISIONS entry with payload numbers.
 
 ## Acceptance criteria
 
-- [ ] Guidance states implemented and tested with synthetic bounding boxes.
-- [ ] Model download is opt-in, disclosed, and skippable; flows work without it.
-- [ ] Auto-crop suggestion never overrides manual adjustments.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Guidance states implemented and tested with synthetic bounding boxes.
+- [x] Model download is opt-in, disclosed, and skippable; flows work without it.
+- [ ] Auto-crop suggestion never overrides manual adjustments — **deferred** to a
+      follow-up (see Results); no crop behavior changed in this task.
+- [x] Typecheck/lint/tests/build pass.
+
+## Results
+
+Implemented 2026-08-22 via the progressive-enhancement path (`src/features/camera/faceGuidance.ts`):
+- Native `FaceDetector` API used where available — zero payload, zero new
+  dependencies, nothing downloaded, everything on-device. The bundled-WASM
+  option was **not needed yet**; revisit only if native coverage proves too
+  small in practice (record payload numbers before adding anything).
+- Opt-in "Face framing: on/off" toggle (only rendered when supported);
+  guidance derives purely from bounding-box geometry: absent face, too
+  far/close, horizontal/vertical centering. Hint priority merged with T012:
+  light/blur > face positioning > contrast.
+- Head-angle (roll) guidance is not possible from axis-aligned bounding boxes;
+  it requires landmarks — deferred until/unless a landmark-capable opt-in
+  model is justified (same privacy gate applies).
+- 203/203 tests pass; typecheck/lint/build clean.

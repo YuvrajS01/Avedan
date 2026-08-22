@@ -9,10 +9,15 @@ import { defaultCanvasFactory } from '../../processing/crop'
  * nothing leaves the device. Guidance never blocks capture (see D034).
  */
 
-export interface FramingHint {
-  id: 'light' | 'steady' | 'contrast' | 'ok'
+/** Shared shape for all capture-time advisory hints. */
+export interface GuidanceHint {
+  id: string
   severity: 'attention' | 'ok'
   message: string
+}
+
+export interface FramingHint extends GuidanceHint {
+  id: 'light' | 'steady' | 'contrast' | 'ok'
 }
 
 /** Collapse quality checks into one capture-time hint, most actionable first. */
