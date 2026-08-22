@@ -243,3 +243,11 @@
 ## MVP release checkpoint (2026-08-22)
 
 MVP scope (T001–T010) audited against the PRD, specs, and implementation; declared **release-ready**. Engineering gates: typecheck ✓, lint ✓, tests 177/177 ✓, production build ✓. Privacy claims verified against source (no network calls, no analytics). Audit details: `.agents/project/MVP_RELEASE_AUDIT.md`. Two blockers found during audit were fixed (D035/D036). V2 begins at T011 (manual on-device verification gate).
+
+## D037 — Camera stream attaches after the video element mounts
+
+**Decision:** `CameraStep` now attaches the `MediaStream` in an effect keyed on the ready state, after the `<video>` has mounted, instead of inside `begin()` while the state was still `starting` (when `videoRef.current` is always null). Playback start is guarded for environments where `play()` does not return a promise.
+
+**Reason:** Post-release defect report: camera light turned on but the preview stayed blank. The `<video>` only renders in the ready state, so the pre-mount `attachStream` call never found an element; the stream ran with no visible preview. Regression-tested by asserting `video.srcObject === stream`.
+
+**Consequence:** Preview now displays as soon as permission is granted; switch/retry flows re-attach on each transition to ready. 178/178 tests pass.

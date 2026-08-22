@@ -73,6 +73,20 @@ describe('CameraStep', () => {
     expect(stop).toHaveBeenCalledTimes(1)
   })
 
+  it('attaches the live stream to the visible video preview', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    const stop = vi.fn()
+    const stream = {} as MediaStream
+    mockedStart.mockResolvedValue({ stream, stop })
+
+    const { container } = render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+
+    const video = container.querySelector('video')
+    expect(video).not.toBeNull()
+    expect(video?.srcObject).toBe(stream)
+  })
+
   it('shows a denied state with an upload fallback when permission is refused', async () => {
     mockedIsSupported.mockImplementation(() => true)
     mockedStart.mockRejectedValue(Object.assign(new Error('denied'), { name: 'NotAllowedError' }))

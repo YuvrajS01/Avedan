@@ -32,10 +32,6 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
     try {
       const handle = await startCamera(facingRef.current)
       handleRef.current = handle
-      if (videoRef.current) {
-        attachStream(videoRef.current, handle.stream)
-        await videoRef.current.play().catch(() => undefined)
-      }
       setStatus('ready')
     } catch (cause) {
       const kind = describeCameraError(cause)
@@ -53,6 +49,19 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
       handleRef.current?.stop()
     }
   }, [begin])
+
+  // The <video> only mounts once the state is 'ready', so the stream must be
+  // attached after that render — attaching during 'starting' finds no element.
+  useEffect(() => {
+    const video = videoRef.current
+    const stream = handleRef.current?.stream
+    if (status !== 'ready' || !video || !stream) return
+    attachStream(video, stream)
+    const playing = video.play()
+    if (playing && typeof playing.catch === 'function') {
+      playing.catch(() => undefined)
+    }
+  }, [status])
 
   const switchCamera = async () => {
     handleRef.current?.stop()
