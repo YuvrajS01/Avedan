@@ -1,5 +1,7 @@
 # T014 — Background quality detection and white-background processing (V2)
 
+**Status:** DONE (2026-08-22)
+
 **Priority:** P1 (next V2 task after T013)
 **Depends on:** processing engine, validation engine, PRIVACY spec
 **V2 objectives covered:** background quality detection (8), white-background processing (9).
@@ -39,7 +41,23 @@
 
 ## Acceptance criteria
 
-- [ ] Uniformity metric tested on synthetic plain/noisy/border-heavy images.
-- [ ] Whitening preserves dark subject pixels; tolerance documented and configurable.
-- [ ] Advisory hint renders on the result screen; never affects validation status.
-- [ ] Toggle is opt-in and off by default; typecheck/lint/tests/build pass.
+- [x] Uniformity metric tested on synthetic plain/noisy/border-heavy images.
+- [x] Whitening preserves dark subject pixels; tolerance documented and configurable.
+- [x] Advisory hint renders on the result screen; never affects validation status.
+- [x] Toggle is opt-in and off by default; typecheck/lint/tests/build pass.
+
+## Results
+
+Implemented 2026-08-22:
+- `processing/background.ts`: `assessBackground` (border-band mean + RGB-distance
+  uniformity fraction, documented thresholds: band 8%, distance ≤30, plain ≥0.6),
+  `whitenBackground` (edge-seeded flood fill within tolerance of the border mean;
+  enclosed regions never leak), and fail-safe `assessCanvasBackground` for the
+  advisory list. No ML, no new dependencies.
+- `ImageRequirements.background: 'keep' | 'white'` added — requirements stay data
+  (FR-01); presets may set it later.
+- Photo flow: opt-in "Lighten a plain background to white" checkbox (off by
+  default); whitening runs after resize, best-effort with fallback to the
+  unmodified canvas; result advisory reports either the backdrop quality or,
+  when whitening was requested, an explicit "best effort — check the preview" note.
+- 214/214 tests pass; typecheck/lint/build clean.

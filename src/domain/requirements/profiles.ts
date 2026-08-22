@@ -79,6 +79,9 @@ export function describeRequirements(profile: ImageRequirements): string {
   if (profile.fileSize?.maxBytes !== undefined) {
     parts.push(`≤ ${Math.round(profile.fileSize.maxBytes / 1024)} KB`)
   }
+  if (profile.background === 'white') {
+    parts.push('white bg')
+  }
 
   return parts.length > 0 ? parts.join(' · ') : 'No fixed technical target'
 }

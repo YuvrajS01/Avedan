@@ -23,4 +23,6 @@ export interface ImageRequirements {
   /** Target width / height ratio, e.g. 3 / 4 for a portrait photo. */
   aspectRatio?: number
   fileSize?: FileSizeRange
+  /** Opt-in background mode; whitening is a best-effort heuristic (T014). */
+  background?: 'keep' | 'white'
 }

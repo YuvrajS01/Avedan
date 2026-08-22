@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 underway — T012 (framing guidance) and T013 (face positioning) done  
+**Stage:** V2 underway — T012 (framing), T013 (face positioning), T014 (background) done  
 **Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; next: T014 background quality detection & whitening
+**Status:** MVP released as `v0.1.0-mvp`; next: T015 auto-crop suggestion from detected face
 
 ## Product goal
 
@@ -36,17 +36,18 @@ Create a browser-based tool that prepares application photos and signatures to e
 - T011 manual verification passed (2026-08-22): photo/signature flows, camera, offline, and privacy confirmed on real hardware. MVP release checkpoint cleared.
 - Camera framing guidance (2026-08-22, T012/D038): live advisory hints while the preview is ready — `features/camera/framing.ts` samples a 160 px frame every 700 ms through the existing quality heuristics; one actionable hint line (dark > bright > blurry > flat) above the shutter; never blocks capture, no models, no new dependencies. 187 tests passing.
 - Face positioning assistance (2026-08-22, T013/D039): opt-in "Face framing" toggle using the native `FaceDetector` API where available — no model downloads; bounding-box geometry drives absent/too-far/too-close/off-center hints merged with quality hints (light/blur > face > contrast). Head-angle guidance and auto-crop pre-positioning deferred. 203 tests passing.
+- Background quality + white-background processing (2026-08-22, T014/D040): advisory border-uniformity check on the photo result; opt-in "Lighten a plain background to white" mode (`ImageRequirements.background`) implemented as edge-seeded flood-fill whitening with subject preservation and best-effort fallback. No ML, no new dependencies. 214 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T014 — Background quality detection + white-background processing (defined in task file).
+- T015 — Auto-crop suggestion from detected face (defined in task file; completes the deferred T013 item).
 - Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring.
-- Manually verified official presets (D003/D019 workflow).
+- Manually verified official presets (D003/D019 workflow); presets may now carry `background: 'white'`.
 - Physical-size (mm/DPI) UI inputs; worker offload of encode/optimize.
 
 ## Current focus
 
-V2 task 3: T014 background quality detection and white-background processing.
+V2 task 4: T015 auto-crop suggestion from detected face.
 
 ## Current risks
 

@@ -24,6 +24,7 @@ interface CustomSettings {
   minKb: string
   maxKb: string
   format: ImageRequirements['format']
+  whiteBg: boolean
 }
 
 const DEFAULT_CUSTOM: CustomSettings = {
@@ -32,6 +33,7 @@ const DEFAULT_CUSTOM: CustomSettings = {
   minKb: '',
   maxKb: '',
   format: 'jpeg',
+  whiteBg: false,
 }
 
 function toPositiveInt(value: string): number | undefined {
@@ -61,6 +63,7 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
     aspectRatio: width !== undefined && height !== undefined ? width / height : 3 / 4,
     format: custom.format,
     fileSize,
+    background: custom.whiteBg ? 'white' : undefined,
   }
 }
 
@@ -111,6 +114,7 @@ export function PhotoView() {
         ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
         : '',
       format: presetProfile.format ?? 'jpeg',
+      whiteBg: false,
     })
   }, [presetProfile])
 
@@ -182,6 +186,7 @@ export function PhotoView() {
       minKb: p.fileSize?.minBytes ? String(Math.round(p.fileSize.minBytes / 1024)) : '',
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
       format: p.format ?? 'jpeg',
+      whiteBg: false,
     })
   }
 
@@ -283,6 +288,14 @@ export function PhotoView() {
             </select>
           </label>
         </div>
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={custom.whiteBg}
+            onChange={(event) => updateCustom({ whiteBg: event.target.checked })}
+          />
+          <span>Lighten a plain background to white (best effort)</span>
+        </label>
         <p className="target-summary">
           Target: <strong>{summary}</strong>
         </p>

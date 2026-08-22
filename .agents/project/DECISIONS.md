@@ -272,3 +272,11 @@ Manual verification passed on real hardware; MVP release checkpoint cleared;
 **Reason:** Satisfies V2 priorities 2/3 with zero privacy surface change and bounded CPU cost (detection piggybacks on the T012 700 ms sampling loop, guarded against overlapping runs). Hint priority merges as light/blur > face positioning > contrast, since poor light or blur also makes detection unreliable.
 
 **Consequence:** Head-angle (roll) guidance needs landmarks — deferred with the same privacy gate. Auto-crop pre-positioning from a detected face is deferred to a follow-up so this task changes no crop behavior.
+
+## D040 — Background handling is advisory + opt-in heuristics, no segmentation
+
+**Decision:** Background quality (T014) is an advisory check from border-band uniformity statistics (band 8% of the smaller side, RGB distance ≤30 to the border mean, plain ≥0.6). White-background mode is opt-in per job (`ImageRequirements.background: 'white'`), implemented as an edge-seeded flood fill that whitens only background-like regions connected to the border; enclosed areas and out-of-tolerance subject pixels are never touched. Whitening failures fall back to the unmodified photo, and the result screen labels the effect "best effort — check the preview".
+
+**Reason:** Completes V2 priorities 8–9 with deterministic, testable pixel math and zero privacy surface change. VALIDATION spec requires background checks stay advisory unless objectively measurable — whitening is never claimed as compliance.
+
+**Consequence:** ML matting remains a V3/V4 concern. The requirement field is data, so presets can carry `background: 'white'` later without UI changes.

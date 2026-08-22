@@ -881,6 +881,23 @@ body {
   margin-top: 0.9375rem;
 }
 
+.check-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5625rem;
+  margin-top: 0.9375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check-field input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
 input[type='range'] {
   appearance: none;
   width: 100%;

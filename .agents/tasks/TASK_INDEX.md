@@ -16,6 +16,7 @@
 | T012 | Camera framing guidance (V2) | T005 | P0 |
 | T013 | Face detection and positioning assistance (V2) | T012 | P1 |
 | T014 | Background quality detection and whitening (V2) | T004 | P1 |
+| T015 | Auto-crop suggestion from detected face (V2) | T013, T004 | P2 |
 
 ## Recommended sequence
 
@@ -23,4 +24,4 @@ T001 → T002 → T003 → T004/T006 → T007 → T005 → T008 → T009 → T01
 
 T004 and T006 can be developed independently after the shared processing primitives exist.
 
-MVP (T001–T010) is complete as of 2026-08-22; T011 passed; V2 underway — T012 and T013 done, T014 next.
+MVP (T001–T010) is complete as of 2026-08-22; T011 passed; V2 underway — T012–T014 done, T015 next.

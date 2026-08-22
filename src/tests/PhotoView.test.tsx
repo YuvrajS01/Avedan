@@ -140,6 +140,16 @@ describe('PhotoView flow', () => {
 
     expect(screen.getByText(/Target:/i)).toHaveTextContent('300 × 400 px · JPEG')
   })
+
+  it('reflects the white-background option in the target summary', async () => {
+    const user = userEvent.setup()
+    render(<PhotoView />)
+
+    expect(screen.queryByText(/white bg/i)).not.toBeInTheDocument()
+    await user.click(screen.getByLabelText(/lighten a plain background/i))
+
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('white bg')
+  })
 })
 
 describe('PhotoView with form presets', () => {
