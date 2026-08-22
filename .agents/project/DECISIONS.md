@@ -251,3 +251,16 @@ MVP scope (T001–T010) audited against the PRD, specs, and implementation; decl
 **Reason:** Post-release defect report: camera light turned on but the preview stayed blank. The `<video>` only renders in the ready state, so the pre-mount `attachStream` call never found an element; the stream ran with no visible preview. Regression-tested by asserting `video.srcObject === stream`.
 
 **Consequence:** Preview now displays as soon as permission is granted; switch/retry flows re-attach on each transition to ready. 178/178 tests pass.
+
+## T011 outcome (2026-08-22)
+
+Manual verification passed on real hardware; MVP release checkpoint cleared;
+`v0.1.0-mvp` tagged and published.
+
+## D038 — Live camera guidance reuses the deterministic quality engine
+
+**Decision:** Capture-time framing hints (T012) are computed by sampling the live video into a ~160 px canvas every 700 ms and running the existing `assessImageQuality` heuristics (`processing/quality.ts`). Hints collapse to one message with priority dark > bright > blurry > flat > good, render as a single advisory `role="status"` line, and never block or gate capture.
+
+**Reason:** Highest-priority V2 item ("camera framing guidance") achievable with zero new dependencies, zero model downloads, and bounded CPU cost — consistent with D033 (no ML until opt-in) and D034 (advisory separate from validation).
+
+**Consequence:** Face-position guidance (T013) will extend the same hint surface once an opt-in detector is chosen.

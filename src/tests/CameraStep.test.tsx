@@ -8,6 +8,7 @@ import {
   captureFrame,
   frameToFile,
 } from '../features/camera/camera'
+import { sampleVideoFraming } from '../features/camera/framing'
 
 vi.mock('../features/camera/camera', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../features/camera/camera')>()
@@ -20,10 +21,19 @@ vi.mock('../features/camera/camera', async (importOriginal) => {
   }
 })
 
+vi.mock('../features/camera/framing', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../features/camera/framing')>()
+  return {
+    ...actual,
+    sampleVideoFraming: vi.fn(() => null),
+  }
+})
+
 const mockedIsSupported = vi.mocked(isCameraSupported)
 const mockedStart = vi.mocked(startCamera)
 const mockedCapture = vi.mocked(captureFrame)
 const mockedFrameToFile = vi.mocked(frameToFile)
+const mockedSample = vi.mocked(sampleVideoFraming)
 
 function stubMediaDevices(getUserMedia?: ReturnType<typeof vi.fn>) {
   Object.defineProperty(navigator, 'mediaDevices', {
@@ -36,6 +46,7 @@ afterEach(() => {
   stubMediaDevices(undefined)
   vi.clearAllMocks()
   mockedIsSupported.mockImplementation(() => false)
+  mockedSample.mockImplementation(() => null)
 })
 
 describe('CameraStep', () => {
@@ -85,6 +96,37 @@ describe('CameraStep', () => {
     const video = container.querySelector('video')
     expect(video).not.toBeNull()
     expect(video?.srcObject).toBe(stream)
+  })
+
+  it('shows an advisory hint for a dark preview without blocking capture', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    const stop = vi.fn()
+    mockedStart.mockResolvedValue({ stream: {} as MediaStream, stop })
+    mockedSample.mockReturnValue({
+      checks: [],
+      hint: { id: 'light', severity: 'attention', message: 'Too dark — face a window or brighter light.' },
+    })
+
+    render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+
+    expect(await screen.findByText(/too dark/i)).toHaveAttribute('role', 'status')
+    expect(screen.getByRole('button', { name: 'Capture' })).toBeEnabled()
+  })
+
+  it('hides the hint while the preview looks good', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    mockedStart.mockResolvedValue({ stream: {} as MediaStream, stop: vi.fn() })
+    mockedSample.mockReturnValue({
+      checks: [],
+      hint: { id: 'ok', severity: 'ok', message: 'Looks good — hold steady and capture.' },
+    })
+
+    render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+
+    await waitFor(() => expect(mockedSample).toHaveBeenCalled())
+    expect(screen.queryByText(/looks good/i)).not.toBeInTheDocument()
   })
 
   it('shows a denied state with an upload fallback when permission is refused', async () => {

@@ -1254,6 +1254,18 @@ input[type='range']::-moz-range-thumb {
   margin-top: 1.375rem;
 }
 
+.framing-hint {
+  margin: 1.125rem auto 0;
+  max-width: 26rem;
+  padding: 0.625rem 0.875rem;
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--r-sm);
+  color: var(--warning);
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
 .capture-button {
   appearance: none;
   border: none;

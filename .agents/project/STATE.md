@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** MVP release-ready (checkpoint 2026-08-22); V2 starts at T011  
+**Stage:** V2 underway — T011 (release gate) passed, T012 (camera framing guidance) done  
 **Last updated:** 2026-08-22  
-**Status:** T001–T010 complete + MVP audit passed; two audit blockers fixed (D035/D036); manual on-device verification (T011) is the remaining pre-public-deployment gate
+**Status:** MVP released as `v0.1.0-mvp`; V2 task 1 complete; next: T013 face detection/positioning
 
 ## Product goal
 
@@ -33,17 +33,20 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Optional quality intelligence (2026-08-22, see DECISIONS D033/D034): advisory blur/lighting/contrast hints via deterministic pixel heuristics (`processing/quality.ts`, downscaled render ≤256px, fail-safe → undefined); attached as `ProcessedAsset.advisory` for the photo flow only; rendered in a separate "Optional quality hints" section that never affects validation status or download; no ML models downloaded; face detection deferred pending an opt-in client-side model.
 - MVP release audit (2026-08-22, `.agents/project/MVP_RELEASE_AUDIT.md`): all MVP features verified against the PRD; privacy claims verified against source (zero network calls/analytics); typecheck/lint/tests/build all pass. Two blockers fixed: manual edits now take precedence over an active form preset (D035), and minimum file size is a first-class field on both flows (D036). 177 tests passing.
 - Released as `v0.1.0-mvp` on GitHub (tag + release page). Post-release fix D037: camera preview now attaches the stream after the video mounts — the blank-preview defect is fixed; 178 tests passing. Candidate for a v0.1.1 patch tag.
+- T011 manual verification passed (2026-08-22): photo/signature flows, camera, offline, and privacy confirmed on real hardware. MVP release checkpoint cleared.
+- Camera framing guidance (2026-08-22, T012/D038): live advisory hints while the preview is ready — `features/camera/framing.ts` samples a 160 px frame every 700 ms through the existing quality heuristics; one actionable hint line (dark > bright > blurry > flat) above the shutter; never blocks capture, no models, no new dependencies. 187 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T011 — Pre-release manual verification pass (real-device camera/offline checks; release gate).
+- T013 — Face detection & positioning assistance (opt-in model per PRIVACY spec; task file defines approach).
+- Background quality detection; white-background processing.
 - Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring.
 - Manually verified official presets (D003/D019 workflow).
 - Physical-size (mm/DPI) UI inputs; worker offload of encode/optimize.
 
 ## Current focus
 
-V2 starting at T011 (see NEXT_TASK.md).
+V2 task 2: T013 face detection and positioning assistance.
 
 ## Current risks
 
@@ -55,7 +58,7 @@ V2 starting at T011 (see NEXT_TASK.md).
 
 ## Next recommended task
 
-T011 — Pre-release manual verification pass (`.agents/tasks/T011-manual-release-verification.md`).
+T013 — Face detection and positioning assistance (`.agents/tasks/T013-face-detection-guidance.md`).
 
 ## Continuity rule
 

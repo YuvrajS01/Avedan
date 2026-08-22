@@ -2,28 +2,25 @@
 
 ## Active task
 
-**T011 — Pre-release manual verification pass (V2 gate)** — defined in
-`.agents/tasks/T011-manual-release-verification.md`, not yet started.
+**T013 — Face detection and positioning assistance (V2)** — defined in
+`.agents/tasks/T013-face-detection-guidance.md`, not yet started.
 
 ## Context
 
-The MVP (T001–T010) was audited and declared release-ready on 2026-08-22 (see
-`.agents/project/MVP_RELEASE_AUDIT.md`). The audit's two blockers were fixed
-in-repo (manual edits while a form preset is active; minimum file-size
-support). T011 completes the manual, on-device items of
-`.agents/docs/RELEASE_CHECKLIST.md` before any public deployment.
+- MVP released as `v0.1.0-mvp`; T011 manual verification passed; T012 camera
+  framing guidance shipped (see STATE.md).
+- T013 covers V2 priorities 2/3/6 (face detection, positioning, head angle)
+  plus a partial auto-crop suggestion (7).
+- Hard privacy gate: any detection model is **opt-in**, disclosed, lazy-loaded,
+  and skippable; flows must work fully without it (PRIVACY spec, D033).
 
-## V2 backlog (after T011)
+## V2 backlog after T013
 
-1. **T012 candidate — Preset fidelity & signature wiring:** pass
-   `allowedScales` for `within`-mode PNG optimization (audit I1) and wire
-   Forms presets into the signature flow via
-   `requirementsFromPreset(preset, 'signature')` (audit I2).
-2. Replace illustrative seed presets with manually verified official
-   requirements (D003/D019 workflow).
-3. Physical-size (mm/DPI) inputs using the existing
-   `dimensionsFromPhysical` engine math.
-4. Worker offload of the encode/optimize loop.
+1. Background quality detection + white-background processing.
+2. Preset fidelity: `allowedScales` for `within`-mode PNG optimization;
+   signature-flow preset wiring.
+3. Manually verified official presets (D003/D019 workflow).
+4. Physical-size (mm/DPI) inputs using `dimensionsFromPhysical`.
 
 New tasks must be added to `.agents/tasks/` and indexed in `TASK_INDEX.md`.
 

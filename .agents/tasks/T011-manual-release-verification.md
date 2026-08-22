@@ -1,5 +1,6 @@
 # T011 — Pre-release manual verification pass (V2 gate)
 
+**Status:** DONE (2026-08-22) — verified by the product owner on real hardware.
 **Priority:** P0 (first V2 task; operational release gate)
 **Depends on:** MVP complete (T001–T010 + MVP audit fixes, 2026-08-22)
 
@@ -29,6 +30,13 @@ verified by automated checks, on real devices/browsers.
 
 ## Acceptance criteria
 
-- [ ] All RELEASE_CHECKLIST boxes checked or explicitly waived with reasons.
-- [ ] Results recorded below with device/browser/OS details.
-- [ ] STATE.md updated with the outcome.
+- [x] All RELEASE_CHECKLIST boxes checked or explicitly waived with reasons.
+- [x] Results recorded below with device/browser/OS details.
+- [x] STATE.md updated with the outcome.
+
+## Results
+
+Owner-verified 2026-08-22: photo and signature flows, camera capture
+(including the D037 preview fix), crop, download, offline reload, and privacy
+behavior confirmed working. MVP release checkpoint passed; `v0.1.0-mvp` tagged
+and published on GitHub. V2 development is cleared to begin at T012.

@@ -9,6 +9,7 @@ import {
   isCameraSupported,
   startCamera,
 } from './camera'
+import { sampleVideoFraming, type FramingHint } from './framing'
 
 type CameraStatus = 'starting' | 'ready' | 'denied' | 'not-found' | 'unsupported' | 'error'
 
@@ -16,6 +17,9 @@ interface CameraStepProps {
   onCaptured: (file: File) => void
   onUseUpload: () => void
 }
+
+/** Milliseconds between advisory framing samples of the live preview. */
+const FRAMING_INTERVAL_MS = 700
 
 export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -26,6 +30,7 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
   )
   const [busy, setBusy] = useState(false)
   const [captureError, setCaptureError] = useState<string | null>(null)
+  const [hint, setHint] = useState<FramingHint | null>(null)
 
   const begin = useCallback(async () => {
     setStatus('starting')
@@ -60,6 +65,28 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
     const playing = video.play()
     if (playing && typeof playing.catch === 'function') {
       playing.catch(() => undefined)
+    }
+  }, [status])
+
+  // Advisory framing loop: sample a small frame periodically while the
+  // preview is live. Purely local, fail-safe, and never blocks capture.
+  useEffect(() => {
+    if (status !== 'ready') {
+      setHint(null)
+      return
+    }
+    let cancelled = false
+    const sample = () => {
+      const video = videoRef.current
+      if (!video) return
+      const result = sampleVideoFraming(video)
+      if (!cancelled) setHint(result?.hint ?? null)
+    }
+    sample()
+    const timer = window.setInterval(sample, FRAMING_INTERVAL_MS)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
     }
   }, [status])
 
@@ -109,6 +136,11 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
           {captureError && (
             <p className="error-note" role="alert">
               {captureError}
+            </p>
+          )}
+          {hint && hint.severity === 'attention' && (
+            <p className="framing-hint" role="status">
+              {hint.message}
             </p>
           )}
           <div className="camera-capture-row">
