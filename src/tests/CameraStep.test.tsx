@@ -95,7 +95,8 @@ describe('CameraStep', () => {
 
     const video = container.querySelector('video')
     expect(video).not.toBeNull()
-    expect(video?.srcObject).toBe(stream)
+    // The attach effect runs after the ready-state render — retry until then.
+    await waitFor(() => expect(video?.srcObject).toBe(stream))
   })
 
   it('shows an advisory hint for a dark preview without blocking capture', async () => {
@@ -125,6 +126,7 @@ describe('CameraStep', () => {
     render(<CameraStep onCaptured={vi.fn()} onUseUpload={vi.fn()} />)
     await screen.findByText(/face the camera with a plain background/i)
 
+    // The framing effect runs after the ready-state render — retry until then.
     await waitFor(() => expect(mockedSample).toHaveBeenCalled())
     expect(screen.queryByText(/looks good/i)).not.toBeInTheDocument()
   })
