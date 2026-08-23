@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { clampPan, coverScale, cropBoxStyle, sourceCropRect } from '../features/photo/cropMath'
+import { clampPan, coverScale, cropBoxStyle, faceFraming, sourceCropRect } from '../features/photo/cropMath'
 
 const BOX = { boxWidth: 300, boxHeight: 400 }
 const IMAGE = { imageWidth: 1200, imageHeight: 1600 }
@@ -127,5 +127,54 @@ describe('sourceCropRect', () => {
   it('falls back to the full image for degenerate boxes', () => {
     const rect = sourceCropRect({ boxWidth: 0, boxHeight: 0, ...IMAGE, zoom: 1, offsetX: 0, offsetY: 0 })
     expect(rect).toEqual({ x: 0, y: 0, width: 1200, height: 1600 })
+  })
+})
+
+describe('faceFraming', () => {
+  const box = { boxWidth: 300, boxHeight: 400, imageWidth: 600, imageHeight: 800 }
+  const centeredFace = { x: 0.35, y: 0.3, width: 0.3, height: 0.4 }
+
+  it('places a well-sized face at the canonical position without zoom change', () => {
+    const framing = faceFraming({ ...box, face: centeredFace })
+    // base = 0.5; face pixel height 320 → wanted zoom = 0.55*400/320/0.5 = 1.375
+    expect(framing.zoom).toBeCloseTo(1.375, 3)
+    const clamped = clampPan({
+      ...box,
+      zoom: framing.zoom,
+      offsetX: framing.offsetX,
+      offsetY: framing.offsetY,
+    })
+    // Face center maps back into the crop box near target Y.
+    const scale = coverScale(300, 400, 600, 800) * framing.zoom
+    const screenX =
+      150 + clamped.offsetX + ((0.5 * 600) - 300) * scale
+    expect(screenX).toBeCloseTo(150, 0)
+    const faceCenterY = (0.3 + 0.2) * 800
+    const screenY =
+      200 + clamped.offsetY + (faceCenterY - 400) * scale
+    expect(screenY).toBeLessThanOrEqual(0.42 * 400 + 1)
+    expect(screenY).toBeGreaterThanOrEqual(0.42 * 400 - 40)
+  })
+
+  it('clamps zoom to the slider minimum for a huge face', () => {
+    const framing = faceFraming({ ...box, face: { x: 0.2, y: 0.1, width: 0.6, height: 0.9 } })
+    expect(framing.zoom).toBe(1)
+  })
+
+  it('clamps zoom to the slider maximum for a tiny face', () => {
+    const framing = faceFraming({ ...box, face: { x: 0.45, y: 0.45, width: 0.06, height: 0.05 } })
+    expect(framing.zoom).toBe(3)
+  })
+
+  it('shifts offsets toward an off-center face', () => {
+    const leftFace = { x: 0.05, y: 0.3, width: 0.25, height: 0.4 }
+    const framing = faceFraming({ ...box, face: leftFace })
+    // Face sits left of center → offset must be positive (image moves right).
+    expect(framing.offsetX).toBeGreaterThan(0)
+  })
+
+  it('degenerates safely for a zero-height face', () => {
+    const framing = faceFraming({ ...box, face: { x: 0.4, y: 0.4, width: 0.2, height: 0 } })
+    expect(Number.isFinite(framing.zoom)).toBe(true)
   })
 })

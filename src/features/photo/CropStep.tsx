@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent, PointerEvent } from 'react'
 import { FlowSteps } from '../../components/FlowSteps'
-import { clampPan, coverScale, cropBoxStyle, sourceCropRect } from './cropMath'
+import { clampPan, coverScale, cropBoxStyle, faceFraming, sourceCropRect } from './cropMath'
+import type { NormalizedFace } from './cropMath'
 import type { Rect } from '../../processing/geometry'
 
 interface CropStepProps {
@@ -12,6 +13,8 @@ interface CropStepProps {
   summary: string
   busy: boolean
   error: string | null
+  /** Optional auto-framing seed from camera face detection (T015). */
+  faceRect?: NormalizedFace
   onConfirm: (rect: Rect) => void
   onCancel: () => void
 }
@@ -26,6 +29,7 @@ export function CropStep({
   summary,
   busy,
   error,
+  faceRect,
   onConfirm,
   onCancel,
 }: CropStepProps) {
@@ -34,11 +38,25 @@ export function CropStep({
   const [box, setBox] = useState(DEFAULT_BOX)
   const [zoom, setZoom] = useState(1)
   const [offset, setOffset] = useState({ x: 0, y: 0 })
+  // T015: apply the face suggestion once, before any manual adjustment.
+  const appliedRef = useRef(false)
+  const measuredRef = useRef(false)
+  const adjustedRef = useRef(false)
+  const [autoFramed, setAutoFramed] = useState(false)
+
+  /** Any manual interaction dismisses the auto-framing note for good. */
+  const markAdjusted = () => {
+    if (!adjustedRef.current) {
+      adjustedRef.current = true
+      setAutoFramed(false)
+    }
+  }
 
   useEffect(() => {
     const measure = () => {
       const el = boxRef.current
       if (el && el.clientWidth > 0 && el.clientHeight > 0) {
+        measuredRef.current = true
         setBox({ width: el.clientWidth, height: el.clientHeight })
       }
     }
@@ -46,6 +64,33 @@ export function CropStep({
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
   }, [])
+
+  // T015: seed the framing from the detected face once the box has been
+  // measured — only before the user's first manual adjustment (FR-04).
+  useEffect(() => {
+    if (!faceRect || !measuredRef.current || appliedRef.current || adjustedRef.current) return
+    appliedRef.current = true
+    const framing = faceFraming({
+      boxWidth: box.width,
+      boxHeight: box.height,
+      imageWidth,
+      imageHeight,
+      face: faceRect,
+    })
+    const view = {
+      boxWidth: box.width,
+      boxHeight: box.height,
+      imageWidth,
+      imageHeight,
+      zoom: framing.zoom,
+      offsetX: framing.offsetX,
+      offsetY: framing.offsetY,
+    }
+    const clamped = clampPan(view)
+    setZoom(framing.zoom)
+    setOffset({ x: clamped.offsetX, y: clamped.offsetY })
+    setAutoFramed(true)
+  }, [faceRect, box, imageWidth, imageHeight])
 
   const view = {
     boxWidth: box.width,
@@ -71,6 +116,7 @@ export function CropStep({
   }
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    markAdjusted()
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
@@ -100,12 +146,14 @@ export function CropStep({
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = 10
+    // Arrow-key panning counts as a manual adjustment (T015).
     if (event.key === 'ArrowLeft') applyPan(-step, 0)
     else if (event.key === 'ArrowRight') applyPan(step, 0)
     else if (event.key === 'ArrowUp') applyPan(0, -step)
     else if (event.key === 'ArrowDown') applyPan(0, step)
     else return
     event.preventDefault()
+    markAdjusted()
   }
 
   const resetFraming = () => {
@@ -159,6 +207,11 @@ export function CropStep({
           <span className="crop-corner br" aria-hidden="true" />
         </div>
         <div>
+          {autoFramed && (
+            <p className="auto-frame-note" role="status">
+              Auto-framed from your face — adjust freely.
+            </p>
+          )}
           <div className="crop-controls">
             <label className="field">
               <span>Zoom</span>
@@ -169,6 +222,7 @@ export function CropStep({
                 step={0.05}
                 value={zoom}
                 onChange={(event) => {
+                  markAdjusted()
                   const nextZoom = Number(event.target.value)
                   setZoom(nextZoom)
                   setOffset((current) => {

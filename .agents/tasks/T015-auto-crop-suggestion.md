@@ -1,5 +1,7 @@
 # T015 — Auto-crop suggestion from detected face (V2)
 
+**Status:** DONE (2026-08-22)
+
 **Priority:** P2 (next V2 task after T014)
 **Depends on:** T013 face guidance (native FaceDetector), crop stage (FR-04)
 **V2 objective covered:** automatic crop suggestions (7) — completing the deferred T013 item.
@@ -34,7 +36,22 @@ crop stage opens centered exactly as today. No models, no downloads.
 
 ## Acceptance criteria
 
-- [ ] `faceCropFocus` math tested: canonical placement, clamped inside image bounds.
-- [ ] Without face data or opt-in, behavior is byte-for-byte unchanged.
-- [ ] Manual pan/zoom overrides the suggestion immediately.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] `faceCropFocus` math tested: canonical placement, clamped inside image bounds.
+- [x] Without face data or opt-in, behavior is byte-for-byte unchanged.
+- [x] Manual pan/zoom overrides the suggestion immediately.
+- [x] Typecheck/lint/tests/build pass.
+
+## Results
+
+Implemented 2026-08-22:
+- `cropMath.faceFraming()`: pure math placing the face center horizontally and
+  at 42% box height, sizing the face to ~55% of crop-box height; zoom clamped
+  to the slider range [1,3]; offsets clamped via existing `clampPan`.
+- Camera capture: when face framing is enabled, the last normalized face box
+  from the sampling loop is passed with the captured file (undefined without
+  opt-in/detection — upload path untouched).
+- Crop step: suggestion applied once after box measurement, before any manual
+  interaction; an "Auto-framed from your face — adjust freely." note shows and
+  dismisses on first pointer/keyboard pan or zoom change (FR-04 preserved).
+- Head-angle guidance remains deferred (needs landmarks). 220/220 tests pass;
+  typecheck/lint/build clean.

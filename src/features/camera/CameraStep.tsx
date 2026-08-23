@@ -22,7 +22,7 @@ import {
 type CameraStatus = 'starting' | 'ready' | 'denied' | 'not-found' | 'unsupported' | 'error'
 
 interface CameraStepProps {
-  onCaptured: (file: File) => void
+  onCaptured: (file: File, normalizedFace?: { x: number; y: number; width: number; height: number }) => void
   onUseUpload: () => void
 }
 
@@ -42,6 +42,9 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
   const [faceSupported] = useState(() => isFaceDetectorSupported())
   const [faceFramingOn, setFaceFramingOn] = useState(false)
   const faceDetectorRef = useRef<FaceDetectorLike | null>(null)
+  // Latest normalized face box from the sampling loop, used at capture time
+  // to seed an auto-framing suggestion in the crop stage (T015).
+  const lastFaceRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null)
 
   const begin = useCallback(async () => {
     setStatus('starting')
@@ -85,6 +88,7 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
   useEffect(() => {
     if (status !== 'ready') {
       setHint(null)
+      lastFaceRef.current = null
       return
     }
     let cancelled = false
@@ -106,6 +110,15 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
               const box = await detectFaceBox(detector, video)
               if (!cancelled) {
                 faceHint = deriveFaceHint(box, video.videoWidth, video.videoHeight)
+                lastFaceRef.current =
+                  box && video.videoWidth > 0 && video.videoHeight > 0
+                    ? {
+                        x: box.x / video.videoWidth,
+                        y: box.y / video.videoHeight,
+                        width: box.width / video.videoWidth,
+                        height: box.height / video.videoHeight,
+                      }
+                    : null
               }
             } catch {
               // Detection failed this round — fall back to quality hints only.
@@ -140,8 +153,9 @@ export function CameraStep({ onCaptured, onUseUpload }: CameraStepProps) {
     try {
       const frame = captureFrame(video)
       const file = await frameToFile(frame.canvas)
+      const face = faceFramingOn ? (lastFaceRef.current ?? undefined) : undefined
       handleRef.current?.stop()
-      onCaptured(file)
+      onCaptured(file, face)
     } catch (cause) {
       setCaptureError(cause instanceof Error ? cause.message : 'The photo could not be captured.')
       setBusy(false)

@@ -280,3 +280,11 @@ Manual verification passed on real hardware; MVP release checkpoint cleared;
 **Reason:** Completes V2 priorities 8–9 with deterministic, testable pixel math and zero privacy surface change. VALIDATION spec requires background checks stay advisory unless objectively measurable — whitening is never claimed as compliance.
 
 **Consequence:** ML matting remains a V3/V4 concern. The requirement field is data, so presets can carry `background: 'white'` later without UI changes.
+
+## D041 — Auto-crop suggestion seeds the initial framing only
+
+**Decision:** When camera face framing is enabled and a face was detected at capture, the crop stage opens pre-positioned via `cropMath.faceFraming()` (face center horizontally centered, at 42% box height, sized to ~55% of the box; zoom clamped to the slider range). The suggestion is applied once after layout measurement and is dismissed by any manual pan, keyboard pan, zoom change, or reset. Without opt-in or detection, nothing changes.
+
+**Reason:** Completes V2 priority 7 while preserving FR-04 (user-adjustable framing): a suggestion must never fight the user. Applying it only before first interaction keeps manual control absolute.
+
+**Consequence:** Canonical placement constants (`CANONICAL_FACE_HEIGHT`, `FACE_TARGET_Y`) are exported for tuning. Head-angle guidance still requires landmarks — unchanged deferral.

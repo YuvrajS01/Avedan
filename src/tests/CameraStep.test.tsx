@@ -97,7 +97,7 @@ describe('CameraStep', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Capture' }))
 
-    await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(file))
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(file, undefined))
     expect(mockedCapture).toHaveBeenCalledTimes(1)
     expect(stop).toHaveBeenCalledTimes(1)
   })
@@ -186,6 +186,42 @@ describe('CameraStep', () => {
     await screen.findByText(/face the camera with a plain background/i)
 
     expect(screen.queryByRole('button', { name: /face framing/i })).not.toBeInTheDocument()
+  })
+
+  it('passes detected face geometry when capturing with face framing on', async () => {
+    mockedIsSupported.mockImplementation(() => true)
+    mockedFaceSupported.mockImplementation(() => true)
+    mockedStart.mockResolvedValue({ stream: {} as MediaStream, stop: vi.fn() })
+    mockedCapture.mockReturnValue({
+      canvas: document.createElement('canvas'),
+      width: 640,
+      height: 480,
+    })
+    const file = new File([new Uint8Array(5)], 'camera.jpg', { type: 'image/jpeg' })
+    mockedFrameToFile.mockResolvedValue(file)
+    // Face box in a 640 × 480 frame.
+    mockedDetect.mockResolvedValue({ x: 160, y: 96, width: 320, height: 240 })
+    const onCaptured = vi.fn()
+
+    const { container } = render(<CameraStep onCaptured={onCaptured} onUseUpload={vi.fn()} />)
+    await screen.findByText(/face the camera with a plain background/i)
+    const video = container.querySelector('video')
+    Object.defineProperty(video, 'videoWidth', { value: 640 })
+    Object.defineProperty(video, 'videoHeight', { value: 480 })
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /face framing: off/i }))
+
+    // Wait for one detection round to populate the last-face ref.
+    await waitFor(() => expect(mockedDetect).toHaveBeenCalled())
+    await user.click(screen.getByRole('button', { name: 'Capture' }))
+
+    await waitFor(() =>
+      expect(onCaptured).toHaveBeenCalledWith(
+        file,
+        expect.objectContaining({ x: 0.25, y: 0.2, width: 0.5, height: 0.5 }),
+      ),
+    )
   })
 
   it('shows a denied state with an upload fallback when permission is refused', async () => {

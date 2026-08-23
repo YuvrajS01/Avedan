@@ -88,3 +88,59 @@ export function sourceCropRect(view: CropViewState): Rect {
 
   return { x, y, width, height }
 }
+
+/* ---------------------------------------------------------------------- */
+/* Auto-crop suggestion from a detected face (V2, T015)                    */
+/* ---------------------------------------------------------------------- */
+
+/** Face rectangle normalized to the full image (0–1 on both axes). */
+export interface NormalizedFace {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/** Desired face height as a fraction of the crop-box height. */
+export const CANONICAL_FACE_HEIGHT = 0.55
+/** Desired vertical face-center position within the box (slightly high). */
+export const FACE_TARGET_Y = 0.42
+/** Zoom bounds mirror the crop slider. */
+const MIN_ZOOM = 1
+const MAX_ZOOM = 3
+
+/**
+ * Initial zoom + pan that places a detected face at a canonical
+ * passport-style position. Pure math; the caller applies (and clamps) the
+ * result. When the requested zoom falls outside the slider range it is
+ * clamped, and the offsets follow from the clamped zoom.
+ */
+export function faceFraming(input: {
+  boxWidth: number
+  boxHeight: number
+  imageWidth: number
+  imageHeight: number
+  face: NormalizedFace
+}): { zoom: number; offsetX: number; offsetY: number } {
+  const { boxWidth, boxHeight, imageWidth, imageHeight, face } = input
+
+  const faceCenterX = (face.x + face.width / 2) * imageWidth
+  const faceCenterY = (face.y + face.height / 2) * imageHeight
+  const facePixelHeight = face.height * imageHeight
+
+  const base = coverScale(boxWidth, boxHeight, imageWidth, imageHeight)
+  const wantedZoom =
+    facePixelHeight > 0
+      ? (CANONICAL_FACE_HEIGHT * boxHeight) / facePixelHeight / base
+      : MIN_ZOOM
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, wantedZoom))
+  const scale = base * zoom
+
+  return {
+    zoom,
+    // Screen position of the face center is boxCenter + offset +
+    // (faceCenter - imageCenter) * scale; solve for the target placement.
+    offsetX: scale * (imageWidth / 2 - faceCenterX),
+    offsetY: scale * (imageHeight / 2 - faceCenterY) + (FACE_TARGET_Y - 0.5) * boxHeight,
+  }
+}

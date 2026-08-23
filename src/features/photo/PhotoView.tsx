@@ -14,6 +14,7 @@ import { ProcessedResult } from '../../components/ProcessedResult'
 import { loadPhotoSource, processPhoto, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
 import { releaseSessionAssets } from '../../utils/session'
 import { isCameraSupported } from '../camera/camera'
+import type { NormalizedFace } from './cropMath'
 import { CameraStep } from '../camera/CameraStep'
 
 type Step = 'intake' | 'camera' | 'crop' | 'result'
@@ -74,6 +75,7 @@ export function PhotoView() {
   const [presetSelect, setPresetSelect] = useState('')
   const [manualEdited, setManualEdited] = useState(false)
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
+  const [capturedFace, setCapturedFace] = useState<NormalizedFace | null>(null)
   const [result, setResult] = useState<ProcessedPhoto | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -121,6 +123,7 @@ export function PhotoView() {
   const reset = useCallback(() => {
     releaseSessionAssets({ loaded, result })
     setLoaded(null)
+    setCapturedFace(null)
     setResult(null)
     setBusy(false)
     setError(null)
@@ -136,11 +139,12 @@ export function PhotoView() {
     }
   }, [])
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (file: File, normalizedFace?: NormalizedFace) => {
     setBusy(true)
     setError(null)
     try {
       const next = await loadPhotoSource(file)
+      setCapturedFace(normalizedFace ?? null)
       setLoaded(next)
       setStep('crop')
     } catch (cause) {
@@ -326,6 +330,7 @@ export function PhotoView() {
           imageWidth={loaded.source.width}
           imageHeight={loaded.source.height}
           aspectRatio={profile.aspectRatio ?? 3 / 4}
+          faceRect={capturedFace ?? undefined}
           summary={summary}
           busy={busy}
           error={error}

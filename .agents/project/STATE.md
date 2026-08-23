@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 underway — T012 (framing), T013 (face positioning), T014 (background) done  
+**Stage:** V2 underway — T012–T015 done (guidance, face positioning, background, auto-crop)  
 **Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; next: T015 auto-crop suggestion from detected face
+**Status:** MVP released as `v0.1.0-mvp`; next: T016 preset fidelity (PNG scaling + signature presets)
 
 ## Product goal
 
@@ -37,17 +37,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Camera framing guidance (2026-08-22, T012/D038): live advisory hints while the preview is ready — `features/camera/framing.ts` samples a 160 px frame every 700 ms through the existing quality heuristics; one actionable hint line (dark > bright > blurry > flat) above the shutter; never blocks capture, no models, no new dependencies. 187 tests passing.
 - Face positioning assistance (2026-08-22, T013/D039): opt-in "Face framing" toggle using the native `FaceDetector` API where available — no model downloads; bounding-box geometry drives absent/too-far/too-close/off-center hints merged with quality hints (light/blur > face > contrast). Head-angle guidance and auto-crop pre-positioning deferred. 203 tests passing.
 - Background quality + white-background processing (2026-08-22, T014/D040): advisory border-uniformity check on the photo result; opt-in "Lighten a plain background to white" mode (`ImageRequirements.background`) implemented as edge-seeded flood-fill whitening with subject preservation and best-effort fallback. No ML, no new dependencies. 214 tests passing.
+- Auto-crop suggestion (2026-08-22, T015/D041): when camera face framing is on and a face was detected, the crop stage opens pre-positioned via pure `cropMath.faceFraming()` math; applied once before any manual interaction and dismissed on first adjustment; no-op without opt-in/detection. 220 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T015 — Auto-crop suggestion from detected face (defined in task file; completes the deferred T013 item).
-- Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring.
-- Manually verified official presets (D003/D019 workflow); presets may now carry `background: 'white'`.
+- T016 — Preset fidelity: `allowedScales` for `within`-mode PNG optimization; signature-flow preset wiring (audit findings I1/I2).
+- Manually verified official presets (D003/D019 workflow); presets may carry `background: 'white'`.
 - Physical-size (mm/DPI) UI inputs; worker offload of encode/optimize.
 
 ## Current focus
 
-V2 task 4: T015 auto-crop suggestion from detected face.
+V2 task 5: T016 preset fidelity.
 
 ## Current risks
 
@@ -59,7 +59,7 @@ V2 task 4: T015 auto-crop suggestion from detected face.
 
 ## Next recommended task
 
-T014 — Background quality detection and white-background processing (`.agents/tasks/T014-background-quality-whitening.md`).
+T016 — Preset fidelity: PNG size optimization and signature preset wiring (`.agents/tasks/T016-preset-fidelity.md`).
 
 ## Continuity rule
 
