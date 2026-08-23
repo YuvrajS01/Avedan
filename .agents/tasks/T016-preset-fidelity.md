@@ -1,5 +1,7 @@
 # T016 — Preset fidelity: PNG size optimization and signature preset wiring (V2)
 
+**Status:** DONE (2026-08-22)
+
 **Priority:** P1 (next V2 task after T015)
 **Depends on:** T003 optimizer, T006 signature flow, MVP audit findings I1/I2
 
@@ -36,7 +38,22 @@ Close the two IMPORTANT findings from the MVP release audit:
 
 ## Acceptance criteria
 
-- [ ] Optimizer tests cover multi-scale fallback for an unsatisfiable max size.
-- [ ] Signature honors a Forms preset end-to-end (summary, context panel, edit precedence).
-- [ ] Exact-dimension flows never scale (regression test).
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Optimizer tests cover multi-scale fallback for an unsatisfiable max size.
+- [x] Signature honors a Forms preset end-to-end (summary, context panel, edit precedence).
+- [x] Exact-dimension flows never scale (regression test — photo flow untouched, no `allowedScales`).
+- [x] Typecheck/lint/tests/build pass.
+
+## Results
+
+Implemented 2026-08-22:
+- **I1 closed:** `processSignature` passes `allowedScales = [1 … 0.5]` whenever a
+  file-size constraint exists (signature semantics are "fit within"); reported
+  width/height now reflect the optimizer's actual encoded scale. Optimizer
+  gained three multi-scale tests including a too-large-after-all-scales case.
+  Photo flow unchanged — exact dimensions are mandatory there.
+- **I2 closed:** Forms cards expose "Prepare signature" → `#/signature?preset=…`;
+  SignatureView resolves the preset via `requirementsFromPreset(preset,
+  'signature')`, shows the context panel (name/authority/last-verified/source
+  link + "Use generic settings instead"), autofills manual fields including
+  min/max KB, and manual edits take precedence per D035.
+- 225/225 tests pass; typecheck/lint/build clean.

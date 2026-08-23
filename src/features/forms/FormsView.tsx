@@ -46,42 +46,55 @@ export function FormsView() {
           const signatureSummary = requirementsFromPreset(preset, 'signature')
           return (
             <li key={preset.id}>
-              <button
-                type="button"
-                className="card preset-card"
-                onClick={() => navigate('photo', { presetId: preset.id })}
-              >
-                <span className="preset-head">
-                  <span className="preset-name">{preset.name}</span>
-                  <span
-                    className={
-                      freshness === 'verified' ? 'badge badge-verified' : 'badge badge-stale'
-                    }
-                  >
-                    {freshness === 'verified' ? 'Verified' : 'Needs re-verification'}
+              <div className="card preset-card">
+                <button
+                  type="button"
+                  className="preset-main"
+                  onClick={() => navigate('photo', { presetId: preset.id })}
+                >
+                  <span className="preset-head">
+                    <span className="preset-name">{preset.name}</span>
+                    <span
+                      className={
+                        freshness === 'verified' ? 'badge badge-verified' : 'badge badge-stale'
+                      }
+                    >
+                      {freshness === 'verified' ? 'Verified' : 'Needs re-verification'}
+                    </span>
                   </span>
-                </span>
-                <span className="action-hint">{preset.authority}</span>
-                {photoSummary && (
-                  <span className="preset-line">Photo: {describeRequirements(photoSummary)}</span>
-                )}
-                {signatureSummary && (
-                  <span className="preset-line">
-                    Signature: {describeRequirements(signatureSummary)}
-                  </span>
-                )}
-                <span className="preset-meta">
-                  Last verified {preset.lastVerified}
-                  {preset.sourceUrl && (
-                    <>
-                      {' · '}
-                      <a href={preset.sourceUrl} target="_blank" rel="noreferrer">
-                        Official source
-                      </a>
-                    </>
+                  <span className="action-hint">{preset.authority}</span>
+                  {photoSummary && (
+                    <span className="preset-line">Photo: {describeRequirements(photoSummary)}</span>
                   )}
-                </span>
-              </button>
+                  {signatureSummary && (
+                    <span className="preset-line">
+                      Signature: {describeRequirements(signatureSummary)}
+                    </span>
+                  )}
+                  <span className="preset-meta">
+                    Last verified {preset.lastVerified}
+                    {preset.sourceUrl && (
+                      <>
+                        {' · '}
+                        <a href={preset.sourceUrl} target="_blank" rel="noreferrer">
+                          Official source
+                        </a>
+                      </>
+                    )}
+                  </span>
+                </button>
+                {signatureSummary && (
+                  <div className="preset-actions">
+                    <button
+                      type="button"
+                      className="button button-ghost"
+                      onClick={() => navigate('signature', { presetId: preset.id })}
+                    >
+                      Prepare signature
+                    </button>
+                  </div>
+                )}
+              </div>
             </li>
           )
         })}

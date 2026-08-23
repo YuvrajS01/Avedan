@@ -288,3 +288,15 @@ Manual verification passed on real hardware; MVP release checkpoint cleared;
 **Reason:** Completes V2 priority 7 while preserving FR-04 (user-adjustable framing): a suggestion must never fight the user. Applying it only before first interaction keeps manual control absolute.
 
 **Consequence:** Canonical placement constants (`CANONICAL_FACE_HEIGHT`, `FACE_TARGET_Y`) are exported for tuning. Head-angle guidance still requires landmarks — unchanged deferral.
+
+## D042 — Signature outputs may scale down; Forms presets reach both flows
+
+**Decision:** The signature pipeline now passes `allowedScales = [1, 0.9 … 0.5]` to the optimizer whenever a file-size constraint exists — legitimate because signature validation already uses `within` dimension semantics — and reports the actually-encoded dimensions. Forms preset cards expose "Prepare signature", and the signature page resolves the preset like the photo page (context panel + autofill + manual-edit precedence per D035).
+
+**Reason:** Closes MVP audit findings I1/I2. PNG encoders ignore quality, so without scaling an oversized PNG had no recourse but "too large". Scaling is only permitted where dimensions are not exact-mandatory; the photo flow never scales (architecture rule).
+
+**Consequence:** Reported metadata matches the downloaded bytes in every case. Presets carrying min-size ranges still surface `too-small` honestly rather than padding.
+
+## T016 outcome (2026-08-22)
+
+MVP audit findings I1 and I2 closed: signature outputs may scale down within `within` semantics (D042), and Forms presets now reach both photo and signature flows. 225/225 tests passing.

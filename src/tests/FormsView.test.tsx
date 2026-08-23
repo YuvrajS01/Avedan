@@ -37,3 +37,21 @@ describe('FormsView', () => {
     expect(window.location.hash).toBe(`#/photo?preset=${FORM_PRESETS[0].id}`)
   })
 })
+
+describe('FormsView signature wiring', () => {
+  it('navigates to the signature flow with the selected preset', async () => {
+    const user = userEvent.setup()
+    render(<FormsView />)
+    // One action per preset card; the first belongs to FORM_PRESETS[0].
+    const first = screen.getAllByRole('button', { name: /prepare signature/i })[0]
+    await user.click(first)
+    expect(window.location.hash).toBe(`#/signature?preset=${FORM_PRESETS[0].id}`)
+  })
+
+  it('only offers signature wiring for presets that define a signature', async () => {
+    render(<FormsView />)
+    const cards = screen.getAllByRole('button', { name: /prepare signature/i })
+    // Every seed preset defines a signature, so one action per card.
+    expect(cards).toHaveLength(FORM_PRESETS.length)
+  })
+})

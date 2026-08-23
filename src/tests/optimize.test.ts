@@ -174,3 +174,51 @@ describe('optimizeEncoding', () => {
     ).rejects.toMatchObject({ code: 'invalid-input' } satisfies Partial<ProcessingError>)
   })
 })
+
+describe('optimizeEncoding with allowedScales', () => {
+  it('falls back to a smaller scale when scale 1 cannot meet the limit', async () => {
+    const { encodeAt, calls } = fakeEncoder(100_000)
+
+    const result = await optimizeEncoding(encodeAt, {
+      fileSize: { maxBytes: 20_000 },
+      allowedScales: [1, 0.8, 0.6],
+    })
+
+    expect(result.outcome).toBe('ok')
+    expect(result.scale).toBeLessThan(1)
+    // Scale 0.8 → max size = 100k * 0.64 * 0.96 ≈ 61.4k > 20k; 0.6 → ≈34.5k…
+    // 0.6 still too big at top quality? Verify against measured size instead:
+    expect(result.sizeBytes).toBeLessThanOrEqual(20_000)
+    expect(calls.some((call) => call.scale === result.scale)).toBe(true)
+  })
+
+  it('prefers full size when it already satisfies the constraint', async () => {
+    const { encodeAt, calls } = fakeEncoder(100_000)
+
+    const result = await optimizeEncoding(encodeAt, {
+      fileSize: { maxBytes: 50_000 },
+      allowedScales: [1, 0.8, 0.6],
+    })
+
+    expect(result.outcome).toBe('ok')
+    expect(result.scale).toBe(1)
+    expect(calls.every((call) => call.scale === 1)).toBe(true)
+  })
+
+  it('reports too-large only after every allowed scale fails', async () => {
+    const { encodeAt, calls } = fakeEncoder(100_000)
+
+    const result = await optimizeEncoding(encodeAt, {
+      fileSize: { maxBytes: 1 },
+      allowedScales: [1, 0.5],
+    })
+
+    expect(result.outcome).toBe('too-large')
+    const triedScales = new Set(calls.map((call) => call.scale))
+    expect(triedScales.has(1)).toBe(true)
+    expect(triedScales.has(0.5)).toBe(true)
+    // Smallest candidate is min quality at the smallest allowed scale:
+    // 100k * 0.5² * (0.2 + 0.8·0.3) = 11k.
+    expect(result.sizeBytes).toBe(11_000)
+  })
+})

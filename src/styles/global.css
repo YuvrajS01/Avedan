@@ -1648,6 +1648,26 @@ input[type='range']::-moz-range-thumb {
   translate: 0 -1px;
 }
 
+.preset-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.preset-actions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
 .preset-head {
   display: flex;
   align-items: center;

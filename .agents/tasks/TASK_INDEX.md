@@ -18,6 +18,7 @@
 | T014 | Background quality detection and whitening (V2) | T004 | P1 |
 | T015 | Auto-crop suggestion from detected face (V2) | T013, T004 | P2 |
 | T016 | Preset fidelity: PNG scaling + signature presets (V2) | T003, T006 | P1 |
+| T017 | Physical size (mm/DPI) requirement inputs (V2) | T004 | P2 |
 
 ## Recommended sequence
 
@@ -25,4 +26,4 @@ T001 → T002 → T003 → T004/T006 → T007 → T005 → T008 → T009 → T01
 
 T004 and T006 can be developed independently after the shared processing primitives exist.
 
-MVP (T001–T010) is complete as of 2026-08-22; T011 passed; V2 underway — T012–T015 done, T016 next.
+MVP (T001–T010) is complete as of 2026-08-22; T011 passed; V2 underway — T012–T016 done, T017 next.

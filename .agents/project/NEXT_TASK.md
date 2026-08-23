@@ -2,25 +2,24 @@
 
 ## Active task
 
-**T016 — Preset fidelity: PNG size optimization and signature preset wiring (V2)** —
-defined in `.agents/tasks/T016-preset-fidelity.md`, not yet started.
+**T017 — Physical size (mm/DPI) requirement inputs (V2)** — defined in
+`.agents/tasks/T017-physical-size-inputs.md`, not yet started.
 
 ## Context
 
 - MVP released as `v0.1.0-mvp`; T011 verification passed.
-- V2 so far: T012 live framing hints, T013 opt-in face positioning, T014
-  background advisory + whitening, T015 auto-crop suggestion. See STATE.md and
-  DECISIONS D038–D041.
-- T016 closes the two IMPORTANT findings from the MVP release audit:
-  multi-scale fallback for `within`-mode outputs (mainly PNG signatures) and
-  Forms → signature preset wiring using the D035 manual-edit precedence rule.
+- V2 so far: T012–T016 (framing hints, face positioning, background advisory +
+  whitening, auto-crop suggestion, preset fidelity). MVP audit IMPORTANT
+  findings I1/I2 are now closed. See STATE.md and DECISIONS D038–D042.
+- T017 exposes mm/cm + DPI inputs using the already-tested
+  `dimensionsFromPhysical` engine math — a small, self-contained UI task.
 
-## V2 backlog after T016
+## V2 backlog after T017
 
-1. Manually verified official presets (D003/D019 workflow); presets may carry
+1. Manually verified official presets (D003/D019 **owner** workflow; needs
+   human verification against official sources). Presets may carry
    `background: 'white'`.
-2. Physical-size (mm/DPI) inputs using `dimensionsFromPhysical`.
-3. Worker offload of the encode/optimize loop.
+2. Worker offload of the encode/optimize loop.
 
 New tasks must be added to `.agents/tasks/` and indexed in `TASK_INDEX.md`.
 

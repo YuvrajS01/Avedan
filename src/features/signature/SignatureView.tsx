@@ -1,10 +1,12 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   SIGNATURE_PROFILES,
   PROFILE_NOTE,
   describeRequirements,
   findSignatureProfile,
 } from '../../domain/requirements/profiles'
+import { findFormPreset, requirementsFromPreset } from '../../domain/presets/registry'
+import { useHashRoute } from '../../hooks/useHashRoute'
 import type { ImageRequirements } from '../../domain/requirements/types'
 import type { ProcessedAsset } from '../../domain/jobs/result'
 import type { DrawableSource } from '../../processing/crop'
@@ -69,17 +71,49 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
 }
 
 export function SignatureView() {
+  const { presetId, navigate } = useHashRoute()
   const [step, setStep] = useState<Step>('choose')
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
   const [presetSelect, setPresetSelect] = useState('')
+  const [manualEdited, setManualEdited] = useState(false)
   const [loaded, setLoaded] = useState<LoadedPhoto | null>(null)
   const [result, setResult] = useState<ProcessedAsset | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const profile = useMemo(() => profileFromCustom(custom), [custom])
+  const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
+  const presetProfile = useMemo(
+    () => (activePreset ? requirementsFromPreset(activePreset, 'signature') : undefined),
+    [activePreset],
+  )
+  const profile = useMemo(
+    () => (presetProfile && !manualEdited ? presetProfile : profileFromCustom(custom)),
+    [presetProfile, manualEdited, custom],
+  )
   const summary = describeRequirements(profile)
+
+  const updateCustom = useCallback((patch: Partial<CustomSettings>) => {
+    setManualEdited(true)
+    setCustom((current) => ({ ...current, ...patch }))
+  }, [])
+
+  // Autofill manual fields from a Forms preset; edits take precedence (D035).
+  useEffect(() => {
+    if (!presetProfile) return
+    setManualEdited(false)
+    setCustom({
+      width: presetProfile.dimensions ? String(presetProfile.dimensions.width) : '',
+      height: presetProfile.dimensions ? String(presetProfile.dimensions.height) : '',
+      minKb: presetProfile.fileSize?.minBytes
+        ? String(Math.round(presetProfile.fileSize.minBytes / 1024))
+        : '',
+      maxKb: presetProfile.fileSize?.maxBytes
+        ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
+        : '',
+      format: presetProfile.format ?? 'png',
+    })
+  }, [presetProfile])
 
   const reset = useCallback(() => {
     releaseSessionAssets({ loaded, result })
@@ -162,6 +196,7 @@ export function SignatureView() {
     if (!id) return
     const p = findSignatureProfile(id)
     if (!p) return
+    setManualEdited(false)
     setCustom({
       width: p.dimensions ? String(p.dimensions.width) : '',
       height: p.dimensions ? String(p.dimensions.height) : '',
@@ -196,7 +231,7 @@ export function SignatureView() {
               type="number"
               min={1}
               value={custom.width}
-              onChange={(event) => setCustom({ ...custom, width: event.target.value })}
+              onChange={(event) => updateCustom({ width: event.target.value })}
             />
           </label>
           <label className="field">
@@ -205,7 +240,7 @@ export function SignatureView() {
               type="number"
               min={1}
               value={custom.height}
-              onChange={(event) => setCustom({ ...custom, height: event.target.value })}
+              onChange={(event) => updateCustom({ height: event.target.value })}
             />
           </label>
           <label className="field">
@@ -215,7 +250,7 @@ export function SignatureView() {
               min={0}
               value={custom.minKb}
               placeholder="none"
-              onChange={(event) => setCustom({ ...custom, minKb: event.target.value })}
+              onChange={(event) => updateCustom({ minKb: event.target.value })}
             />
           </label>
           <label className="field">
@@ -225,7 +260,7 @@ export function SignatureView() {
               min={0}
               value={custom.maxKb}
               placeholder="none"
-              onChange={(event) => setCustom({ ...custom, maxKb: event.target.value })}
+              onChange={(event) => updateCustom({ maxKb: event.target.value })}
             />
           </label>
           <label className="field">
@@ -233,7 +268,7 @@ export function SignatureView() {
             <select
               value={custom.format}
               onChange={(event) =>
-                setCustom({ ...custom, format: event.target.value as CustomSettings['format'] })
+                updateCustom({ format: event.target.value as CustomSettings['format'] })
               }
             >
               <option value="png">PNG</option>
@@ -258,6 +293,32 @@ export function SignatureView() {
           <p className="lede">
             Upload a photo of a signed paper, or draw a new signature.
           </p>
+          {activePreset && (
+            <div className="preset-context">
+              <p>
+                Form preset: <strong>{activePreset.name}</strong> · {activePreset.authority}
+              </p>
+              <p className="profile-note">
+                Last verified {activePreset.lastVerified}
+                {activePreset.sourceUrl && (
+                  <>
+                    {' · '}
+                    <a href={activePreset.sourceUrl} target="_blank" rel="noreferrer">
+                      Official source
+                    </a>
+                  </>
+                )}{' '}
+                — always confirm against the official source.
+              </p>
+              <button
+                type="button"
+                className="button button-ghost"
+                onClick={() => navigate('signature')}
+              >
+                Use generic settings instead
+              </button>
+            </div>
+          )}
           {requirementsPanel}
           <ul className="option-grid">
             <li>

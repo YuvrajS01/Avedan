@@ -20,7 +20,14 @@ function flattenToWhite(source: CanvasLike): CanvasLike {
 /**
  * Signature pipeline per PROCESSING_ENGINE order:
  * trim empty margins → fit resize → encode → optimize → validate.
+ *
+ * Signature dimensions are "fit within" (validation uses `within` mode), so
+ * when a file-size constraint cannot be met at full size the optimizer may
+ * try progressively smaller scales — this is the only recourse for PNG,
+ * whose encoder ignores quality (MVP audit finding I1).
  */
+const SIGNATURE_ALLOWED_SCALES = [1, 0.9, 0.8, 0.7, 0.6, 0.5]
+
 export async function processSignature(input: {
   source: DrawableSource
   profile: ImageRequirements
@@ -41,8 +48,15 @@ export async function processSignature(input: {
 
   const optimization = await optimizeEncoding(
     createCanvasEncoder(flattened as unknown as EncodableCanvas, format),
-    { fileSize: input.profile.fileSize },
+    {
+      fileSize: input.profile.fileSize,
+      allowedScales: input.profile.fileSize ? SIGNATURE_ALLOWED_SCALES : undefined,
+    },
   )
+
+  // The optimizer may have scaled down; report what was actually encoded.
+  const width = Math.max(1, Math.round(target.width * optimization.scale))
+  const height = Math.max(1, Math.round(target.height * optimization.scale))
 
   const url =
     typeof URL.createObjectURL === 'function'
@@ -56,8 +70,8 @@ export async function processSignature(input: {
     blob: optimization.blob,
     url,
     fileName: `${baseName}-avedan.${extension}`,
-    width: resized.width,
-    height: resized.height,
+    width,
+    height,
     format,
     sizeBytes: optimization.sizeBytes,
     quality: optimization.quality,
