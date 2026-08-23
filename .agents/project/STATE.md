@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 underway — T012–T016 done (capture guidance suite + preset fidelity)  
+**Stage:** V2 underway — T012–T017 done (capture guidance suite + fidelity + physical sizes)  
 **Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; next: T017 physical size (mm/DPI) inputs
+**Status:** MVP released as `v0.1.0-mvp`; next: T018 worker offload of encode/optimize
 
 ## Product goal
 
@@ -39,16 +39,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Background quality + white-background processing (2026-08-22, T014/D040): advisory border-uniformity check on the photo result; opt-in "Lighten a plain background to white" mode (`ImageRequirements.background`) implemented as edge-seeded flood-fill whitening with subject preservation and best-effort fallback. No ML, no new dependencies. 214 tests passing.
 - Auto-crop suggestion (2026-08-22, T015/D041): when camera face framing is on and a face was detected, the crop stage opens pre-positioned via pure `cropMath.faceFraming()` math; applied once before any manual interaction and dismissed on first adjustment; no-op without opt-in/detection. 220 tests passing.
 - Preset fidelity (2026-08-22, T016/D042): signature pipeline scales down within `within` semantics when a file-size constraint demands it (fixes oversized PNGs); reported dims match encoded bytes. Forms preset cards expose "Prepare signature"; signature page resolves presets with context panel + D035 edit precedence. MVP audit IMPORTANT findings I1/I2 closed. 225 tests passing.
+- Physical size inputs (2026-08-22, T017/D043): "Physical size (advanced)" disclosure in the photo panel — mm/cm + DPI derive pixel dimensions through the existing `dimensionsFromPhysical` math into the editable px fields; invalid input is inert; validation stays pixel-based; no DPI embedded in exports. 228 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T017 — Physical size (mm/DPI) requirement inputs (defined in task file).
-- Manually verified official presets (D003/D019 owner workflow); presets may carry `background: 'white'`.
-- Worker offload of encode/optimize loop.
+- T018 — Worker offload of the encode/optimize loop (defined in task file).
+- Manually verified official presets (D003/D019 **owner** workflow); presets may carry `background: 'white'`.
 
 ## Current focus
 
-V2 task 6: T017 physical size (mm/DPI) inputs.
+V2 task 7: T018 worker offload.
 
 ## Current risks
 
@@ -60,7 +60,7 @@ V2 task 6: T017 physical size (mm/DPI) inputs.
 
 ## Next recommended task
 
-T017 — Physical size (mm/DPI) requirement inputs (`.agents/tasks/T017-physical-size-inputs.md`).
+T018 — Worker offload of the encode/optimize loop (`.agents/tasks/T018-worker-offload.md`).
 
 ## Continuity rule
 

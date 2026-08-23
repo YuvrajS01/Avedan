@@ -1,5 +1,7 @@
 # T017 — Physical size (mm/DPI) requirement inputs (V2)
 
+**Status:** DONE (2026-08-22)
+
 **Priority:** P2 (next V2 task after T016)
 **Depends on:** `processing/geometry.ts#dimensionsFromPhysical` (already implemented and tested)
 
@@ -31,6 +33,19 @@ physical units — common on government forms.
 
 ## Acceptance criteria
 
-- [ ] mm/cm + DPI inputs derive correct pixels (property-tested against `dimensionsFromPhysical`).
-- [ ] Derived values are editable; invalid input never blocks the flow.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] mm/cm + DPI inputs derive correct pixels (property-tested against `dimensionsFromPhysical`).
+- [x] Derived values are editable; invalid input never blocks the flow.
+- [x] Typecheck/lint/tests/build pass.
+
+## Results
+
+Implemented 2026-08-22 in the photo requirements panel under a collapsed
+"Physical size (advanced)" disclosure:
+- Unit (mm/cm) + physical width/height + DPI (default 300) inputs.
+- A memo derives pixels through the existing `dimensionsFromPhysical` engine
+  math and an effect fills the editable Width/Height fields; invalid or
+  partial input leaves everything untouched.
+- The derived-values note states exactly how the pixels were computed
+  ("Derived 413 × 531 px from 35 × 45 mm at 300 DPI").
+- Preset autofills clear the physical fields; validation remains pixel-based;
+  no DPI metadata is embedded in exports. 228/228 tests pass.

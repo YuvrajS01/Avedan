@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { PhotoView } from '../features/photo/PhotoView'
 import { loadPhotoSource, processPhoto } from '../features/photo/processPhoto'
@@ -149,6 +149,48 @@ describe('PhotoView flow', () => {
     await user.click(screen.getByLabelText(/lighten a plain background/i))
 
     expect(screen.getByText(/Target:/i)).toHaveTextContent('white bg')
+  })
+
+  it('derives pixel dimensions from physical size and DPI (T017)', async () => {
+    const user = userEvent.setup()
+    render(<PhotoView />)
+
+    await user.click(screen.getByText(/physical size \(advanced\)/i))
+    const width = screen.getByLabelText('Width (px)')
+    const height = screen.getByLabelText('Height (px)')
+    expect(width).toHaveValue(300)
+
+    await user.type(screen.getByLabelText('Physical width'), '35')
+    await user.type(screen.getByLabelText('Physical height'), '45')
+    // DPI defaults to 300: 35 mm → 413 px, 45 mm → 531 px.
+    await waitFor(() => expect(width).toHaveValue(413))
+    expect(height).toHaveValue(531)
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('413 × 531 px')
+    expect(screen.getByText(/derived 413 × 531 px from 35 × 45 mm at 300 dpi/i)).toBeInTheDocument()
+  })
+
+  it('converts centimeters via the unit selector', async () => {
+    const user = userEvent.setup()
+    render(<PhotoView />)
+
+    await user.click(screen.getByText(/physical size \(advanced\)/i))
+    await user.selectOptions(screen.getByLabelText('Unit'), 'cm')
+    await user.type(screen.getByLabelText('Physical width'), '3.5')
+    await user.type(screen.getByLabelText('Physical height'), '4.5')
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Width (px)')).toHaveValue(413),
+    )
+  })
+
+  it('leaves pixels untouched when physical input is invalid', async () => {
+    const user = userEvent.setup()
+    render(<PhotoView />)
+
+    await user.click(screen.getByText(/physical size \(advanced\)/i))
+    await user.type(screen.getByLabelText('Physical width'), '-5')
+
+    expect(screen.getByLabelText('Width (px)')).toHaveValue(300)
   })
 })
 

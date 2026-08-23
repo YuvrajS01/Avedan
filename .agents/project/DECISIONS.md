@@ -300,3 +300,19 @@ Manual verification passed on real hardware; MVP release checkpoint cleared;
 ## T016 outcome (2026-08-22)
 
 MVP audit findings I1 and I2 closed: signature outputs may scale down within `within` semantics (D042), and Forms presets now reach both photo and signature flows. 225/225 tests passing.
+
+## D043 — Physical size derives pixels; validation stays pixel-based
+
+**Decision:** The photo requirements panel offers an optional "Physical size (advanced)" disclosure (mm/cm + DPI, default 300). Derived pixels fill the editable Width/Height fields through the existing `dimensionsFromPhysical` engine math; invalid or partial input changes nothing. Validation continues to check pixels only, and no DPI metadata is embedded in exported files.
+
+**Reason:** Many government forms state photo sizes physically (35 × 45 mm). PRD §5 lists optional physical size/DPI under custom requirements; the engine math existed since T002 but had no UI. Deriving into the standard px fields keeps a single source of truth and avoids a second validation path.
+
+**Consequence:** Presets already carry `physicalSizeMm`/`dpi` in the schema, so future verified presets can prefill these fields without further UI work.
+
+## D043 — Physical size derives pixels; validation stays pixel-based
+
+**Decision:** The photo requirements panel offers an optional "Physical size (advanced)" disclosure (mm/cm + DPI, default 300). Derived pixels fill the editable Width/Height fields through the existing `dimensionsFromPhysical` engine math; invalid or partial input changes nothing. Validation continues to check pixels only, and no DPI metadata is embedded in exported files.
+
+**Reason:** Many government forms state photo sizes physically (35 × 45 mm). PRD §5 lists optional physical size/DPI under custom requirements; the engine math existed since T002 but had no UI. Deriving into the standard px fields keeps a single source of truth and avoids a second validation path.
+
+**Consequence:** Presets already carry `physicalSizeMm`/`dpi` in the schema, so future verified presets can prefill these fields without further UI work.

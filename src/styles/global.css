@@ -898,6 +898,22 @@ body {
   accent-color: var(--accent);
 }
 
+.advanced-fields {
+  margin-top: 0.9375rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.advanced-fields summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.advanced-fields[open] summary {
+  margin-bottom: 0.75rem;
+}
+
 input[type='range'] {
   appearance: none;
   width: 100%;

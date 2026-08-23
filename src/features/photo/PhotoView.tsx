@@ -12,6 +12,7 @@ import { IntakeStep } from './IntakeStep'
 import { CropStep } from './CropStep'
 import { ProcessedResult } from '../../components/ProcessedResult'
 import { loadPhotoSource, processPhoto, type LoadedPhoto, type ProcessedPhoto } from './processPhoto'
+import { dimensionsFromPhysical } from '../../processing/geometry'
 import { releaseSessionAssets } from '../../utils/session'
 import { isCameraSupported } from '../camera/camera'
 import type { NormalizedFace } from './cropMath'
@@ -26,6 +27,11 @@ interface CustomSettings {
   maxKb: string
   format: ImageRequirements['format']
   whiteBg: boolean
+  /** Optional physical size (T017); pixels are derived from these. */
+  physWidth: string
+  physHeight: string
+  unit: 'mm' | 'cm'
+  dpi: string
 }
 
 const DEFAULT_CUSTOM: CustomSettings = {
@@ -35,6 +41,10 @@ const DEFAULT_CUSTOM: CustomSettings = {
   maxKb: '',
   format: 'jpeg',
   whiteBg: false,
+  physWidth: '',
+  physHeight: '',
+  unit: 'mm',
+  dpi: '300',
 }
 
 function toPositiveInt(value: string): number | undefined {
@@ -102,6 +112,34 @@ export function PhotoView() {
     setCustom((current) => ({ ...current, ...patch }))
   }, [])
 
+  // T017: physical size -> pixel dimensions via the tested engine math.
+  const physical = useMemo(() => {
+    const w = Number(custom.physWidth)
+    const h = Number(custom.physHeight)
+    const dpi = Number(custom.dpi)
+    if (!Number.isFinite(w) || !Number.isFinite(h) || !Number.isFinite(dpi)) return null
+    if (w <= 0 || h <= 0 || dpi <= 0) return null
+    const mmPerUnit = custom.unit === 'cm' ? 10 : 1
+    try {
+      return dimensionsFromPhysical(
+        { widthMm: w * mmPerUnit, heightMm: h * mmPerUnit },
+        dpi,
+      )
+    } catch {
+      return null
+    }
+  }, [custom.physWidth, custom.physHeight, custom.unit, custom.dpi])
+
+  // Derived pixels fill the editable width/height fields (T017).
+  useEffect(() => {
+    if (!physical) return
+    setCustom((current) =>
+      current.width === String(physical.width) && current.height === String(physical.height)
+        ? current
+        : { ...current, width: String(physical.width), height: String(physical.height) },
+    )
+  }, [physical])
+
   // When navigating from Forms with a preset, autofill the manual fields for editing
   useEffect(() => {
     if (!presetProfile) return
@@ -117,6 +155,10 @@ export function PhotoView() {
         : '',
       format: presetProfile.format ?? 'jpeg',
       whiteBg: false,
+      physWidth: '',
+      physHeight: '',
+      unit: 'mm',
+      dpi: '300',
     })
   }, [presetProfile])
 
@@ -191,6 +233,10 @@ export function PhotoView() {
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
       format: p.format ?? 'jpeg',
       whiteBg: false,
+      physWidth: '',
+      physHeight: '',
+      unit: 'mm',
+      dpi: '300',
     })
   }
 
@@ -292,6 +338,61 @@ export function PhotoView() {
             </select>
           </label>
         </div>
+        <details className="advanced-fields">
+          <summary>Physical size (advanced)</summary>
+          <div className="custom-fields">
+            <label className="field">
+              <span>Unit</span>
+              <select
+                value={custom.unit}
+                onChange={(event) =>
+                  updateCustom({ unit: event.target.value as CustomSettings['unit'] })
+                }
+              >
+                <option value="mm">mm</option>
+                <option value="cm">cm</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>DPI</span>
+              <input
+                type="number"
+                min={1}
+                value={custom.dpi}
+                onChange={(event) => updateCustom({ dpi: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span>Physical width</span>
+              <input
+                type="number"
+                min={0}
+                step="0.1"
+                value={custom.physWidth}
+                placeholder="—"
+                onChange={(event) => updateCustom({ physWidth: event.target.value })}
+              />
+            </label>
+            <label className="field">
+              <span>Physical height</span>
+              <input
+                type="number"
+                min={0}
+                step="0.1"
+                value={custom.physHeight}
+                placeholder="—"
+                onChange={(event) => updateCustom({ physHeight: event.target.value })}
+              />
+            </label>
+          </div>
+          {physical && (
+            <p className="profile-note">
+              Derived {physical.width} × {physical.height} px from{' '}
+              {custom.physWidth} × {custom.physHeight} {custom.unit} at {custom.dpi} DPI.
+              Pixels are editable afterwards.
+            </p>
+          )}
+        </details>
         <label className="check-field">
           <input
             type="checkbox"
