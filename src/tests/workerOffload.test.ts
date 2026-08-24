@@ -240,6 +240,32 @@ describe('client dispatcher with a fake worker', () => {
     expect(fallback).toHaveBeenCalledTimes(1)
   })
 
+  it('falls back to the in-thread pipeline when the worker stays silent', async () => {
+    vi.useFakeTimers()
+    try {
+      // A worker that loads fine but never answers (engine quirk, CSP, …).
+      stubWorkerGlobals(() => undefined)
+
+      const fallback = vi.fn(async () => signatureOutput)
+      const pending = processWithOptionalWorker(
+        {
+          kind: 'photo',
+          source: { width: 10, height: 10 } as never,
+          cropRect: { x: 0, y: 0, width: 10, height: 10 },
+          profile,
+          fileName: 'a.jpg',
+        },
+        fallback,
+      )
+
+      await vi.runAllTimersAsync()
+      expect(await pending).toEqual(signatureOutput)
+      expect(fallback).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('uses the in-thread pipeline directly when workers are unsupported', async () => {
     vi.stubGlobal('Worker', undefined)
     vi.stubGlobal('createImageBitmap', undefined)

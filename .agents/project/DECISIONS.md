@@ -324,3 +324,11 @@ MVP audit findings I1 and I2 closed: signature outputs may scale down within `wi
 **Reason:** T019 prepares the registry so owner-verified official presets (D003/D019) require only data entry. Previously the schema accepted `background`/`physicalSizeMm`/`dpi` but the mapping silently dropped them, so verified presets could not express white-background or physical-size forms.
 
 **Consequence:** Validation remains pixel-based (D043) — physical fields feed UI prefill and requirement summaries (`mm @ DPI`) only. Adding a real preset is now pure data entry in one documented file, validated at load time.
+
+## D046 — Worker jobs carry a watchdog timeout; silence degrades to in-thread
+
+**Decision:** Every processing-worker round-trip (`src/workers/client.ts`) arms a 15-second watchdog. If the worker responds with neither a result nor an error within that window, the client rejects the job and `processWithOptionalWorker` reruns the identical pipeline in-thread. Response/error paths clear the timer; the worker is always terminated afterwards.
+
+**Reason:** A field report of the app hanging on "Preparing your photo…" could not be reproduced in headless Chrome (dev + production preview both completed via the real worker chunk), pointing to an environment-specific stall where a module worker loads but never answers (engine quirk, CSP, extension, or blocked script). In that failure mode neither `onerror` nor a response arrives, so the original promise-based wrapper could wait forever. The watchdog bounds every possible stall without penalizing legitimate long encodes, which finish in seconds.
+
+**Consequence:** Worst case on a stalled worker is one wasted background attempt plus an in-thread rerun — slower, but never stuck. No protocol change; the timeout is not configurable because legitimate jobs are far below it by design.

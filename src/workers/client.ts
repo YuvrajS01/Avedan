@@ -25,6 +25,13 @@ function spawnWorker(): Worker {
   return new Worker(new URL('./process.worker.ts', import.meta.url), { type: 'module' })
 }
 
+/**
+ * Upper bound for a worker round-trip. Legitimate jobs finish in seconds;
+ * anything silent past this is treated as a stalled worker so the flow can
+ * degrade to the in-thread pipeline instead of hanging the UI.
+ */
+const WORKER_TIMEOUT_MS = 15000
+
 export interface ProcessingJobInput {
   kind: ProcessKind
   source: Parameters<typeof createImageBitmap>[0]
@@ -40,20 +47,26 @@ async function runProcessingJob(input: ProcessingJobInput): Promise<ProcessedOut
 
   try {
     return await new Promise<ProcessedOutputData>((resolve, reject) => {
-      const fail = (message: string) =>
-        reject(new Error(message))
+      const fail = (message: string) => reject(new Error(message))
+      const timeout = setTimeout(
+        () => fail('Background processing did not finish in time.'),
+        WORKER_TIMEOUT_MS,
+      )
+      const settle = (fn: () => void) => {
+        clearTimeout(timeout)
+        fn()
+      }
 
       worker.onmessage = (event: MessageEvent<ProcessResponsePayload>) => {
         const response = event.data
         if (!response || response.id !== id) return
-        if (response.ok) {
-          resolve(response.result)
-        } else {
-          fail(response.error.message)
-        }
+        settle(() => {
+          if (response.ok) resolve(response.result)
+          else fail(response.error.message)
+        })
       }
       worker.onerror = () => {
-        fail('Background processing failed.')
+        settle(() => fail('Background processing failed.'))
       }
 
       const message: ProcessRequestPayload =
