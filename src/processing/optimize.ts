@@ -179,7 +179,8 @@ export async function optimizeEncoding(
  * Scale 1 reuses the canvas directly; smaller scales render a resized copy.
  */
 export type EncodableCanvas = DrawableSource & CanvasLike & {
-  toBlob: HTMLCanvasElement['toBlob']
+  toBlob?: HTMLCanvasElement['toBlob']
+  convertToBlob?: (options?: { type?: string; quality?: number }) => Promise<Blob>
 }
 
 export function createCanvasEncoder(

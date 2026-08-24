@@ -9,11 +9,24 @@ export interface CanvasLike {
 
 export type CanvasFactory = (width: number, height: number) => CanvasLike
 
+/**
+ * Create a canvas in whichever runtime is available: a document canvas on
+ * the main thread, an OffscreenCanvas inside a worker (T018).
+ */
 export function defaultCanvasFactory(width: number, height: number): CanvasLike {
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  return canvas
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    return canvas
+  }
+  if (typeof OffscreenCanvas !== 'undefined') {
+    return new OffscreenCanvas(width, height) as unknown as CanvasLike
+  }
+  throw new ProcessingError(
+    'canvas-unavailable',
+    'No canvas implementation is available in this environment.',
+  )
 }
 
 export type DrawableSource = CanvasImageSource & { width: number; height: number }

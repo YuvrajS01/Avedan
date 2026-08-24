@@ -62,4 +62,41 @@ describe('encodeCanvas', () => {
       code: 'encode-failed',
     } satisfies Partial<ProcessingError>)
   })
+
+  it('encodes via convertToBlob when only OffscreenCanvas-style export exists', async () => {
+    const blob = new Blob([new Uint8Array([7])], { type: 'image/webp' })
+    const convertToBlob = vi.fn(async () => blob)
+    const canvas = {
+      width: 64,
+      height: 64,
+      getContext: () => null,
+      convertToBlob,
+    }
+
+    const result = await encodeCanvas(canvas as never, 'webp', 0.75)
+
+    expect(result).toBe(blob)
+    expect(convertToBlob).toHaveBeenCalledWith({
+      type: 'image/webp',
+      quality: 0.75,
+    })
+  })
+
+  it('omits quality on convertToBlob for lossless PNG', async () => {
+    const blob = new Blob(['png'], { type: 'image/png' })
+    const convertToBlob = vi.fn(async () => blob)
+    const canvas = {
+      width: 8,
+      height: 8,
+      getContext: () => null,
+      convertToBlob,
+    }
+
+    await encodeCanvas(canvas as never, 'png')
+
+    expect(convertToBlob).toHaveBeenCalledWith({
+      type: 'image/png',
+      quality: undefined,
+    })
+  })
 })

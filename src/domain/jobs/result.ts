@@ -18,3 +18,10 @@ export interface ProcessedAsset {
   /** Optional advisory hints; absent when assessment is unavailable. */
   advisory?: QualityCheck[]
 }
+
+/**
+ * Serializable processing output without the session object URL (T018).
+ * This is the shape transferred from the processing worker; the URL is
+ * attached on the main thread where `URL.createObjectURL` exists.
+ */
+export type ProcessedOutputData = Omit<ProcessedAsset, 'url'>

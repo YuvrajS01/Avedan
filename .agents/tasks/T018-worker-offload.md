@@ -29,7 +29,21 @@ never freeze the UI, without duplicating engine logic.
 
 ## Acceptance criteria
 
-- [ ] Worker module unit-tested (message protocol + result shape) with a fake worker.
-- [ ] Flows use the worker only when supported; fallback verified by tests.
-- [ ] No regression in output bytes/metadata versus the in-thread path.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Worker module unit-tested (message protocol + result shape) with a fake worker.
+- [x] Flows use the worker only when supported; fallback verified by tests.
+- [x] No regression in output bytes/metadata versus the in-thread path.
+- [x] Typecheck/lint/tests/build pass.
+
+## Outcome (2026-08-22)
+
+Implemented as D044. The pipelines were split into serializable cores
+(`computePhotoOutput`, `computeSignatureOutput`) shared verbatim by the
+worker (`src/workers/process.worker.ts`, handler in
+`handleProcessRequest.ts`, protocol in `protocol.ts`) and the main thread.
+`src/workers/client.ts` dispatches to the worker only when supported,
+converts sources to transferable `ImageBitmap`s, and falls back silently to
+the identical in-thread pipeline on failure or unsupported environments.
+`defaultCanvasFactory` now uses `OffscreenCanvas` when `document` is absent,
+and `encodeCanvas` supports `convertToBlob`. 239 tests passing (11 new:
+protocol/dispatcher/fallback + convertToBlob encoding); typecheck, lint, and
+production build (worker chunk emitted) all pass.
