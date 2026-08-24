@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 — T012–T019 done (capture guidance, fidelity, physical sizes, worker offload, verified-preset registry prep)  
-**Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; V2 engineering items complete; next: owner-verified presets / v0.2.0 candidate
+**Stage:** v0.2.0 — V2 complete (T012–T019) and owner-verified (T020 gate, 2026-08-24)  
+**Last updated:** 2026-08-24  
+**Status:** Released as `v0.2.0`; remaining backlog: owner-verified official presets
 
 ## Product goal
 
@@ -42,15 +42,15 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Physical size inputs (2026-08-22, T017/D043): "Physical size (advanced)" disclosure in the photo panel — mm/cm + DPI derive pixel dimensions through the existing `dimensionsFromPhysical` math into the editable px fields; invalid input is inert; validation stays pixel-based; no DPI embedded in exports. 228 tests passing.
 - Worker offload of the encode/optimize loop (2026-08-22, T018/D044): photo and signature pipelines split into serializable cores (`computePhotoOutput`/`computeSignatureOutput`) shared verbatim by a module worker (`src/workers/process.worker.ts` + `protocol.ts` + `handleProcessRequest.ts`) and the main thread; `src/workers/client.ts` uses the worker only when supported, transfers an `ImageBitmap` via structured clone, and silently falls back to the identical in-thread pipeline otherwise. A 15 s watchdog (D046, field-fix for a "stuck on Preparing your photo…" report unreproducible in headless Chrome) bounds any silent worker so the flow can never hang. `defaultCanvasFactory` falls back to `OffscreenCanvas`; `encodeCanvas` supports `convertToBlob`. 245 tests passing; typecheck/lint/build pass (worker chunk emitted).
 - Verified-preset registry preparation (2026-08-22, T019/D045): `ImageRequirements` gained descriptive `physicalSizeMm`/`dpi`; `requirementsFromPreset` maps background ('white' only), physical size and DPI; photo page prefills physical fields + DPI + white-background toggle from presets (hash-route and dropdown) with manual-edit precedence intact; seed data extracted to documented `domain/presets/seedPresets.ts` with an owner verification checklist; new illustrative white-background template. Validation stays pixel-based (D043). 244 tests passing.
+- v0.2.0 release (2026-08-24): T020 manual verification gate passed by the product owner on real hardware (V2 capture-guidance suite + MVP regressions). 245 tests passing; typecheck/lint/build clean. Tagged `v0.2.0`.
 
-## Not implemented yet (V2 backlog)
+## Not implemented yet (backlog)
 
 - Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected.
-- Optional: v0.2.0 release tag once the V2 capture-guidance suite is manually verified on real devices (T011-style pass).
 
 ## Current focus
 
-V2 backlog: owner-verified presets (owner workflow); then a v0.2.0 candidate tag.
+Owner workflow: verified official presets.
 
 ## Current risks
 
@@ -62,7 +62,7 @@ V2 backlog: owner-verified presets (owner workflow); then a v0.2.0 candidate tag
 
 ## Next recommended task
 
-Owner workflow: verify official presets against authoritative sources and add them to `src/domain/presets/seedPresets.ts` per its checklist (agent-blocked). In parallel, a manual T011-style device-verification pass of the V2 suite clears the way for a v0.2.0 tag.
+None queued for agents. The owner adds verified official presets to `src/domain/presets/seedPresets.ts` per its checklist; new feature work (thumb impressions, batch/ZIP export, PDF utilities) should be scoped against `.agents/docs/ROADMAP.md` and defined as a new task file first.
 
 ## Continuity rule
 
