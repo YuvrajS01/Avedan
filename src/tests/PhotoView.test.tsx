@@ -232,4 +232,25 @@ describe('PhotoView with form presets', () => {
     expect(screen.getByText(/Target:/i)).toHaveTextContent('350 × 531 px')
     window.location.hash = '#/'
   })
+
+  it('prefills physical size and DPI from a preset carrying them (T019)', async () => {
+    const user = userEvent.setup()
+    window.location.hash = '#/photo?preset=example-exam-413x531'
+    render(<PhotoView />)
+    await user.click(screen.getByText(/physical size \(advanced\)/i))
+    expect(screen.getByLabelText('Physical width')).toHaveValue(35)
+    expect(screen.getByLabelText('Physical height')).toHaveValue(45)
+    expect(screen.getByLabelText(/dpi/i)).toHaveValue(300)
+    // Derived pixels match the preset's pixel size.
+    await waitFor(() => expect(screen.getByLabelText('Width (px)')).toHaveValue(413))
+    window.location.hash = '#/'
+  })
+
+  it('prefills the white-background toggle from a preset requiring white', () => {
+    window.location.hash = '#/photo?preset=example-white-background'
+    render(<PhotoView />)
+    expect(screen.getByLabelText(/lighten a plain background/i)).toBeChecked()
+    expect(screen.getByText(/Target:/i)).toHaveTextContent('white bg')
+    window.location.hash = '#/'
+  })
 })

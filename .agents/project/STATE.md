@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** V2 underway — T012–T017 done (capture guidance suite + fidelity + physical sizes)  
+**Stage:** V2 — T012–T019 done (capture guidance, fidelity, physical sizes, worker offload, verified-preset registry prep)  
 **Last updated:** 2026-08-22  
-**Status:** MVP released as `v0.1.0-mvp`; next: T018 worker offload of encode/optimize
+**Status:** MVP released as `v0.1.0-mvp`; V2 engineering items complete; next: owner-verified presets / v0.2.0 candidate
 
 ## Product goal
 
@@ -40,15 +40,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Auto-crop suggestion (2026-08-22, T015/D041): when camera face framing is on and a face was detected, the crop stage opens pre-positioned via pure `cropMath.faceFraming()` math; applied once before any manual interaction and dismissed on first adjustment; no-op without opt-in/detection. 220 tests passing.
 - Preset fidelity (2026-08-22, T016/D042): signature pipeline scales down within `within` semantics when a file-size constraint demands it (fixes oversized PNGs); reported dims match encoded bytes. Forms preset cards expose "Prepare signature"; signature page resolves presets with context panel + D035 edit precedence. MVP audit IMPORTANT findings I1/I2 closed. 225 tests passing.
 - Physical size inputs (2026-08-22, T017/D043): "Physical size (advanced)" disclosure in the photo panel — mm/cm + DPI derive pixel dimensions through the existing `dimensionsFromPhysical` math into the editable px fields; invalid input is inert; validation stays pixel-based; no DPI embedded in exports. 228 tests passing.
+- Worker offload of the encode/optimize loop (2026-08-22, T018/D044): photo and signature pipelines split into serializable cores (`computePhotoOutput`/`computeSignatureOutput`) shared verbatim by a module worker (`src/workers/process.worker.ts` + `protocol.ts` + `handleProcessRequest.ts`) and the main thread; `src/workers/client.ts` uses the worker only when supported, transfers an `ImageBitmap` via structured clone, and silently falls back to the identical in-thread pipeline otherwise. `defaultCanvasFactory` falls back to `OffscreenCanvas`; `encodeCanvas` supports `convertToBlob`. 239 tests passing; typecheck/lint/build pass (worker chunk emitted).
+- Verified-preset registry preparation (2026-08-22, T019/D045): `ImageRequirements` gained descriptive `physicalSizeMm`/`dpi`; `requirementsFromPreset` maps background ('white' only), physical size and DPI; photo page prefills physical fields + DPI + white-background toggle from presets (hash-route and dropdown) with manual-edit precedence intact; seed data extracted to documented `domain/presets/seedPresets.ts` with an owner verification checklist; new illustrative white-background template. Validation stays pixel-based (D043). 244 tests passing.
 
 ## Not implemented yet (V2 backlog)
 
-- T018 — Worker offload of the encode/optimize loop (defined in task file).
-- Manually verified official presets (D003/D019 **owner** workflow); presets may carry `background: 'white'`.
+- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected.
+- Optional: v0.2.0 release tag once the V2 capture-guidance suite is manually verified on real devices (T011-style pass).
 
 ## Current focus
 
-V2 task 7: T018 worker offload.
+V2 backlog: owner-verified presets (owner workflow); then a v0.2.0 candidate tag.
 
 ## Current risks
 
@@ -60,7 +62,7 @@ V2 task 7: T018 worker offload.
 
 ## Next recommended task
 
-T018 — Worker offload of the encode/optimize loop (`.agents/tasks/T018-worker-offload.md`).
+Owner workflow: verify official presets against authoritative sources and add them to `src/domain/presets/seedPresets.ts` per its checklist (agent-blocked). In parallel, a manual T011-style device-verification pass of the V2 suite clears the way for a v0.2.0 tag.
 
 ## Continuity rule
 

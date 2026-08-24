@@ -119,4 +119,46 @@ describe('requirementsFromPreset', () => {
     const bare = validateFormPreset({ id: 'p', name: 'p', authority: 'a', lastVerified: '2026-01-01', photo: { format: 'jpeg' } })
     expect(requirementsFromPreset(bare, 'signature')).toBeUndefined()
   })
+
+  it('maps physical size, dpi, and white background (T019)', () => {
+    const preset = validateFormPreset({
+      id: 'physical-preset',
+      name: 'Physical preset',
+      authority: 'Authority',
+      lastVerified: '2026-08-01',
+      sourceUrl: 'https://example.gov/physical',
+      photo: {
+        format: 'jpeg',
+        pixelSize: { width: 413, height: 531 },
+        aspectRatio: { width: 35, height: 45 },
+        physicalSizeMm: { width: 35, height: 45 },
+        dpi: 300,
+        background: 'white',
+      },
+    })
+    const requirements = requirementsFromPreset(preset, 'photo')
+    expect(requirements).toMatchObject({
+      physicalSizeMm: { width: 35, height: 45 },
+      dpi: 300,
+      background: 'white',
+    })
+  })
+
+  it('maps non-white background modes to no whitening', () => {
+    const preset = validateFormPreset({
+      id: 'original-bg-preset',
+      name: 'Original bg preset',
+      authority: 'Authority',
+      lastVerified: '2026-08-01',
+      photo: { format: 'jpeg', background: 'original' },
+    })
+    expect(requirementsFromPreset(preset, 'photo')?.background).toBeUndefined()
+  })
+
+  it('omits physical/background fields when the preset has none', () => {
+    const requirements = requirementsFromPreset(VALID, 'photo')
+    expect(requirements?.physicalSizeMm).toBeUndefined()
+    expect(requirements?.dpi).toBeUndefined()
+    expect(requirements?.background).toBeUndefined()
+  })
 })

@@ -2,26 +2,27 @@
 
 ## Active task
 
-**T018 — Worker offload of the encode/optimize loop (V2)** — defined in
-`.agents/tasks/T018-worker-offload.md`, not yet started.
+None in progress. T019 (verified-preset registry preparation) is
+**complete** — see `.agents/tasks/T019-preset-registry-prep.md` and
+DECISIONS D045.
 
 ## Context
 
 - MVP released as `v0.1.0-mvp`; T011 verification passed.
-- V2 so far: T012–T017 (framing hints, face positioning, background advisory +
-  whitening, auto-crop suggestion, preset fidelity, physical-size inputs).
-  See STATE.md and DECISIONS D038–D043.
-- T018 addresses the last remaining engineering item (MVP audit M4): move the
-  encode/measure/optimize loop off the main thread with an in-thread fallback.
+- V2 engineering suite complete: T012–T019 (framing hints, face positioning,
+  background advisory + whitening, auto-crop suggestion, preset fidelity,
+  physical-size inputs, worker offload, registry prep). See STATE.md and
+  DECISIONS D038–D045. 244 tests passing; typecheck/lint/build clean.
 
-## V2 backlog after T018
+## Remaining V2 backlog (agent-blocked or release work)
 
-1. Manually verified official presets — **owner workflow** (D003/D019): needs
-   human verification against official sources; agent can only prepare the
-   registry structure. Presets may carry `background: 'white'` and
-   `physicalSizeMm`/`dpi`.
-2. Optional: a v0.2.0 release tag once the V2 capture-guidance suite is
-   manually verified on real devices (T011-style pass).
+1. **Owner workflow** — manually verified official presets (D003/D019):
+   verify values against official sources and add entries to
+   `src/domain/presets/seedPresets.ts` following its checklist. This is
+   human verification; an agent cannot perform it. The registry now accepts
+   `background: 'white'`, `physicalSizeMm`/`dpi` end-to-end.
+2. **v0.2.0 release tag** once the V2 capture-guidance suite is manually
+   verified on real devices (T011-style pass).
 
 New tasks must be added to `.agents/tasks/` and indexed in `TASK_INDEX.md`.
 

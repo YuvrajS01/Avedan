@@ -144,6 +144,10 @@ export function PhotoView() {
   useEffect(() => {
     if (!presetProfile) return
     setManualEdited(false)
+    // T019: presets may carry physical size and background preferences;
+    // they prefill like pixels/format/file-size and stay editable.
+    const physMm = presetProfile.physicalSizeMm
+    const dpi = toPositiveInt(String(presetProfile.dpi ?? NaN))
     setCustom({
       width: presetProfile.dimensions ? String(presetProfile.dimensions.width) : DEFAULT_CUSTOM.width,
       height: presetProfile.dimensions ? String(presetProfile.dimensions.height) : DEFAULT_CUSTOM.height,
@@ -154,11 +158,11 @@ export function PhotoView() {
         ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
         : '',
       format: presetProfile.format ?? 'jpeg',
-      whiteBg: false,
-      physWidth: '',
-      physHeight: '',
+      whiteBg: presetProfile.background === 'white',
+      physWidth: physMm ? String(physMm.width) : '',
+      physHeight: physMm ? String(physMm.height) : '',
       unit: 'mm',
-      dpi: '300',
+      dpi: dpi !== undefined ? String(dpi) : DEFAULT_CUSTOM.dpi,
     })
   }, [presetProfile])
 
@@ -226,17 +230,18 @@ export function PhotoView() {
     const p = findProfile(id)
     if (!p) return
     setManualEdited(false)
+    const physMm = p.physicalSizeMm
     setCustom({
       width: p.dimensions ? String(p.dimensions.width) : '',
       height: p.dimensions ? String(p.dimensions.height) : '',
       minKb: p.fileSize?.minBytes ? String(Math.round(p.fileSize.minBytes / 1024)) : '',
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
       format: p.format ?? 'jpeg',
-      whiteBg: false,
-      physWidth: '',
-      physHeight: '',
+      whiteBg: p.background === 'white',
+      physWidth: physMm ? String(physMm.width) : '',
+      physHeight: physMm ? String(physMm.height) : '',
       unit: 'mm',
-      dpi: '300',
+      dpi: p.dpi !== undefined ? String(p.dpi) : '300',
     })
   }
 

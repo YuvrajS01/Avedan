@@ -25,4 +25,12 @@ export interface ImageRequirements {
   fileSize?: FileSizeRange
   /** Opt-in background mode; whitening is a best-effort heuristic (T014). */
   background?: 'keep' | 'white'
+  /**
+   * Descriptive physical size from a form preset (T019). Pixels remain the
+   * single validation basis (D043); these fields only feed UI prefill and
+   * requirement summaries.
+   */
+  physicalSizeMm?: PixelDimensions
+  /** Scan/print density associated with `physicalSizeMm` (T019). */
+  dpi?: number
 }

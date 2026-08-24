@@ -1,74 +1,13 @@
 import type { ImageRequirements } from '../requirements/types'
 import type { PresetAssetKind } from './schema'
 import { validateFormPreset, type FormPreset } from './schema'
+import { SEED_PRESETS } from './seedPresets'
 
 /**
- * Seed registry. Entries are illustrative templates with verification
- * metadata; they must never be presented as official requirements for a
- * real application (see DECISIONS D019). Replace/extend only with values
- * manually verified against official sources.
+ * Registry built from the seed data in `seedPresets.ts` (T019). Entries are
+ * validated against the schema at load time and must never be presented as
+ * official requirements until manually verified (DECISIONS D003/D019).
  */
-const SEED_PRESETS: unknown[] = [
-  {
-    id: 'example-exam-413x531',
-    name: 'Example exam form (35 × 45 mm)',
-    authority: 'Example Authority',
-    description:
-      'Illustrative template: 413 × 531 px JPG photo within 20–50 KB and a JPG signature within 10–20 KB.',
-    lastVerified: '2026-08-01',
-    sourceUrl: 'https://example.gov/exam',
-    photo: {
-      format: 'jpeg',
-      pixelSize: { width: 413, height: 531 },
-      aspectRatio: { width: 35, height: 45 },
-      physicalSizeMm: { width: 35, height: 45 },
-      dpi: 300,
-      fileSizeBytes: { min: 20 * 1024, max: 50 * 1024 },
-    },
-    signature: {
-      format: 'jpeg',
-      fileSizeBytes: { min: 10 * 1024, max: 20 * 1024 },
-    },
-  },
-  {
-    id: 'example-university-square',
-    name: 'Example university application',
-    authority: 'Example University',
-    description:
-      'Illustrative template: square 300 × 300 px PNG photo up to 100 KB and a PNG signature up to 50 KB.',
-    lastVerified: '2026-07-15',
-    sourceUrl: 'https://example.edu/apply',
-    photo: {
-      format: 'png',
-      pixelSize: { width: 300, height: 300 },
-      aspectRatio: { width: 1, height: 1 },
-      fileSizeBytes: { max: 100 * 1024 },
-    },
-    signature: {
-      format: 'png',
-      fileSizeBytes: { max: 50 * 1024 },
-    },
-  },
-  {
-    id: 'example-recruitment-small',
-    name: 'Example recruitment form (small)',
-    authority: 'Example Recruitment Board',
-    description:
-      'Illustrative template: 200 × 260 px JPG photo up to 30 KB and a compact JPG signature.',
-    lastVerified: '2025-06-01',
-    sourceUrl: 'https://example.gov.in/recruit',
-    photo: {
-      format: 'jpeg',
-      pixelSize: { width: 200, height: 260 },
-      aspectRatio: { width: 3, height: 4 },
-      fileSizeBytes: { max: 30 * 1024 },
-    },
-    signature: {
-      format: 'jpeg',
-      fileSizeBytes: { max: 20 * 1024 },
-    },
-  },
-]
 
 function loadRegistry(): FormPreset[] {
   const seen = new Set<string>()
@@ -124,5 +63,12 @@ export function requirementsFromPreset(
           targetBytes: requirements.fileSizeBytes.target,
         }
       : undefined,
+    // Only explicit white backgrounds activate whitening; 'original' and
+    // 'transparent' mean the engine keeps the pixels as-is (T019).
+    background: requirements.background === 'white' ? 'white' : undefined,
+    physicalSizeMm: requirements.physicalSizeMm
+      ? { ...requirements.physicalSizeMm }
+      : undefined,
+    dpi: requirements.dpi,
   }
 }

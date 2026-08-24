@@ -82,6 +82,12 @@ export function describeRequirements(profile: ImageRequirements): string {
   if (profile.background === 'white') {
     parts.push('white bg')
   }
+  // Descriptive only — validation stays pixel-based (D043).
+  if (profile.physicalSizeMm && profile.dpi) {
+    parts.push(
+      `${profile.physicalSizeMm.width} × ${profile.physicalSizeMm.height} mm @ ${profile.dpi} DPI`,
+    )
+  }
 
   return parts.length > 0 ? parts.join(' · ') : 'No fixed technical target'
 }

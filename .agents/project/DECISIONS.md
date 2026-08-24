@@ -309,10 +309,18 @@ MVP audit findings I1 and I2 closed: signature outputs may scale down within `wi
 
 **Consequence:** Presets already carry `physicalSizeMm`/`dpi` in the schema, so future verified presets can prefill these fields without further UI work.
 
-## D043 — Physical size derives pixels; validation stays pixel-based
+## D044 — Encode/optimize runs in a worker with identical in-thread fallback
 
-**Decision:** The photo requirements panel offers an optional "Physical size (advanced)" disclosure (mm/cm + DPI, default 300). Derived pixels fill the editable Width/Height fields through the existing `dimensionsFromPhysical` engine math; invalid or partial input changes nothing. Validation continues to check pixels only, and no DPI metadata is embedded in exported files.
+**Decision:** The encode → measure → optimize loop moved into a dedicated module worker (`src/workers/process.worker.ts`). The photo and signature pipelines were split into serializable cores (`computePhotoOutput` / `computeSignatureOutput`) that return `ProcessedOutputData` (no object URL), shared verbatim between the worker and the main thread. A client dispatcher (`src/workers/client.ts`) uses the worker only when `Worker` + `createImageBitmap` exist, converts any source to a transferable `ImageBitmap`, transfers it (structured clone, no base64), and silently falls back to the identical in-thread pipeline on any unsupported environment or worker failure.
 
-**Reason:** Many government forms state photo sizes physically (35 × 45 mm). PRD §5 lists optional physical size/DPI under custom requirements; the engine math existed since T002 but had no UI. Deriving into the standard px fields keeps a single source of truth and avoids a second validation path.
+**Reason:** MVP audit MINOR M4 and the architecture rule that heavy processing should run off the main thread when practical. Splitting the pipelines rather than duplicating them guarantees output parity by construction; the fallback keeps older browsers and the jsdom test environment fully functional.
 
-**Consequence:** Presets already carry `physicalSizeMm`/`dpi` in the schema, so future verified presets can prefill these fields without further UI work.
+**Consequence:** `src/processing/*` remains framework-independent — `defaultCanvasFactory` now falls back to `OffscreenCanvas` when `document` is absent, and `encodeCanvas` supports OffscreenCanvas's `convertToBlob`. Object URLs are still created only on the main thread (workers lack `URL.createObjectURL`). The worker bundle is emitted automatically by Vite (`new URL('./process.worker.ts', import.meta.url)`); no new dependencies.
+
+## D045 — Preset physical/background data flows end-to-end; seed registry is owner-ready
+
+**Decision:** `ImageRequirements` gained optional descriptive `physicalSizeMm` and `dpi` fields, and `requirementsFromPreset` now maps a preset's background ('white' only — 'original'/'transparent' never activate whitening), physical size, and DPI into the engine requirements. The photo page prefills the physical-size fields, DPI, and white-background toggle from selected presets (both hash-route and the "Load preset" dropdown), keeping manual-edit precedence (D035). Seed preset data moved to `src/domain/presets/seedPresets.ts` with a written owner verification checklist; one new illustrative template exercises the white-background flag.
+
+**Reason:** T019 prepares the registry so owner-verified official presets (D003/D019) require only data entry. Previously the schema accepted `background`/`physicalSizeMm`/`dpi` but the mapping silently dropped them, so verified presets could not express white-background or physical-size forms.
+
+**Consequence:** Validation remains pixel-based (D043) — physical fields feed UI prefill and requirement summaries (`mm @ DPI`) only. Adding a real preset is now pure data entry in one documented file, validated at load time.

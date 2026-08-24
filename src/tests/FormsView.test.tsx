@@ -51,7 +51,9 @@ describe('FormsView signature wiring', () => {
   it('only offers signature wiring for presets that define a signature', async () => {
     render(<FormsView />)
     const cards = screen.getAllByRole('button', { name: /prepare signature/i })
-    // Every seed preset defines a signature, so one action per card.
-    expect(cards).toHaveLength(FORM_PRESETS.length)
+    // One action per preset that defines signature requirements; photo-only
+    // presets (e.g. the white-background template) have none.
+    const withSignature = FORM_PRESETS.filter((preset) => preset.signature)
+    expect(cards).toHaveLength(withSignature.length)
   })
 })
