@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.3.0 — V3 Form Intelligence in progress (T021–T022 done, 2026-08-26)  
+**Stage:** v0.3.0 — V3 Form Intelligence in progress (T021–T023 done, 2026-08-26)  
 **Last updated:** 2026-08-26  
-**Status:** `feat/v3-form-intelligence` branch; T021 engine + T022 thumb flow complete (257 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`
+**Status:** `feat/v3-form-intelligence` branch; T021 engine + T022 thumb flow + T023 preset-aware validation complete (263 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`
 
 ## Product goal
 
@@ -45,15 +45,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - v0.2.0 release (2026-08-24): T020 manual verification gate passed by the product owner on real hardware (V2 capture-guidance suite + MVP regressions). 245 tests passing; typecheck/lint/build clean. Tagged `v0.2.0`.
 - V3 preset engine & data model (2026-08-26, T021/D047): schema extended to `photo | signature | thumbImpression` (spec parity), `validateFormPreset` and `requirementsFromPreset` handle thumbImpression identically, `FormsView` iterates data-driven over `PRESET_ASSET_KINDS` to render Photo/Signature/Thumb impression lines with shared freshness/source/disclaimer UI, one illustrative thumb-kit preset (`example-thumb-kit`: photo 350×450 white 20–50 KB + signature 10–20 KB + thumb 240×240 10–30 KB) satisfies the "one carefully selected example preset" rule without claiming authority. 250 tests passing; typecheck/lint/build clean.
 - V3 thumb impression flow (2026-08-26, T022/D048): dedicated `#/thumb` route + `ThumbView` (upload drag-drop → trimmed preview → result), `processThumb`/`computeThumbOutput` (trim → fit-within never upscale → flatten white → optimize with THUMB_ALLOWED_SCALES → validate `within`), worker protocol extended to `thumb`, `THUMB_PROFILES` (240×240 JPEG ≤30KB, 200×200 PNG ≤20KB), NavBar thumb icon, Forms cards now offer Prepare signature + Prepare thumb data-driven per preset. 257 tests passing; typecheck/lint/build clean.
+- V3 preset-aware validation (2026-08-26, T023/D049): `src/domain/presets/helpers.ts` (`requiredAssetKinds`, `assetLabel`, `dimensionModeForKind`, `presetKindsSummary`) and `ProcessedResult` now preset-aware (optional `preset` prop shows "Validated against {name} · {authority}" + lastVerified + Official source + always-confirm disclaimer). Photo/Signature/Thumb views forward `activePreset` to result. 263 tests passing; typecheck/lint/build clean.
 
 ## Not implemented yet (backlog)
 
-- V3 Form Intelligence remainder (see TASK_INDEX T023–T025): preset-aware requirement validation, Application Kit view aggregating photo/signature/thumb for a selected preset, kit ZIP/batch export.
+- V3 Form Intelligence remainder (see TASK_INDEX T024–T025): Application Kit view aggregating photo/signature/thumb for a selected preset, kit ZIP/batch export.
 - Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
 
 ## Current focus
 
-V3 Form Intelligence: T021–T022 complete on `feat/v3-form-intelligence` branch; next is T023 preset-aware requirement validation (validate outputs against preset constraints, surface guidance, never claim acceptance).
+V3 Form Intelligence: T021–T023 complete on `feat/v3-form-intelligence` branch; next is T024 Application Kit view (aggregate all required assets for a preset, data-driven, with per-asset requirement + prepare CTAs + verification metadata + disclaimer).
 
 ## Current risks
 
@@ -65,7 +66,7 @@ V3 Form Intelligence: T021–T022 complete on `feat/v3-form-intelligence` branch
 
 ## Next recommended task
 
-T023 — V3 preset-aware requirement validation (depends on T021). Create a helper to summarize which asset kinds a preset requires and validate outputs against those constraints with correct dimensionMode (exact for photo, within for signature/thumb), surfacing spec-shaped checks + disclaimer. See `.agents/tasks/T023-v3-requirement-validation.md` and TASK_INDEX.
+T024 — V3 Application Kit view (depends on T021–T023). Build `#/kit?preset=id` view aggregating all required assets (photo/signature/thumbImpression) for a selected preset, with name/authority/year/lastVerified/freshness/source link/disclaimer and per-asset `describeRequirements` + Prepare CTA (`#/photo?preset=id`, etc.). Data-driven over `requiredAssetKinds`; session-local only. See `.agents/tasks/T024-v3-application-kit.md` and TASK_INDEX.
 
 ## Continuity rule
 

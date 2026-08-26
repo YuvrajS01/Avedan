@@ -412,7 +412,13 @@ export function ThumbView() {
       )}
 
       {step === 'result' && result && (
-        <ProcessedResult result={result} summary={summary} noun="thumb impression" onReset={reset} />
+        <ProcessedResult
+          result={result}
+          summary={summary}
+          noun="thumb impression"
+          onReset={reset}
+          preset={activePreset ?? undefined}
+        />
       )}
     </>
   )

@@ -445,7 +445,13 @@ export function PhotoView() {
         />
       )}
       {step === 'result' && result && (
-        <ProcessedResult result={result} summary={summary} noun="photo" onReset={reset} />
+        <ProcessedResult
+          result={result}
+          summary={summary}
+          noun="photo"
+          onReset={reset}
+          preset={activePreset ?? undefined}
+        />
       )}
     </>
   )

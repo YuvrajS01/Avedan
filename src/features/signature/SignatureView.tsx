@@ -432,7 +432,13 @@ export function SignatureView() {
       )}
 
       {step === 'result' && result && (
-        <ProcessedResult result={result} summary={summary} noun="signature" onReset={reset} />
+        <ProcessedResult
+          result={result}
+          summary={summary}
+          noun="signature"
+          onReset={reset}
+          preset={activePreset ?? undefined}
+        />
       )}
     </>
   )
