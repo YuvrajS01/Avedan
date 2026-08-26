@@ -1,6 +1,6 @@
 # T022 — V3 Thumb impression preparation flow
 
-**Status:** PLANNED
+**Status:** DONE (2026-08-26)
 **Priority:** P1
 **Depends on:** T021 (preset engine with thumbImpression)
 **Architecture references:** D005 (processing separate from UI), D015 (fit-within vs exact), D010 (injectable canvas), processing/trim, signature flow
@@ -26,13 +26,28 @@ Provide a dedicated thumb-impression preparation flow (upload, guidance, trim, r
 
 ## Acceptance criteria
 
-- [ ] New route `thumb` with intake → preview → result steps, keyboard accessible, mobile-friendly.
-- [ ] Preset-driven: when `#/thumb?preset=id` carries thumbImpression, preset attribution banner shows (name, authority, lastVerified, source link) and manual edits take precedence (D035 pattern).
-- [ ] Validation uses `within` semantics where appropriate; advisory hints separate.
-- [ ] Tests for thumb processing + view (upload → trimmed preview → result).
-- [ ] Typecheck/lint/tests/build pass.
+- [x] New route `thumb` with intake → preview → result steps, keyboard accessible, mobile-friendly.
+- [x] Preset-driven: when `#/thumb?preset=id` carries thumbImpression, preset attribution banner shows (name, authority, lastVerified, source link) and manual edits take precedence (D035 pattern).
+- [x] Validation uses `within` semantics where appropriate; advisory hints separate.
+- [x] Tests for thumb processing + view (upload → trimmed preview → result).
+- [x] Typecheck/lint/tests/build pass.
 
 ## Verification
 
-- `npm run typecheck`, `lint`, `test`, `build` pass.
+- `npm run typecheck`, `lint`, `test`, `build` pass — 257 tests, 25 files.
 - Manual: upload a thumb photo, complete flow, download; confirm dimensions/format/size match preset when one is selected.
+
+## Outcome (2026-08-26)
+
+Implemented on `feat/v3-form-intelligence`:
+- `src/domain/requirements/profiles.ts` — added `THUMB_PROFILES` + `findThumbProfile`.
+- `src/features/thumb/processThumb.ts` — trim → fit-within (never upscale) → flatten white → optimize with `THUMB_ALLOWED_SCALES` when file-size constrained → validate `within`; `computeThumbOutput` shared main/worker, `processThumb` via `processWithOptionalWorker` kind `thumb`.
+- `src/workers/protocol.ts` / `handleProcessRequest.ts` / `client.ts` — extended `ProcessKind` to `photo|signature|thumb`, new `ThumbProcessRequest`, worker dispatch.
+- `src/features/thumb/ThumbView.tsx` — choose (upload drag-drop + requirements panel with Load preset + Width/Height/Min/Max/Format, `THUMB_PROFILES`, preset autofill with manual precedence, preset context banner, thumb-specific lede + privacy note) → preview (trimmed PNG preview) → result (`ProcessedResult` noun thumb impression); session URLs revoked.
+- `src/app/routes.ts` + `App.tsx` + `components/NavBar.tsx` — added `thumb` route, Nav icon, view registry.
+- `src/features/forms/FormsView.tsx` — data-driven Prepare signature + Prepare thumb buttons per preset.
+- Tests: `ThumbView.test.tsx` (5), `App.test.tsx` + `routes.test.ts` updated for thumb, `FormsView.test.tsx` extended (thumb button + navigation). 257 tests passing; typecheck/lint/build clean. No hardcoded exam rules; within validation consistent with D015/D042.
+
+## Handoff
+
+Branch `feat/v3-form-intelligence`; next is T023 requirement validation.

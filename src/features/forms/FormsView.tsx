@@ -95,20 +95,26 @@ export function FormsView() {
                     )}
                   </span>
                 </button>
-                {signatureSummary && (
+                {(signatureSummary || thumbSummary) && (
                   <div className="preset-actions">
-                    <button
-                      type="button"
-                      className="button button-ghost"
-                      onClick={() => navigate('signature', { presetId: preset.id })}
-                    >
-                      Prepare signature
-                    </button>
-                  </div>
-                )}
-                {thumbSummary && (
-                  <div className="preset-actions">
-                    <span className="action-hint">Includes thumb impression requirement</span>
+                    {signatureSummary && (
+                      <button
+                        type="button"
+                        className="button button-ghost"
+                        onClick={() => navigate('signature', { presetId: preset.id })}
+                      >
+                        Prepare signature
+                      </button>
+                    )}
+                    {thumbSummary && (
+                      <button
+                        type="button"
+                        className="button button-ghost"
+                        onClick={() => navigate('thumb', { presetId: preset.id })}
+                      >
+                        Prepare thumb
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

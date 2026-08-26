@@ -5,12 +5,14 @@ import { ThemeToggle } from '../components/ThemeToggle'
 import { HomeView } from '../features/home/HomeView'
 import { PhotoView } from '../features/photo/PhotoView'
 import { SignatureView } from '../features/signature/SignatureView'
+import { ThumbView } from '../features/thumb/ThumbView'
 import { FormsView } from '../features/forms/FormsView'
 
 const VIEWS: Record<string, ComponentType> = {
   home: HomeView,
   photo: PhotoView,
   signature: SignatureView,
+  thumb: ThumbView,
   forms: FormsView,
 }
 

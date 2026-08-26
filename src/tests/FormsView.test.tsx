@@ -66,7 +66,7 @@ describe('FormsView thumb impression (T021)', () => {
     expect(screen.getByText(thumbPreset!.name)).toBeInTheDocument()
     // Data-driven line: "Thumb impression: ..."
     expect(screen.getAllByText(/Thumb impression:/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/Includes thumb impression requirement/i)).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /prepare thumb/i }).length).toBeGreaterThan(0)
   })
 
   it('search finds the thumb kit preset by description', async () => {
@@ -75,5 +75,14 @@ describe('FormsView thumb impression (T021)', () => {
     await user.type(screen.getByLabelText(/search forms/i), 'thumb')
     const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
     expect(screen.getByText(thumbPreset!.name)).toBeInTheDocument()
+  })
+
+  it('navigates to the thumb flow with the selected preset', async () => {
+    const user = userEvent.setup()
+    render(<FormsView />)
+    const thumbButton = screen.getAllByRole('button', { name: /prepare thumb/i })[0]
+    await user.click(thumbButton)
+    const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
+    expect(window.location.hash).toBe(`#/thumb?preset=${thumbPreset!.id}`)
   })
 })

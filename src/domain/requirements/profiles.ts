@@ -64,6 +64,29 @@ export function findSignatureProfile(id: string): RequirementProfile | undefined
   return SIGNATURE_PROFILES.find((profile) => profile.id === id)
 }
 
+export const THUMB_PROFILES: RequirementProfile[] = [
+  {
+    id: 'thumb-standard',
+    label: 'Standard (≤ 30 KB)',
+    description: 'Fits within 240 × 240 px, JPG under 30 KB.',
+    dimensions: { width: 240, height: 240 },
+    format: 'jpeg',
+    fileSize: { maxBytes: 30 * 1024 },
+  },
+  {
+    id: 'thumb-small-png',
+    label: 'Small PNG (≤ 20 KB)',
+    description: 'Fits within 200 × 200 px, PNG under 20 KB.',
+    dimensions: { width: 200, height: 200 },
+    format: 'png',
+    fileSize: { maxBytes: 20 * 1024 },
+  },
+]
+
+export function findThumbProfile(id: string): RequirementProfile | undefined {
+  return THUMB_PROFILES.find((profile) => profile.id === id)
+}
+
 export function describeRequirements(profile: ImageRequirements): string {
   const parts: string[] = []
 

@@ -79,13 +79,21 @@ async function runProcessingJob(input: ProcessingJobInput): Promise<ProcessedOut
               profile: input.profile,
               fileName: input.fileName,
             }
-          : {
-              id,
-              kind: 'signature',
-              source: bitmap,
-              profile: input.profile,
-              fileName: input.fileName,
-            }
+          : input.kind === 'thumb'
+            ? {
+                id,
+                kind: 'thumb',
+                source: bitmap,
+                profile: input.profile,
+                fileName: input.fileName,
+              }
+            : {
+                id,
+                kind: 'signature',
+                source: bitmap,
+                profile: input.profile,
+                fileName: input.fileName,
+              }
       // Transfer the bitmap instead of cloning it (structured clone).
       worker.postMessage(message, [bitmap])
     })

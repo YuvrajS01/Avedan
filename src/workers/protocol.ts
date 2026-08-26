@@ -2,9 +2,9 @@ import type { ImageRequirements } from '../domain/requirements/types'
 import type { ProcessedOutputData } from '../domain/jobs/result'
 import type { Rect } from '../processing/geometry'
 
-/** Message protocol for the processing worker (T018). */
+/** Message protocol for the processing worker (T018/T022). */
 
-export type ProcessKind = 'photo' | 'signature'
+export type ProcessKind = 'photo' | 'signature' | 'thumb'
 
 interface ProcessRequestBase {
   /** Correlates a response with its request; unique per client session. */
@@ -25,7 +25,11 @@ export interface SignatureProcessRequest extends ProcessRequestBase {
   kind: 'signature'
 }
 
-export type ProcessRequestPayload = PhotoProcessRequest | SignatureProcessRequest
+export interface ThumbProcessRequest extends ProcessRequestBase {
+  kind: 'thumb'
+}
+
+export type ProcessRequestPayload = PhotoProcessRequest | SignatureProcessRequest | ThumbProcessRequest
 
 export interface ProcessSuccessResponse {
   id: number

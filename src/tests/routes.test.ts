@@ -5,6 +5,7 @@ describe('routeFromHash', () => {
   it('maps known hashes to routes', () => {
     expect(routeFromHash('#/photo')).toBe('photo')
     expect(routeFromHash('#/signature')).toBe('signature')
+    expect(routeFromHash('#/thumb')).toBe('thumb')
     expect(routeFromHash('#/forms')).toBe('forms')
     expect(routeFromHash('#/')).toBe('home')
   })

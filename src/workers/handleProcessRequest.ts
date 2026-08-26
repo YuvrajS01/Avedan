@@ -1,6 +1,7 @@
 import type { ProcessedOutputData } from '../domain/jobs/result'
 import { computePhotoOutput } from '../features/photo/processPhoto'
 import { computeSignatureOutput } from '../features/signature/processSignature'
+import { computeThumbOutput } from '../features/thumb/processThumb'
 import type { ProcessRequestPayload } from './protocol'
 
 /**
@@ -16,6 +17,13 @@ export async function handleProcessRequest(
     return computePhotoOutput({
       source: request.source,
       cropRect: request.cropRect,
+      profile: request.profile,
+      fileName: request.fileName,
+    })
+  }
+  if (request.kind === 'thumb') {
+    return computeThumbOutput({
+      source: request.source,
       profile: request.profile,
       fileName: request.fileName,
     })
