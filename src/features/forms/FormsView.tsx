@@ -95,28 +95,33 @@ export function FormsView() {
                     )}
                   </span>
                 </button>
-                {(signatureSummary || thumbSummary) && (
-                  <div className="preset-actions">
-                    {signatureSummary && (
-                      <button
-                        type="button"
-                        className="button button-ghost"
-                        onClick={() => navigate('signature', { presetId: preset.id })}
-                      >
-                        Prepare signature
-                      </button>
-                    )}
-                    {thumbSummary && (
-                      <button
-                        type="button"
-                        className="button button-ghost"
-                        onClick={() => navigate('thumb', { presetId: preset.id })}
-                      >
-                        Prepare thumb
-                      </button>
-                    )}
-                  </div>
-                )}
+                <div className="preset-actions">
+                  <button
+                    type="button"
+                    className="button button-ghost"
+                    onClick={() => navigate('kit', { presetId: preset.id })}
+                  >
+                    View kit
+                  </button>
+                  {signatureSummary && (
+                    <button
+                      type="button"
+                      className="button button-ghost"
+                      onClick={() => navigate('signature', { presetId: preset.id })}
+                    >
+                      Prepare signature
+                    </button>
+                  )}
+                  {thumbSummary && (
+                    <button
+                      type="button"
+                      className="button button-ghost"
+                      onClick={() => navigate('thumb', { presetId: preset.id })}
+                    >
+                      Prepare thumb
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           )
