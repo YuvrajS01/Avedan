@@ -36,4 +36,4 @@ T004 and T006 can be developed independently after the shared processing primiti
 
 MVP (T001–T010) complete 2026-08-22 (T011 gate passed, `v0.1.0-mvp`); V2 complete — T012–T019 engineering items done and the T020 manual verification gate passed 2026-08-24 (`v0.2.0`). Remaining backlog: owner-verified official presets (pure data entry into `seedPresets.ts`).
 
-V3 (Form Intelligence) planned 2026-08-26: T021 in progress — preset engine extended for photo/signature/thumbImpression with data-driven Forms rendering and one illustrative thumb preset; T022–T025 queued incrementally.
+V3 (Form Intelligence) complete 2026-08-26 on `feat/v3-form-intelligence`: T021 engine + T022 thumb flow + T023 validation + T024 kit view + T025 kit export — all done, 281 tests, typecheck/lint/build clean. Next is owner verification / v0.3.0 tag (manual on-device check + one verified official preset per D003/D019).

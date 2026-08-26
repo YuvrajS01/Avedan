@@ -22,6 +22,7 @@ import { encodeCanvas } from '../../processing/encode'
 import type { EncodableCanvas } from '../../processing/optimize'
 import { releaseSessionAssets } from '../../utils/session'
 import { processSignature } from './processSignature'
+import { setKitAsset } from '../../domain/kit/store'
 
 type Step = 'choose' | 'draw' | 'preview' | 'result'
 
@@ -163,6 +164,13 @@ export function SignatureView() {
         profile,
         fileName: 'signature',
       })
+      if (presetId) {
+        setKitAsset(presetId, 'signature', {
+          blob: processed.blob,
+          fileName: processed.fileName,
+          sizeBytes: processed.sizeBytes,
+        })
+      }
       setResult(processed)
       setStep('result')
     } catch (cause) {
@@ -182,6 +190,13 @@ export function SignatureView() {
         profile,
         fileName: loaded.fileName,
       })
+      if (presetId) {
+        setKitAsset(presetId, 'signature', {
+          blob: processed.blob,
+          fileName: processed.fileName,
+          sizeBytes: processed.sizeBytes,
+        })
+      }
       setResult(processed)
       setStep('result')
     } catch (cause) {

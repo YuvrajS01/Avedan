@@ -21,6 +21,7 @@ import { encodeCanvas } from '../../processing/encode'
 import type { EncodableCanvas } from '../../processing/optimize'
 import { releaseSessionAssets } from '../../utils/session'
 import { processThumb } from './processThumb'
+import { setKitAsset } from '../../domain/kit/store'
 
 type Step = 'choose' | 'preview' | 'result'
 
@@ -163,6 +164,13 @@ export function ThumbView() {
         profile,
         fileName: loaded.fileName,
       })
+      if (presetId) {
+        setKitAsset(presetId, 'thumbImpression', {
+          blob: processed.blob,
+          fileName: processed.fileName,
+          sizeBytes: processed.sizeBytes,
+        })
+      }
       setResult(processed)
       setStep('result')
     } catch (cause) {

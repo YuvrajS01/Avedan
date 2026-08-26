@@ -17,6 +17,7 @@ import { releaseSessionAssets } from '../../utils/session'
 import { isCameraSupported } from '../camera/camera'
 import type { NormalizedFace } from './cropMath'
 import { CameraStep } from '../camera/CameraStep'
+import { setKitAsset } from '../../domain/kit/store'
 
 type Step = 'intake' | 'camera' | 'crop' | 'result'
 
@@ -211,6 +212,13 @@ export function PhotoView() {
         profile,
         fileName: loaded.fileName,
       })
+      if (presetId) {
+        setKitAsset(presetId, 'photo', {
+          blob: processed.blob,
+          fileName: processed.fileName,
+          sizeBytes: processed.sizeBytes,
+        })
+      }
       setResult(processed)
       setStep('result')
     } catch (cause) {

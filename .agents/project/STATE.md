@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.3.0 — V3 Form Intelligence in progress (T021–T024 done, 2026-08-26)  
+**Stage:** v0.3.0 — V3 Form Intelligence complete (T021–T025 done, 2026-08-26)  
 **Last updated:** 2026-08-26  
-**Status:** `feat/v3-form-intelligence` branch; T021 engine + T022 thumb flow + T023 validation + T024 kit view complete (269 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`
+**Status:** `feat/v3-form-intelligence` branch; V3 complete — engine + thumb flow + preset-aware validation + kit view + kit ZIP export (281 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`, ready for v0.3.0 tag after owner verification
 
 ## Product goal
 
@@ -47,15 +47,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - V3 thumb impression flow (2026-08-26, T022/D048): dedicated `#/thumb` route + `ThumbView` (upload drag-drop → trimmed preview → result), `processThumb`/`computeThumbOutput` (trim → fit-within never upscale → flatten white → optimize with THUMB_ALLOWED_SCALES → validate `within`), worker protocol extended to `thumb`, `THUMB_PROFILES` (240×240 JPEG ≤30KB, 200×200 PNG ≤20KB), NavBar thumb icon, Forms cards now offer Prepare signature + Prepare thumb data-driven per preset. 257 tests passing; typecheck/lint/build clean.
 - V3 preset-aware validation (2026-08-26, T023/D049): `src/domain/presets/helpers.ts` (`requiredAssetKinds`, `assetLabel`, `dimensionModeForKind`, `presetKindsSummary`) and `ProcessedResult` now preset-aware (optional `preset` prop shows "Validated against {name} · {authority}" + lastVerified + Official source + always-confirm disclaimer). Photo/Signature/Thumb views forward `activePreset` to result. 263 tests passing; typecheck/lint/build clean.
 - V3 Application Kit view (2026-08-26, T024/D050): `#/kit?preset=id` via `KitView` (findFormPreset + presetFreshness, summary card with name/authority/year/lastVerified/freshness badge/source link/stale warning + disclaimer, required assets iterated data-driven via `requiredAssetKinds` + `requirementsFromPreset` + `describeRequirements` + `assetLabel` with Prepare CTAs to photo/signature/thumb + `?preset=id`; empty preset handled with Browse forms). `FormsView` adds View kit button, NavBar/Routes/App include kit. 269 tests passing; typecheck/lint/build clean.
+- V3 kit export (2026-08-26, T025/D051): `src/utils/zip.ts` minimal STORE ZIP (CRC32 + headers, ~2 KB, no deps) + `src/domain/kit/store.ts` session-local Map<presetId, Map<kind, asset>>; Photo/Signature/Thumb store to kit when `presetId` present; `KitView` shows per-asset Prepared/Not yet prepared + `preparedCount`, per-asset Download buttons, and Download kit ZIP card (collects prepared assets → blobToUint8Array → createZipBlob → object URL → download + Re-download link, handles empty/busy/error, STORE note, fallback to individual downloads). 281 tests passing; typecheck/lint/build clean (75 modules, 281 KB gz 84.5 KB).
 
 ## Not implemented yet (backlog)
 
-- V3 Form Intelligence remainder (see TASK_INDEX T025): kit ZIP/batch export (client-side ZIP of prepared assets for a kit, session-local, no upload, fallback to individual downloads if weight excessive).
-- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
+- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source. One real verified preset can now be added to replace/extend `example-thumb-kit` after checking the official portal/notification (year/version, photo/signature/thumb fileSize/format/pixelSize, sourceUrl, lastVerified).
+- Future V3+ enhancements (see ROADMAP): batch CSV/institution mode, document/PDF utilities — scoped as new tasks.
 
 ## Current focus
 
-V3 Form Intelligence: T021–T024 complete on `feat/v3-form-intelligence` branch; next is T025 kit export (ZIP / batch guidance) — client-side ZIP assembly for a kit, evaluating dependency weight, fallback to checklist if excessive.
+V3 Form Intelligence **complete** (T021–T025) on `feat/v3-form-intelligence` branch (281 tests, typecheck/lint/build clean). Next is owner verification / v0.3.0 release gate (manual on-device check of photo/signature/thumb/kit + offline/privacy), or new feature scoping against ROADMAP.
 
 ## Current risks
 
@@ -67,7 +68,7 @@ V3 Form Intelligence: T021–T024 complete on `feat/v3-form-intelligence` branch
 
 ## Next recommended task
 
-T025 — V3 kit export (ZIP / batch guidance) (depends on T024). Implement client-side ZIP generation for the current kit session (photo + signature + thumb blobs) with sensible filenames (`{preset-id}-photo.jpg` etc.), evaluating dependency weight (prefer small helper, fallback to individual downloads). Session-local only, no network, revoke URLs after reset. See `.agents/tasks/T025-v3-kit-export.md` and TASK_INDEX.
+None queued for agents. V3 complete — owner to verify flows on real device and add one manually verified official preset (per `.agents/tasks/T021–T025` checklists), then tag `v0.3.0`. New feature work should be scoped against `ROADMAP.md` and defined as a new task file first.
 
 ## Continuity rule
 
