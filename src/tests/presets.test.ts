@@ -66,7 +66,18 @@ describe('validateFormPreset', () => {
     const empty: Record<string, unknown> = { ...VALID }
     delete empty.photo
     delete empty.signature
-    expect(() => validateFormPreset(empty)).toThrow(/photo or signature/)
+    expect(() => validateFormPreset(empty)).toThrow(/at least one of photo/)
+  })
+
+  it('accepts a thumb-only preset', () => {
+    const thumbOnly = validateFormPreset({
+      id: 'thumb-preset',
+      name: 'Thumb preset',
+      authority: 'Authority',
+      lastVerified: '2026-08-01',
+      thumbImpression: { format: 'jpeg', pixelSize: { width: 240, height: 240 } },
+    })
+    expect(thumbOnly.thumbImpression?.pixelSize).toEqual({ width: 240, height: 240 })
   })
 })
 
@@ -160,5 +171,29 @@ describe('requirementsFromPreset', () => {
     expect(requirements?.physicalSizeMm).toBeUndefined()
     expect(requirements?.dpi).toBeUndefined()
     expect(requirements?.background).toBeUndefined()
+  })
+
+  it('maps thumbImpression requirements into engine requirements', () => {
+    const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
+    expect(thumbPreset).toBeDefined()
+    const requirements = requirementsFromPreset(thumbPreset!, 'thumbImpression')
+    expect(requirements).toMatchObject({
+      format: 'jpeg',
+      dimensions: { width: 240, height: 240 },
+      aspectRatio: 1,
+      fileSize: { minBytes: 10 * 1024, maxBytes: 30 * 1024 },
+    })
+    expect(requirements?.id).toBe(`${thumbPreset!.id}:thumbImpression`)
+  })
+
+  it('returns undefined for missing thumbImpression', () => {
+    const bare = validateFormPreset({
+      id: 'photo-only',
+      name: 'Photo only',
+      authority: 'Authority',
+      lastVerified: '2026-01-01',
+      photo: { format: 'jpeg' },
+    })
+    expect(requirementsFromPreset(bare, 'thumbImpression')).toBeUndefined()
   })
 })

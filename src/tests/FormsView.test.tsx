@@ -57,3 +57,23 @@ describe('FormsView signature wiring', () => {
     expect(cards).toHaveLength(withSignature.length)
   })
 })
+
+describe('FormsView thumb impression (T021)', () => {
+  it('renders thumb impression summaries for presets that define them', () => {
+    render(<FormsView />)
+    const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
+    expect(thumbPreset).toBeDefined()
+    expect(screen.getByText(thumbPreset!.name)).toBeInTheDocument()
+    // Data-driven line: "Thumb impression: ..."
+    expect(screen.getAllByText(/Thumb impression:/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Includes thumb impression requirement/i)).toBeInTheDocument()
+  })
+
+  it('search finds the thumb kit preset by description', async () => {
+    const user = userEvent.setup()
+    render(<FormsView />)
+    await user.type(screen.getByLabelText(/search forms/i), 'thumb')
+    const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
+    expect(screen.getByText(thumbPreset!.name)).toBeInTheDocument()
+  })
+})

@@ -6,6 +6,15 @@ import {
   requirementsFromPreset,
 } from '../../domain/presets/registry'
 import { describeRequirements } from '../../domain/requirements/profiles'
+import type { PresetAssetKind } from '../../domain/presets/schema'
+
+const ASSET_LABEL: Record<PresetAssetKind, string> = {
+  photo: 'Photo',
+  signature: 'Signature',
+  thumbImpression: 'Thumb impression',
+}
+
+const ASSET_KINDS: PresetAssetKind[] = ['photo', 'signature', 'thumbImpression']
 
 export function FormsView() {
   const { navigate } = useHashRoute()
@@ -26,8 +35,8 @@ export function FormsView() {
     <section className="view" aria-labelledby="forms-title">
       <h1 id="forms-title">Form requirements</h1>
       <p className="lede">
-        Pick a form to prefill the photo and signature targets. Always confirm
-        against the official source before submitting.
+        Pick a form to prefill the photo, signature and thumb-impression targets.
+        Always confirm against the official source before submitting.
       </p>
       <label className="field search-field">
         <span>Search forms</span>
@@ -42,8 +51,18 @@ export function FormsView() {
       <ul className="preset-list">
         {filtered.map((preset) => {
           const freshness = presetFreshness(preset)
-          const photoSummary = requirementsFromPreset(preset, 'photo')
           const signatureSummary = requirementsFromPreset(preset, 'signature')
+          const thumbSummary = requirementsFromPreset(preset, 'thumbImpression')
+          // Data-driven requirement lines (V3): iterate over present asset kinds
+          const requirementLines = ASSET_KINDS.map((kind) => {
+            const req = requirementsFromPreset(preset, kind)
+            if (!req) return null
+            return (
+              <span key={kind} className="preset-line">
+                {ASSET_LABEL[kind]}: {describeRequirements(req)}
+              </span>
+            )
+          })
           return (
             <li key={preset.id}>
               <div className="card preset-card">
@@ -63,14 +82,7 @@ export function FormsView() {
                     </span>
                   </span>
                   <span className="action-hint">{preset.authority}</span>
-                  {photoSummary && (
-                    <span className="preset-line">Photo: {describeRequirements(photoSummary)}</span>
-                  )}
-                  {signatureSummary && (
-                    <span className="preset-line">
-                      Signature: {describeRequirements(signatureSummary)}
-                    </span>
-                  )}
+                  {requirementLines}
                   <span className="preset-meta">
                     Last verified {preset.lastVerified}
                     {preset.sourceUrl && (
@@ -92,6 +104,11 @@ export function FormsView() {
                     >
                       Prepare signature
                     </button>
+                  </div>
+                )}
+                {thumbSummary && (
+                  <div className="preset-actions">
+                    <span className="action-hint">Includes thumb impression requirement</span>
                   </div>
                 )}
               </div>

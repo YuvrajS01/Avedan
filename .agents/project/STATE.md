@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.2.0 — V2 complete (T012–T019) and owner-verified (T020 gate, 2026-08-24)  
-**Last updated:** 2026-08-24  
-**Status:** Released as `v0.2.0`; remaining backlog: owner-verified official presets
+**Stage:** v0.3.0 — V3 Form Intelligence in progress (T021 done, 2026-08-26)  
+**Last updated:** 2026-08-26  
+**Status:** `feat/v3-form-intelligence` branch; T021 preset engine + one thumb-kit example complete (250 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`
 
 ## Product goal
 
@@ -43,14 +43,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Worker offload of the encode/optimize loop (2026-08-22, T018/D044): photo and signature pipelines split into serializable cores (`computePhotoOutput`/`computeSignatureOutput`) shared verbatim by a module worker (`src/workers/process.worker.ts` + `protocol.ts` + `handleProcessRequest.ts`) and the main thread; `src/workers/client.ts` uses the worker only when supported, transfers an `ImageBitmap` via structured clone, and silently falls back to the identical in-thread pipeline otherwise. A 15 s watchdog (D046, field-fix for a "stuck on Preparing your photo…" report unreproducible in headless Chrome) bounds any silent worker so the flow can never hang. `defaultCanvasFactory` falls back to `OffscreenCanvas`; `encodeCanvas` supports `convertToBlob`. 245 tests passing; typecheck/lint/build pass (worker chunk emitted).
 - Verified-preset registry preparation (2026-08-22, T019/D045): `ImageRequirements` gained descriptive `physicalSizeMm`/`dpi`; `requirementsFromPreset` maps background ('white' only), physical size and DPI; photo page prefills physical fields + DPI + white-background toggle from presets (hash-route and dropdown) with manual-edit precedence intact; seed data extracted to documented `domain/presets/seedPresets.ts` with an owner verification checklist; new illustrative white-background template. Validation stays pixel-based (D043). 244 tests passing.
 - v0.2.0 release (2026-08-24): T020 manual verification gate passed by the product owner on real hardware (V2 capture-guidance suite + MVP regressions). 245 tests passing; typecheck/lint/build clean. Tagged `v0.2.0`.
+- V3 preset engine & data model (2026-08-26, T021/D047): schema extended to `photo | signature | thumbImpression` (spec parity), `validateFormPreset` and `requirementsFromPreset` handle thumbImpression identically, `FormsView` iterates data-driven over `PRESET_ASSET_KINDS` to render Photo/Signature/Thumb impression lines with shared freshness/source/disclaimer UI, one illustrative thumb-kit preset (`example-thumb-kit`: photo 350×450 white 20–50 KB + signature 10–20 KB + thumb 240×240 10–30 KB) satisfies the "one carefully selected example preset" rule without claiming authority. 250 tests passing; typecheck/lint/build clean.
 
 ## Not implemented yet (backlog)
 
-- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected.
+- V3 Form Intelligence remainder (see TASK_INDEX T022–T025): thumb impression preparation flow, preset-aware requirement validation, Application Kit view aggregating photo/signature/thumb for a selected preset, kit ZIP/batch export.
+- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
 
 ## Current focus
 
-Owner workflow: verified official presets.
+V3 Form Intelligence: T021 complete on `feat/v3-form-intelligence` branch; next is T022 thumb impression preparation flow (upload/trim/fit-within/optimize/validate, data-driven, client-side).
 
 ## Current risks
 
@@ -62,7 +64,7 @@ Owner workflow: verified official presets.
 
 ## Next recommended task
 
-None queued for agents. The owner adds verified official presets to `src/domain/presets/seedPresets.ts` per its checklist; new feature work (thumb impressions, batch/ZIP export, PDF utilities) should be scoped against `.agents/docs/ROADMAP.md` and defined as a new task file first.
+T022 — V3 thumb impression preparation flow (depends on T021). Implement a dedicated thumb-impression intake/processing/validation pipeline reusing existing primitives (trim, fit-within, optimizer with allowedScales, within validation), with hash route `#/thumb?preset=id`, nav entry, and data-driven Forms → Prepare thumb wiring. Keep V3 incremental; see `.agents/tasks/T022-v3-thumb-impression-flow.md` and TASK_INDEX.
 
 ## Continuity rule
 
