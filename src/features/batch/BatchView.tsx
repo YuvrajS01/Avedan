@@ -11,6 +11,12 @@ import { useHashRoute } from '../../hooks/useHashRoute'
 import { dimensionsFromPhysical } from '../../processing/geometry'
 import { createZipBlob, blobToUint8Array } from '../../utils/zip'
 import { processBatchPhotos, type BatchItem } from './batchProcess'
+import { FileNamingField } from '../../components/FileNamingField'
+import {
+  getNamingTemplate,
+  renderFileName,
+  dedupeFileNames,
+} from '../../domain/naming/fileNaming'
 
 interface CustomSettings {
   width: string
@@ -80,6 +86,7 @@ export function BatchView() {
   const [error, setError] = useState<string | null>(null)
   const [zipUrl, setZipUrl] = useState<string | null>(null)
   const [zipName, setZipName] = useState('')
+  const [namingTemplate, setNamingTemplate] = useState(() => getNamingTemplate(presetId))
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
@@ -139,6 +146,10 @@ export function BatchView() {
       dpi: dpi !== undefined ? String(dpi) : DEFAULT_CUSTOM.dpi,
     })
   }, [presetProfile])
+
+  useEffect(() => {
+    setNamingTemplate(getNamingTemplate(presetId))
+  }, [presetId])
 
   useEffect(() => {
     return () => {
@@ -208,11 +219,28 @@ export function BatchView() {
     setBusy(true)
     setError(null)
     try {
+      const template = namingTemplate || getNamingTemplate(presetId)
+      const rawNames: string[] = []
       const entries: { name: string; data: Uint8Array }[] = []
-      for (const item of successful) {
+      for (let index = 0; index < successful.length; index++) {
+        const item = successful[index]
         const asset = item.asset!
+        const originalBase = item.file.name.replace(/\.[^.]+$/, '') || 'photo'
+        const ext = (asset.fileName.split('.').pop() ?? asset.format ?? 'jpg').replace(/^\.+/, '')
+        const rendered = renderFileName(template, {
+          original: originalBase,
+          index: index + 1,
+          kind: 'photo',
+          preset: presetId ?? 'manual',
+          ext,
+        })
+        rawNames.push(rendered)
+      }
+      const deduped = dedupeFileNames(rawNames)
+      for (let index = 0; index < successful.length; index++) {
+        const asset = successful[index].asset!
         const data = await blobToUint8Array(asset.blob)
-        entries.push({ name: asset.fileName, data })
+        entries.push({ name: deduped[index], data })
       }
       const zipBlob = createZipBlob(entries, new Date())
       const url = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(zipBlob) : ''
@@ -575,9 +603,10 @@ export function BatchView() {
           <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1rem' }}>Download all</h3>
             <p className="profile-note">
-              ZIP of all successful photos — built in your browser (STORE, no recompression). Filenames are{' '}
-              <code>{'{original}-avedan.{ext}'}</code> and already carry the required format.
+              ZIP of all successful photos — built in your browser (STORE, no recompression). Filenames follow your
+              naming template.
             </p>
+            <FileNamingField presetId={presetId} onChange={setNamingTemplate} />
             <div className="step-actions" style={{ marginTop: '0.75rem' }}>
               <button
                 type="button"
