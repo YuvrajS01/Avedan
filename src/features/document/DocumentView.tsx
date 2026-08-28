@@ -422,25 +422,23 @@ export function DocumentView() {
         </p>
         {requirementsPanel}
         <div
-          className="drop-zone card"
+          className="intake-zone"
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault()
             handleFile(event.dataTransfer.files?.[0])
           }}
-          onClick={() => fileInputRef.current?.click()}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
-              event.preventDefault()
-              fileInputRef.current?.click()
-            }
-          }}
-          aria-label="Document drop zone"
         >
-          <span className="option-label">Upload document</span>
-          <span className="option-hint">JPG, PNG or WebP — click or drag and drop</span>
+          <p className="intake-title">Drop your document here</p>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Upload document
+          </button>
+          <p className="intake-alt">or drag and drop an image here</p>
+          <p className="option-hint">JPG, PNG or WebP — white paper, good lighting</p>
         </div>
         <input
           ref={fileInputRef}
