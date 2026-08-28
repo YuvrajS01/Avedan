@@ -8,6 +8,7 @@ import { SignatureView } from '../features/signature/SignatureView'
 import { ThumbView } from '../features/thumb/ThumbView'
 import { KitView } from '../features/kit/KitView'
 import { BatchView } from '../features/batch/BatchView'
+import { DocumentView } from '../features/document/DocumentView'
 import { FormsView } from '../features/forms/FormsView'
 
 const VIEWS: Record<string, ComponentType> = {
@@ -17,6 +18,7 @@ const VIEWS: Record<string, ComponentType> = {
   thumb: ThumbView,
   kit: KitView,
   batch: BatchView,
+  document: DocumentView,
   forms: FormsView,
 }
 

@@ -1,6 +1,6 @@
 # T030 — V4 Document scan / perspective correction (deferred)
 
-**Status:** PLANNED
+**Status:** DONE (2026-08-28)
 **Priority:** P2
 **Depends on:** Batch foundation (T026), processing engine modularity
 **Architecture references:** PROCESSING_ENGINE spec, D007 (progressive enhancement), PRIVACY
@@ -28,11 +28,20 @@ Provide a **local, opt-in document scan** flow: user points camera or uploads a 
 
 ## Acceptance criteria (when activated)
 
-- [ ] Document quadrilateral detected or manually set, perspective corrected, preview matches output pixels.
-- [ ] Preset `pixelSize` respected; file size optimizer applies.
-- [ ] Tests for geometry math + correction (without DOM canvas).
-- [ ] Docs updated; no new deps unless weight is justified and disclosed.
+- [x] Document quadrilateral manually set via 4 draggable handles (auto-detection deferred, manual fallback always available), perspective corrected, preview matches output pixels.
+- [x] Preset `pixelSize` respected; file size optimizer applies.
+- [x] Tests for geometry math + correction (without DOM canvas).
+- [x] Docs updated; no new deps unless weight is justified and disclosed.
+
+## Outcome (2026-08-28)
+
+Implemented on `feat/v4-power-user` as minimal viable document scan (deferred task now delivered without ML model download):
+- `src/processing/perspective.ts` — `affineForTriangle` (solves 6-equation affine for tri→tri), `drawTri` (clip + setTransform + drawImage), `correctPerspective` (splits quad into two triangles `tl-tr-br` + `tl-br-bl`, draws each with affine, white background, `defaultCanvasFactory` fallback to `OffscreenCanvas`, `defaultQuadForImage` 5% inset, `clampQuad`), pure math, deterministic, testable, no deps.
+- `src/features/document/processDocument.ts` — `computeDocumentOutput` (perspectiveCorrect → `createCanvasEncoder` → `optimizeEncoding` → `validateOutput` with `pixelSize` as target, `within`/`exact` per profile) + `processDocument` (in-thread, no worker kind, session URL via `URL.createObjectURL`).
+- `src/features/document/DocumentView.tsx` — `#/document` + `?preset=id` (preset → `requirementsFromPreset` `photo` with manual precedence, same requirements panel as Photo including physical/white BG), intake (upload), adjust (image + SVG quad overlay + 4 draggable corner buttons via `pointermove`/`pointerup` with source-pixel mapping via `imageRef` rect + `source.width/displayWidth` scale, `clampQuad`, Reset corners, Continue), result via `ProcessedResult` noun `document` with preset banner. Privacy-local, before/after via thumbnail, reset, never auto-crops without drag.
+- `src/app/routes.ts` + `App.tsx` + `components/NavBar.tsx` — added `document` route, DocumentView, Scan icon (document), Nav Scan.
+- Tests: `src/tests/perspective.test.ts` (4) defaultQuad, clampQuad, correctPerspective size + two triangles, degenerate fallback; `src/tests/DocumentView.test.tsx` (5) intake, preset context, adjust, process, error; `App.test` + `routes.test` updated for Scan. 334 tests passing (4+5 new), 83 modules; typecheck/lint/build clean (318 KB JS, 93.6 KB gz), no new deps. Auto-detection via edge detection remains future progressive enhancement (no model download, D007).
 
 ## Verification
 
-- Manual: photograph an A4 sheet at ~30° angle, correct to 800×1100 px, verify straight edges and correct dimensions.
+- `typecheck` clean, `lint` clean, `test` 334/334, `build` 83 modules. Manual: photograph A4 at ~30°, upload, drag corners to outline page, Continue → output 800×1100 px straight rectangle, correct file size, download, all local.

@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026–T029 done, 2026-08-28)  
+**Stage:** v0.4.0 — V4 Power User & Institution complete (T026–T030 done, 2026-08-28)  
 **Last updated:** 2026-08-28  
-**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) + T028 CSV (319 tests, D054) + T029 batch sig/thumb (324 tests, D055) complete; kind switch + per-kind processor, `within` + trim, ZIP kind-aware
+**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) + T028 CSV (319 tests, D054) + T029 batch sig/thumb (324 tests, D055) + T030 document scan (334 tests, D056) complete; batch photo/sig/thumb + naming + CSV + perspective, privacy-local, no new deps
 
 ## Product goal
 
@@ -52,16 +52,16 @@ Create a browser-based tool that prepares application photos and signatures to e
 - V4 configurable file naming (2026-08-28, T027/D053): `src/domain/naming/fileNaming.ts` (`sanitizeFileNamePart`, `renderFileName` `{original}` `{index}` `{kind}` `{preset}` `{ext}` with fallback `{original}-avedan` + ext append + sanitize, `dedupeFileNames` case-insensitive `-2`, `get/setNamingTemplate` per preset via `localStorage` `avedan-naming:${presetId}`) + `src/components/FileNamingField.tsx` (disclosure with input, live preview, tokens help, per-preset persist) + `BatchView`/`KitView` ZIPs now render via `renderFileName` + `dedupeFileNames` (original base from file/asset, index, kind, preset, ext) before `createZipBlob`, Kit single downloads also templated. 308 tests passing (13 fileNaming new); typecheck/lint/build clean, no new deps.
 - V4 institution dataset import (2026-08-28, T028/D054): `src/domain/dataset/csv.ts` (`parseCSV` quoted commas/`""`, trims/lowercases headers, `matchDatasetToFiles` basename case-insensitive, first-row-wins) + `src/domain/naming/fileNaming.ts` extended with `{csv.xxx}` (case-insensitive, sanitized) + `BatchView` dataset state (`dataset`/`datasetError`/`datasetMatch` memo, `handleDatasetFile` File.text→FileReader fallback, `parseCSV`, preview table first 5 rows, matched `X of Y files matched` + unmatched files/rows, `handleDownloadZip` passes `csvRow` to `renderFileName` for `{csv.id}` etc., `dedupeFileNames`). 319 tests passing (8 csv, 1 fileNaming csv token, 2 BatchView dataset); typecheck/lint/build clean (80 modules, 303 KB), no new deps, privacy-local.
 - V4 batch signature/thumb extension (2026-08-28, T029/D055): `src/features/batch/batchProcess.ts` now `processSingleSignature`/`processSingleThumb` + generic `processBatch(files, kind, profile)` sequential dispatch (`photo` via auto `computeCropRect`→`processPhoto`, `signature`/`thumb` via trim→fit-within→`processSignature`/`processThumb`, `within` + `THUMB_ALLOWED_SCALES`), `BatchView` now `batchKind` state (`photo` default, `DEFAULT_CUSTOM_BY_KIND`, `presetKind` memo, `profile` kind-aware, effect resets custom on kind switch, `handlePresetSelect` switches `PHOTO`/`SIGNATURE`/`THUMB_PROFILES`, `handleProcess`→`processBatch(files, batchKind)`, `handleDownloadZip` kind-aware, requirements panel `Asset kind` select + dynamic Load preset, heading/lede/drop-zone/process button/summary/ZIP/privacy note all dynamic via `kindLabel`/`kindSingular`). 324 tests passing (batchProcess +2, BatchView +2 kind-switch); typecheck/lint/build clean (80 modules, 305 KB), no new deps, no exam hardcoding.
+- V4 document perspective correction (2026-08-28, T030/D056): `src/processing/perspective.ts` (`affineForTriangle` 6-equation, `drawTri` clip+setTransform+drawImage, `correctPerspective` two triangles `tl-tr-br` + `tl-br-bl` with white background, `defaultQuadForImage` 5% inset, `clampQuad`) + `src/features/document/processDocument.ts` (`computeDocumentOutput` perspectiveCorrect→encode→optimize→validate, `processDocument` in-thread) + `src/features/document/DocumentView.tsx` (`#/document?preset=id` same requirements panel as Photo, intake upload, adjust with image+SVG quad overlay+4 draggable corners via `pointermove`/`pointerup` with source-pixel mapping and `clampQuad`, Reset/Continue, result via `ProcessedResult` noun `document` with preset banner, privacy-local, never auto-crops without drag). `ROUTES`/`App`/`NavBar` Scan. 334 tests passing (perspective 4 + DocumentView 5); typecheck/lint/build clean (83 modules, 318 KB, 93.6 KB gz), no new deps.
 
 ## Not implemented yet (backlog)
 
-- V4 remainder (T030): document perspective correction (deferred, no ML model, manual 4-corner fallback, pure canvas math, `pixelSize` + fileSize optimizer, before/after preview, reset).
 - Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
-- Future V4+ enhancements (ROADMAP Phase 4/5): PDF generation/compression, OCR — scoped as new tasks only when product value is clear; do not become a generic document-management system without reason.
+- Future V4+ enhancements (ROADMAP Phase 4/5): PDF generation/compression, OCR where appropriate — scoped as new tasks only when product value is clear; do not become a generic document-management system without reason. Document auto-detection via edge/contour remains a progressive enhancement (no model download) for a future T030 follow-up.
 
 ## Current focus
 
-V4 Power User & Institution: T026–T029 **complete** on `feat/v4-power-user` (324 tests, D052–D055). Next is T030 document perspective correction (deferred) — deterministic edge detection + 4-corner manual fallback + perspective transform via canvas, reuses `ImageRequirements` for final dimensions, same validation/ZIP path.
+V4 Power User & Institution **complete** (T026–T030) on `feat/v4-power-user` (334 tests, D052–D056, 83 modules). Power User batch (photo/sig/thumb) + naming + CSV + document scan are done, privacy-local, no new deps. Next is owner verification / v0.4.0 release gate (manual on-device check of batch/kit/document + offline/privacy) or new feature scoping against ROADMAP.
 
 ## Current risks
 
@@ -73,7 +73,7 @@ V4 Power User & Institution: T026–T029 **complete** on `feat/v4-power-user` (3
 
 ## Next recommended task
 
-T030 — V4 document scan / perspective correction (deferred, P2, depends on T026). Local, opt-in document scan: edge detection (no model), 4-corner manual fallback, perspective transform via canvas (pure math, testable, no new deps), reuses `ImageRequirements` for final dimensions, same validation/ZIP path, before/after + reset, never auto-crops without confirmation. See `.agents/tasks/T030-document-scan.md` and TASK_INDEX.
+None queued for agents. V4 complete — owner to verify batch (photo/sig/thumb) + naming + CSV + document scan on real device and add any verified official preset, then tag `v0.4.0`. New feature work (PDF workflows, OCR, institution batch ZIP naming with dataset) should be scoped against `ROADMAP.md` and defined as a new task file first.
 
 ## Continuity rule
 

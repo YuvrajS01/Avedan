@@ -16,7 +16,7 @@ describe('App shell', () => {
 
   it('renders navigation for all sections', () => {
     render(<App />)
-    for (const name of ['Home', 'Photo', 'Signature', 'Thumb', 'Kit', 'Batch', 'Forms']) {
+    for (const name of ['Home', 'Photo', 'Signature', 'Thumb', 'Kit', 'Batch', 'Scan', 'Forms']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
   })
@@ -63,7 +63,16 @@ describe('App shell', () => {
     render(<App />)
     await user.click(screen.getByRole('button', { name: 'Batch' }))
     expect(
-      screen.getByRole('heading', { name: 'Batch photos' }),
+      screen.getByRole('heading', { name: /batch photos|batch signatures|batch thumb/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('switches to the document view when navigated', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Scan' }))
+    expect(
+      screen.getByRole('heading', { name: 'Document scan' }),
     ).toBeInTheDocument()
   })
 

@@ -7,6 +7,7 @@ const LABELS: Record<Route, string> = {
   thumb: 'Thumb',
   kit: 'Kit',
   batch: 'Batch',
+  document: 'Scan',
   forms: 'Forms',
 }
 
@@ -78,6 +79,16 @@ function NavIcon({ route }: { route: Route }) {
           <rect x="13" y="4" width="7" height="7" rx="1" />
           <rect x="4" y="13" width="7" height="7" rx="1" />
           <rect x="13" y="13" width="7" height="7" rx="1" />
+        </svg>
+      )
+    case 'document':
+      return (
+        <svg {...common}>
+          <rect x="5" y="3" width="14" height="18" rx="1.5" />
+          <path d="M9 8h6" />
+          <path d="M9 12h6" />
+          <path d="M9 16h6" />
+          <path d="M14 3v4h4" />
         </svg>
       )
   }
