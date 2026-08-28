@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026–T027 done, 2026-08-28)  
+**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026–T028 done, 2026-08-28)  
 **Last updated:** 2026-08-28  
-**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) complete; configurable `{original}_{index}_{kind}_{preset}_{ext}` with sanitize/dedupe, per-preset localStorage, batch/kit ZIPs
+**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) + T028 CSV dataset (319 tests, D054) complete; local CSV parse/matching + `{csv.xxx}` naming, session-local, no upload
 
 ## Product goal
 
@@ -50,16 +50,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - V3 kit export (2026-08-26, T025/D051): `src/utils/zip.ts` minimal STORE ZIP (CRC32 + headers, ~2 KB, no deps) + `src/domain/kit/store.ts` session-local Map<presetId, Map<kind, asset>>; Photo/Signature/Thumb store to kit when `presetId` present; `KitView` shows per-asset Prepared/Not yet prepared + `preparedCount`, per-asset Download buttons, and Download kit ZIP card (collects prepared assets → blobToUint8Array → createZipBlob → object URL → download + Re-download link, handles empty/busy/error, STORE note, fallback to individual downloads). 281 tests passing; typecheck/lint/build clean (75 modules, 281 KB gz 84.5 KB).
 - V4 batch photo foundation (2026-08-28, T026/D052): `#/batch` route + `BatchView` (requirements panel same as Photo with preset `?preset=id` + manual precedence, multi-file `multiple` + drag-drop filter `image/jpeg|png|webp`, count, Clear, sequential `processBatchPhotos` via `processSinglePhoto` auto center-crop `computeCropRect` → `processPhoto` worker+watchdog, per-file rows with thumbnail via `asset.url`, dimensions/format/size, validation badge `Passed`/`Needs attention` + details, per-file Download, summary `X of Y passed`, Download all ZIP via `createZipBlob` STORE, busy/error, URL revoke on Clear/unmount, privacy note). `FormsView` adds Batch photos button per photo preset, NavBar batch icon, `batchProcess.test` + `BatchView.test` cover auto crop/sequential/error/progress + intake/queue/preset/ZIP. 295 tests passing; typecheck/lint/build clean (77 modules, 295 KB gz 87.3 KB), no new deps.
 - V4 configurable file naming (2026-08-28, T027/D053): `src/domain/naming/fileNaming.ts` (`sanitizeFileNamePart`, `renderFileName` `{original}` `{index}` `{kind}` `{preset}` `{ext}` with fallback `{original}-avedan` + ext append + sanitize, `dedupeFileNames` case-insensitive `-2`, `get/setNamingTemplate` per preset via `localStorage` `avedan-naming:${presetId}`) + `src/components/FileNamingField.tsx` (disclosure with input, live preview, tokens help, per-preset persist) + `BatchView`/`KitView` ZIPs now render via `renderFileName` + `dedupeFileNames` (original base from file/asset, index, kind, preset, ext) before `createZipBlob`, Kit single downloads also templated. 308 tests passing (13 fileNaming new); typecheck/lint/build clean, no new deps.
+- V4 institution dataset import (2026-08-28, T028/D054): `src/domain/dataset/csv.ts` (`parseCSV` quoted commas/`""`, trims/lowercases headers, `matchDatasetToFiles` basename case-insensitive, first-row-wins) + `src/domain/naming/fileNaming.ts` extended with `{csv.xxx}` (case-insensitive, sanitized) + `BatchView` dataset state (`dataset`/`datasetError`/`datasetMatch` memo, `handleDatasetFile` File.text→FileReader fallback, `parseCSV`, preview table first 5 rows, matched `X of Y files matched` + unmatched files/rows, `handleDownloadZip` passes `csvRow` to `renderFileName` for `{csv.id}` etc., `dedupeFileNames`). 319 tests passing (8 csv, 1 fileNaming csv token, 2 BatchView dataset); typecheck/lint/build clean (80 modules, 303 KB), no new deps, privacy-local.
 
 ## Not implemented yet (backlog)
 
-- V4 remainder (T028–T030): CSV institution dataset (local parse, no upload, matched vs unmatched, `{csv.id}` naming), batch signature/thumb (reuse batch foundation, `within` + trim, kind switch), document perspective correction (T030 deferred, no ML model, manual 4-corner fallback).
+- V4 remainder (T029–T030): batch signature/thumb (reuse batch foundation, `within` + trim, kind switch, `THUMB_PROFILES`/`SIGNATURE_PROFILES`), document perspective correction (T030 deferred, no ML model, manual 4-corner fallback, pure canvas math).
 - Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
 - Future V4+ enhancements (ROADMAP Phase 4/5): PDF generation/compression, OCR — scoped as new tasks only when product value is clear; do not become a generic document-management system without reason.
 
 ## Current focus
 
-V4 Power User & Institution: T026–T027 **complete** on `feat/v4-power-user` (308 tests, D052–D053). Next is T028 CSV institution dataset (local parse, matched vs unmatched, preview, `{csv.id}` naming).
+V4 Power User & Institution: T026–T028 **complete** on `feat/v4-power-user` (319 tests, D052–D054). Next is T029 batch signature/thumb extension (reuse batch foundation, `within` validation, kind switch).
 
 ## Current risks
 
@@ -71,7 +72,7 @@ V4 Power User & Institution: T026–T027 **complete** on `feat/v4-power-user` (3
 
 ## Next recommended task
 
-T028 — V4 institution dataset import (CSV) (P1, depends on T026). Local CSV parse (no upload, tiny parser, columns `id`/`roll`/`name` + `photo`/`signature`/`thumb` filename), preview first 5 rows, match by basename (case-insensitive), show matched vs missing vs extra, extend naming with `{csv.id}` when present, privacy-local, no IndexedDB. See `.agents/tasks/T028-institution-dataset.md` and TASK_INDEX.
+T029 — V4 batch signature / thumb impression extension (P2, depends on T026). Reuse batch foundation to offer Photo / Signature / Thumb modes (kind switch, requirements panel per kind, dispatch to `computePhotoOutput` vs `computeSignatureOutput`/`computeThumbOutput`, `within` validation, trimmed thumbnails, ZIP with kind-aware filenames). See `.agents/tasks/T029-batch-signature-thumb.md` and TASK_INDEX.
 
 ## Continuity rule
 

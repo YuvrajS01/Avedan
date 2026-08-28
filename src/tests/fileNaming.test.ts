@@ -64,6 +64,51 @@ describe('renderFileName (T027)', () => {
       renderFileName('photo_{index}', { original: 'rahul', index: 1, kind: 'photo', preset: 'p', ext: 'jpg' }),
     ).toBe('photo_1.jpg')
   })
+
+  it('replaces csv tokens when dataset row is present (T028)', () => {
+    expect(
+      renderFileName('{csv.id}_{original}', {
+        original: 'rahul',
+        index: 1,
+        kind: 'photo',
+        preset: 'p',
+        ext: 'jpg',
+        csv: { id: '123', name: 'Rahul' },
+      }),
+    ).toBe('123_rahul.jpg')
+    expect(
+      renderFileName('{csv.name}_{index}', {
+        original: 'a',
+        index: 2,
+        kind: 'photo',
+        preset: 'p',
+        ext: 'jpg',
+        csv: { name: 'Anita' },
+      }),
+    ).toBe('Anita_2.jpg')
+    // Missing csv key becomes empty -> sanitized to "file" fallback via ext handling
+    expect(
+      renderFileName('{csv.missing}_{original}', {
+        original: 'a',
+        index: 1,
+        kind: 'photo',
+        preset: 'p',
+        ext: 'jpg',
+        csv: {},
+      }),
+    ).toBe('file_a.jpg')
+    // Case-insensitive csv keys
+    expect(
+      renderFileName('{csv.ID}', {
+        original: 'a',
+        index: 1,
+        kind: 'photo',
+        preset: 'p',
+        ext: 'jpg',
+        csv: { id: '999' },
+      }),
+    ).toBe('999.jpg')
+  })
 })
 
 describe('dedupeFileNames (T027)', () => {

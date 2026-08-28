@@ -9,6 +9,8 @@ export interface NamingContext {
   preset: string
   /** Extension without dot, e.g., "jpg" */
   ext: string
+  /** Optional CSV row data for institution dataset (T028) — keys are lowercased headers */
+  csv?: Record<string, string>
 }
 
 const DEFAULT_TEMPLATE = '{original}-avedan'
@@ -19,6 +21,7 @@ const DEFAULT_TEMPLATE = '{original}-avedan'
  * trims whitespace, and falls back to "file" if empty.
  */
 export function sanitizeFileNamePart(value: string): string {
+  // eslint-disable-next-line no-control-regex
   const sanitized = value.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim()
   if (!sanitized) return 'file'
   // Avoid names that are just dots or empty after sanitization
@@ -56,6 +59,13 @@ export function renderFileName(template: string, context: NamingContext): string
     .replaceAll('{kind}', kind)
     .replaceAll('{preset}', preset)
     .replaceAll('{ext}', ext)
+
+  // CSV tokens: {csv.id}, {csv.name}, etc. (T028) — case-insensitive keys
+  rendered = rendered.replace(/\{csv\.([^}]+)\}/gi, (_, rawKey: string) => {
+    const key = rawKey.trim().toLowerCase()
+    const value = context.csv?.[key] ?? ''
+    return sanitizeFileNamePart(value)
+  })
 
   rendered = rendered.trim()
   if (!rendered) rendered = original

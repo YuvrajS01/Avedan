@@ -1,6 +1,6 @@
 # T028 — V4 Institution dataset import (CSV)
 
-**Status:** PLANNED
+**Status:** DONE (2026-08-28)
 **Priority:** P1
 **Depends on:** T026 (batch foundation), T027 (naming)
 **Architecture references:** PRIVACY (no upload, local CSV parse), D002 (requirements as data), PRD secondary users
@@ -28,11 +28,19 @@ Let a power user import a **local CSV** (parsed entirely in the browser, no uplo
 
 ## Acceptance criteria
 
-- [ ] CSV parsed locally, preview, matched vs unmatched clearly indicated.
-- [ ] Batch processing uses matched rows for per-file naming + validation grouping.
-- [ ] Tests for CSV parse, matching, missing/extra handling, privacy (no network).
-- [ ] Typecheck/lint/tests/build pass.
+- [x] CSV parsed locally, preview, matched vs unmatched clearly indicated.
+- [x] Batch processing uses matched rows for per-file naming + validation grouping.
+- [x] Tests for CSV parse, matching, missing/extra handling, privacy (no network).
+- [x] Typecheck/lint/tests/build pass.
+
+## Outcome (2026-08-28)
+
+Implemented on `feat/v4-power-user`:
+- `src/domain/dataset/csv.ts` — `parseCSV` (quoted commas, escaped `""`, trims, lowercases headers, skips empty lines, handles extra columns as `_extra_*`) + `matchDatasetToFiles` (normalizes basenames case-insensitive, matches by full filename or basename without ext, first-row-wins for duplicates, returns `matched`/`unmatchedFiles`/`unmatchedRows`).
+- `src/domain/naming/fileNaming.ts` — extended `NamingContext.csv` + `renderFileName` now replaces `{csv.xxx}` (case-insensitive keys via `/\{csv\.([^}]+)\}/gi`, sanitized) for institution naming.
+- `src/features/batch/BatchView.tsx` — added `dataset`/`datasetError` state + `datasetInputRef`, `datasetMatch` memo (`matchDatasetToFiles` when dataset+files present), `handleDatasetFile` (File.text with FileReader fallback, `parseCSV`, error handling, privacy note) + `handleClearDataset`, disclosure “Import dataset (CSV) — optional” with file input, preview table (headers + first 5 rows), matched count `X of Y files matched · Y unmatched files · Z unmatched rows`, per-file preview when dataset present; `handleDownloadZip` now uses `datasetMatch` to pass `csvRow` to `renderFileName` for `{csv.id}` etc., with `dedupeFileNames`.
+- Tests: `src/tests/csv.test.ts` (8) parse, quoted, empty, matching, unmatched, basename fallback, duplicate handling; `src/tests/fileNaming.test.ts` extended with `csv` token test (case-insensitive, missing → `file` fallback); `src/tests/BatchView.test.tsx` extended with CSV import preview + matching tests (2). 319 tests passing; typecheck/lint/build clean (80 modules, 303 KB).
 
 ## Verification
 
-- Manual: import `applicants.csv` (id,name,photo), drop 3 photos named per CSV, verify matched rows show ids and ZIP uses `{id}_photo.jpg`.
+- `typecheck` clean, `lint` clean (control regex disabled), `test` 319/319, `build` 80 modules. Manual: import `applicants.csv` (2 rows), drop 2 matching photos → preview + “2 of 2 files matched”, ZIP with `{csv.id}_{original}` yields `1_rahul.jpg` etc., all local.

@@ -17,6 +17,7 @@ import {
   renderFileName,
   dedupeFileNames,
 } from '../../domain/naming/fileNaming'
+import { parseCSV, matchDatasetToFiles, type ParsedCSV } from '../../domain/dataset/csv'
 
 interface CustomSettings {
   width: string
@@ -87,7 +88,10 @@ export function BatchView() {
   const [zipUrl, setZipUrl] = useState<string | null>(null)
   const [zipName, setZipName] = useState('')
   const [namingTemplate, setNamingTemplate] = useState(() => getNamingTemplate(presetId))
+  const [dataset, setDataset] = useState<ParsedCSV | null>(null)
+  const [datasetError, setDatasetError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const datasetInputRef = useRef<HTMLInputElement>(null)
 
   const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
   const presetProfile = useMemo(
@@ -99,6 +103,11 @@ export function BatchView() {
     [presetProfile, manualEdited, custom],
   )
   const summary = describeRequirements(profile)
+
+  const datasetMatch = useMemo(() => {
+    if (!dataset || dataset.rows.length === 0 || files.length === 0) return null
+    return matchDatasetToFiles(files, dataset.rows)
+  }, [dataset, files])
 
   const updateCustom = useCallback((patch: Partial<CustomSettings>) => {
     setManualEdited(true)
@@ -178,6 +187,40 @@ export function BatchView() {
     setZipName('')
   }
 
+  const handleDatasetFile = async (file: File | undefined) => {
+    if (!file) return
+    setDatasetError(null)
+    try {
+      let text: string
+      if (typeof (file as unknown as { text?: () => Promise<string> }).text === 'function') {
+        text = await (file as unknown as { text: () => Promise<string> }).text()
+      } else {
+        text = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = () => reject(reader.error)
+          reader.readAsText(file)
+        })
+      }
+      const parsed = parseCSV(text)
+      if (parsed.headers.length === 0 || parsed.rows.length === 0) {
+        setDatasetError('CSV appears empty or has no valid headers.')
+        setDataset(null)
+        return
+      }
+      setDataset(parsed)
+    } catch (cause) {
+      setDatasetError(cause instanceof Error ? cause.message : 'Could not parse CSV.')
+      setDataset(null)
+    }
+  }
+
+  const handleClearDataset = () => {
+    setDataset(null)
+    setDatasetError(null)
+    if (datasetInputRef.current) datasetInputRef.current.value = ''
+  }
+
   const handleProcess = async () => {
     if (files.length === 0) {
       setError('Add at least one photo first.')
@@ -227,12 +270,14 @@ export function BatchView() {
         const asset = item.asset!
         const originalBase = item.file.name.replace(/\.[^.]+$/, '') || 'photo'
         const ext = (asset.fileName.split('.').pop() ?? asset.format ?? 'jpg').replace(/^\.+/, '')
+        const csvRow = datasetMatch?.matched.find((match) => match.file === item.file)?.row
         const rendered = renderFileName(template, {
           original: originalBase,
           index: index + 1,
           kind: 'photo',
           preset: presetId ?? 'manual',
           ext,
+          csv: csvRow,
         })
         rawNames.push(rendered)
       }
@@ -466,6 +511,85 @@ export function BatchView() {
       </p>
 
       {requirementsPanel}
+
+      <details className="advanced-fields" style={{ marginBottom: '1rem' }}>
+        <summary>Import dataset (CSV) — optional</summary>
+        <div className="card" style={{ padding: '1rem', marginTop: '0.5rem' }}>
+          <p className="profile-note">
+            Local CSV parsed in this browser — never uploaded. Columns like <code>id</code>, <code>name</code>,{' '}
+            <code>photo</code> are matched to files by filename (case-insensitive). First 5 rows previewed.
+          </p>
+          <input
+            ref={datasetInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            aria-label="Import dataset CSV"
+            onChange={(event) => {
+              handleDatasetFile(event.target.files?.[0])
+              event.target.value = ''
+            }}
+          />
+          {datasetError && (
+            <p className="error-note" role="alert" style={{ marginTop: '0.5rem' }}>
+              {datasetError}
+            </p>
+          )}
+          {dataset && (
+            <>
+              <p className="profile-note" style={{ marginTop: '0.5rem' }}>
+                {dataset.rows.length} rows, columns: {dataset.headers.join(', ')}
+              </p>
+              <div style={{ overflowX: 'auto', marginTop: '0.5rem' }}>
+                <table className="kit-table" style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {dataset.headers.slice(0, 5).map((header) => (
+                        <th key={header} style={{ textAlign: 'left', borderBottom: '1px solid var(--border)', padding: '4px 8px' }}>
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataset.rows.slice(0, 5).map((row, index) => (
+                      <tr key={index}>
+                        {dataset.headers.slice(0, 5).map((header) => (
+                          <td key={header} style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>
+                            {row[header]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {dataset.rows.length > 5 && (
+                <p className="profile-note">Showing 5 of {dataset.rows.length} rows.</p>
+              )}
+              <div className="step-actions" style={{ marginTop: '0.5rem' }}>
+                <button type="button" className="button button-ghost" onClick={handleClearDataset}>
+                  Clear dataset
+                </button>
+              </div>
+            </>
+          )}
+          {datasetMatch && (
+            <p className="profile-note" style={{ marginTop: '0.5rem' }}>
+              <strong>
+                {datasetMatch.matched.length} of {files.length} files matched
+              </strong>{' '}
+              · {datasetMatch.unmatchedFiles.length} unmatched files · {datasetMatch.unmatchedRows.length} unmatched
+              rows
+              {datasetMatch.matched.length > 0 && (
+                <> — e.g. {datasetMatch.matched[0].file.name} ↔ {Object.values(datasetMatch.matched[0].row)[0]}</>
+              )}
+            </p>
+          )}
+          {dataset && files.length === 0 && (
+            <p className="profile-note">Add photos above to see matching.</p>
+          )}
+        </div>
+      </details>
 
       <div
         className="drop-zone card"

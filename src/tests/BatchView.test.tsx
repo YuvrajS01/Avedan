@@ -128,4 +128,36 @@ describe('BatchView (T026)', () => {
     await user.click(screen.getByRole('button', { name: /^clear$/i }))
     expect(screen.queryAllByText(/1 files queued/i).length).toBe(0)
   })
+
+  it('imports CSV dataset and shows preview and matching', async () => {
+    const user = userEvent.setup()
+    render(<BatchView />)
+    // Open dataset disclosure
+    await user.click(screen.getByText(/Import dataset \(CSV\)/i))
+    const csvInput = screen.getByLabelText(/Import dataset CSV/i) as HTMLInputElement
+    const csvContent = 'id,name,photo\n1,Rahul,rahul.jpg\n2,Anita,anita.jpg'
+    const csvFile = new File([csvContent], 'data.csv', { type: 'text/csv' })
+    await user.upload(csvInput, csvFile)
+    expect(await screen.findByText(/2 rows, columns: id, name, photo/i)).toBeInTheDocument()
+    expect(screen.getByText('Rahul')).toBeInTheDocument()
+    // Now add matching files
+    const photoInput = screen.getByLabelText(/upload batch photos/i) as HTMLInputElement
+    await user.upload(photoInput, [new File(['a'], 'rahul.jpg', { type: 'image/jpeg' }), new File(['b'], 'anita.jpg', { type: 'image/jpeg' })])
+    expect(await screen.findByText(/2 of 2 files matched/i)).toBeInTheDocument()
+    expect(screen.getByText(/0 unmatched files/i)).toBeInTheDocument()
+  })
+
+  it('reports unmatched files and rows', async () => {
+    const user = userEvent.setup()
+    render(<BatchView />)
+    await user.click(screen.getByText(/Import dataset \(CSV\)/i))
+    const csvInput = screen.getByLabelText(/Import dataset CSV/i) as HTMLInputElement
+    const csvFile = new File(['id,photo\n1,rahul.jpg'], 'data.csv', { type: 'text/csv' })
+    await user.upload(csvInput, csvFile)
+    await screen.findByText(/1 rows/i)
+    const photoInput = screen.getByLabelText(/upload batch photos/i) as HTMLInputElement
+    await user.upload(photoInput, [new File(['a'], 'rahul.jpg', { type: 'image/jpeg' }), new File(['b'], 'extra.jpg', { type: 'image/jpeg' })])
+    expect(await screen.findByText(/1 of 2 files matched/i)).toBeInTheDocument()
+    expect(screen.getByText(/1 unmatched files/i)).toBeInTheDocument()
+  })
 })
