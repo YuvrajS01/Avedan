@@ -6,6 +6,8 @@ describe('routeFromHash', () => {
     expect(routeFromHash('#/photo')).toBe('photo')
     expect(routeFromHash('#/signature')).toBe('signature')
     expect(routeFromHash('#/thumb')).toBe('thumb')
+    expect(routeFromHash('#/kit')).toBe('kit')
+    expect(routeFromHash('#/batch')).toBe('batch')
     expect(routeFromHash('#/forms')).toBe('forms')
     expect(routeFromHash('#/')).toBe('home')
   })

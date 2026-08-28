@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.3.0 — V3 Form Intelligence complete (T021–T025 done, 2026-08-26)  
-**Last updated:** 2026-08-26  
-**Status:** `feat/v3-form-intelligence` branch; V3 complete — engine + thumb flow + preset-aware validation + kit view + kit ZIP export (281 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`, ready for v0.3.0 tag after owner verification
+**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026 batch photo foundation done, 2026-08-28)  
+**Last updated:** 2026-08-28  
+**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch photo foundation complete (295 tests, 77 modules, 295 KB JS, D052); sequential auto center-crop + per-file validation + ZIP, privacy-local, no new deps
 
 ## Product goal
 
@@ -48,15 +48,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - V3 preset-aware validation (2026-08-26, T023/D049): `src/domain/presets/helpers.ts` (`requiredAssetKinds`, `assetLabel`, `dimensionModeForKind`, `presetKindsSummary`) and `ProcessedResult` now preset-aware (optional `preset` prop shows "Validated against {name} · {authority}" + lastVerified + Official source + always-confirm disclaimer). Photo/Signature/Thumb views forward `activePreset` to result. 263 tests passing; typecheck/lint/build clean.
 - V3 Application Kit view (2026-08-26, T024/D050): `#/kit?preset=id` via `KitView` (findFormPreset + presetFreshness, summary card with name/authority/year/lastVerified/freshness badge/source link/stale warning + disclaimer, required assets iterated data-driven via `requiredAssetKinds` + `requirementsFromPreset` + `describeRequirements` + `assetLabel` with Prepare CTAs to photo/signature/thumb + `?preset=id`; empty preset handled with Browse forms). `FormsView` adds View kit button, NavBar/Routes/App include kit. 269 tests passing; typecheck/lint/build clean.
 - V3 kit export (2026-08-26, T025/D051): `src/utils/zip.ts` minimal STORE ZIP (CRC32 + headers, ~2 KB, no deps) + `src/domain/kit/store.ts` session-local Map<presetId, Map<kind, asset>>; Photo/Signature/Thumb store to kit when `presetId` present; `KitView` shows per-asset Prepared/Not yet prepared + `preparedCount`, per-asset Download buttons, and Download kit ZIP card (collects prepared assets → blobToUint8Array → createZipBlob → object URL → download + Re-download link, handles empty/busy/error, STORE note, fallback to individual downloads). 281 tests passing; typecheck/lint/build clean (75 modules, 281 KB gz 84.5 KB).
+- V4 batch photo foundation (2026-08-28, T026/D052): `#/batch` route + `BatchView` (requirements panel same as Photo with preset `?preset=id` + manual precedence, multi-file `multiple` + drag-drop filter `image/jpeg|png|webp`, count, Clear, sequential `processBatchPhotos` via `processSinglePhoto` auto center-crop `computeCropRect` → `processPhoto` worker+watchdog, per-file rows with thumbnail via `asset.url`, dimensions/format/size, validation badge `Passed`/`Needs attention` + details, per-file Download, summary `X of Y passed`, Download all ZIP via `createZipBlob` STORE, busy/error, URL revoke on Clear/unmount, privacy note). `FormsView` adds Batch photos button per photo preset, NavBar batch icon, `batchProcess.test` + `BatchView.test` cover auto crop/sequential/error/progress + intake/queue/preset/ZIP. 295 tests passing; typecheck/lint/build clean (77 modules, 295 KB gz 87.3 KB), no new deps.
 
 ## Not implemented yet (backlog)
 
-- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source. One real verified preset can now be added to replace/extend `example-thumb-kit` after checking the official portal/notification (year/version, photo/signature/thumb fileSize/format/pixelSize, sourceUrl, lastVerified).
-- Future V3+ enhancements (see ROADMAP): batch CSV/institution mode, document/PDF utilities — scoped as new tasks.
+- V4 remainder (T027–T030): configurable file naming (`{original}_{index}_{kind}`), CSV institution dataset (local parse, no upload), batch signature/thumb (reuse batch foundation, `within` + trim), document perspective correction (T030 deferred, no ML model download).
+- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
+- Future V4+ enhancements (ROADMAP Phase 4/5): PDF generation/compression, OCR — scoped as new tasks only when product value is clear; do not become a generic document-management system without reason.
 
 ## Current focus
 
-V3 Form Intelligence **complete** (T021–T025) on `feat/v3-form-intelligence` branch (281 tests, typecheck/lint/build clean). Next is owner verification / v0.3.0 release gate (manual on-device check of photo/signature/thumb/kit + offline/privacy), or new feature scoping against ROADMAP.
+V4 Power User & Institution: T026 batch photo foundation **complete** on `feat/v4-power-user` (295 tests, 77 modules, D052). Next is T027 configurable file naming for batch/kit exports (tiny template, default `{original}-avedan` unchanged, sanitization + collision dedupe).
 
 ## Current risks
 
@@ -68,7 +70,7 @@ V3 Form Intelligence **complete** (T021–T025) on `feat/v3-form-intelligence` b
 
 ## Next recommended task
 
-None queued for agents. V3 complete — owner to verify flows on real device and add one manually verified official preset (per `.agents/tasks/T021–T025` checklists), then tag `v0.3.0`. New feature work should be scoped against `ROADMAP.md` and defined as a new task file first.
+T027 — V4 configurable file naming for batch/kit exports (P1, depends on T026). Minimal template `{original}_{index}_{kind}_{preset}_{ext}` (no eval, sanitize + collision `-2`), UI disclosure with live preview + per-preset `localStorage`, pure `renderFileName` helper (unit-tested), batch/kit ZIPs call it before `createZipBlob`. Keeps default `{original}-avedan` for simple use. See `.agents/tasks/T027-batch-naming.md` and TASK_INDEX.
 
 ## Continuity rule
 

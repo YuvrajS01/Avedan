@@ -27,6 +27,11 @@
 | T023 | V3 requirement validation (preset-aware) | T021 | P1 |
 | T024 | V3 Application Kit view | T021, T022, T023 | P1 |
 | T025 | V3 kit export (ZIP / batch guidance) | T024 | P2 |
+| T026 | V4 batch photo processing foundation | T025 | P0 |
+| T027 | V4 configurable file naming for batch/kit exports | T026 | P1 |
+| T028 | V4 institution dataset import (CSV) | T026 | P1 |
+| T029 | V4 batch signature / thumb impression extension | T026 | P2 |
+| T030 | V4 document scan / perspective correction (deferred) | T026 | P2 |
 
 ## Recommended sequence
 
@@ -36,4 +41,6 @@ T004 and T006 can be developed independently after the shared processing primiti
 
 MVP (T001–T010) complete 2026-08-22 (T011 gate passed, `v0.1.0-mvp`); V2 complete — T012–T019 engineering items done and the T020 manual verification gate passed 2026-08-24 (`v0.2.0`). Remaining backlog: owner-verified official presets (pure data entry into `seedPresets.ts`).
 
-V3 (Form Intelligence) complete 2026-08-26 on `feat/v3-form-intelligence`: T021 engine + T022 thumb flow + T023 validation + T024 kit view + T025 kit export — all done, 281 tests, typecheck/lint/build clean. Next is owner verification / v0.3.0 tag (manual on-device check + one verified official preset per D003/D019).
+V3 (Form Intelligence) complete 2026-08-26 on `feat/v3-form-intelligence` → `main` (v0.3.0): T021 engine + T022 thumb flow + T023 validation + T024 kit view + T025 kit export — all done, 281 tests, typecheck/lint/build clean. Tag `v0.3.0` released.
+
+V4 (Power User & Institution) planned 2026-08-28 on `feat/v4-power-user`: T026 batch photo foundation **in progress** — multi-file auto center-crop, sequential worker pipeline, per-file validation + ZIP (reuses `utils/zip`); T027 configurable naming, T028 CSV dataset, T029 batch signature/thumb, T030 document scan deferred. Keep V4 incremental per T026 acceptance; each task commits separately.

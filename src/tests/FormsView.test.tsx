@@ -85,4 +85,12 @@ describe('FormsView thumb impression (T021)', () => {
     const thumbPreset = FORM_PRESETS.find((preset) => preset.thumbImpression)
     expect(window.location.hash).toBe(`#/thumb?preset=${thumbPreset!.id}`)
   })
+
+  it('navigates to the batch flow with the selected preset', async () => {
+    const user = userEvent.setup()
+    render(<FormsView />)
+    const batchButton = screen.getAllByRole('button', { name: /batch photos/i })[0]
+    await user.click(batchButton)
+    expect(window.location.hash).toMatch(/^#\/batch\?preset=/)
+  })
 })

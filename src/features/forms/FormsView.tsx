@@ -51,6 +51,7 @@ export function FormsView() {
       <ul className="preset-list">
         {filtered.map((preset) => {
           const freshness = presetFreshness(preset)
+          const photoSummary = requirementsFromPreset(preset, 'photo')
           const signatureSummary = requirementsFromPreset(preset, 'signature')
           const thumbSummary = requirementsFromPreset(preset, 'thumbImpression')
           // Data-driven requirement lines (V3): iterate over present asset kinds
@@ -103,6 +104,15 @@ export function FormsView() {
                   >
                     View kit
                   </button>
+                  {photoSummary && (
+                    <button
+                      type="button"
+                      className="button button-ghost"
+                      onClick={() => navigate('batch', { presetId: preset.id })}
+                    >
+                      Batch photos
+                    </button>
+                  )}
                   {signatureSummary && (
                     <button
                       type="button"
