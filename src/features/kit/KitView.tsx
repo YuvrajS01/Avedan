@@ -5,6 +5,12 @@ import { requiredAssetKinds, assetLabel } from '../../domain/presets/helpers'
 import { describeRequirements } from '../../domain/requirements/profiles'
 import { getKitAsset } from '../../domain/kit/store'
 import { blobToUint8Array, createZipBlob } from '../../utils/zip'
+import { FileNamingField } from '../../components/FileNamingField'
+import {
+  getNamingTemplate,
+  renderFileName,
+  dedupeFileNames,
+} from '../../domain/naming/fileNaming'
 
 export function KitView() {
   const { presetId, navigate } = useHashRoute()
@@ -12,8 +18,13 @@ export function KitView() {
   const [zipName, setZipName] = useState<string>('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [namingTemplate, setNamingTemplate] = useState(() => getNamingTemplate(presetId))
 
   const preset = useMemo(() => findFormPreset(presetId), [presetId])
+
+  useEffect(() => {
+    setNamingTemplate(getNamingTemplate(presetId))
+  }, [presetId])
 
   // Revoke ZIP URLs when replaced or on unmount (privacy + memory, T025).
   useEffect(() => {
@@ -27,14 +38,30 @@ export function KitView() {
   const handleDownloadKit = async () => {
     if (!preset) return
     const kinds = requiredAssetKinds(preset)
-    const entries: { name: string; data: Uint8Array }[] = []
+    const template = namingTemplate || getNamingTemplate(preset.id)
+    const rawNames: string[] = []
+    const blobs: { kind: string; asset: NonNullable<ReturnType<typeof getKitAsset>> }[] = []
     for (const kind of kinds) {
       const asset = getKitAsset(preset.id, kind)
       if (asset) {
-        const data = await blobToUint8Array(asset.blob)
-        // File name already carries -avedan.{ext}; keep it as-is for the ZIP.
-        entries.push({ name: asset.fileName, data })
+        const baseWithoutExt = asset.fileName.replace(/\.[^.]+$/, '').replace(/-avedan$/i, '') || kind
+        const ext = (asset.fileName.split('.').pop() ?? 'jpg').replace(/^\.+/, '')
+        const rendered = renderFileName(template, {
+          original: baseWithoutExt,
+          index: blobs.length + 1,
+          kind,
+          preset: preset.id,
+          ext,
+        })
+        rawNames.push(rendered)
+        blobs.push({ kind, asset })
       }
+    }
+    const deduped = dedupeFileNames(rawNames)
+    const entries: { name: string; data: Uint8Array }[] = []
+    for (let index = 0; index < blobs.length; index++) {
+      const data = await blobToUint8Array(blobs[index].asset.blob)
+      entries.push({ name: deduped[index], data })
     }
     if (entries.length === 0) {
       setError('No prepared assets yet — prepare each file first, then download the kit.')
@@ -149,11 +176,21 @@ export function KitView() {
           const asset = getKitAsset(preset.id, kind)
           const onDownloadSingle = () => {
             if (!asset) return
+            const template = namingTemplate || getNamingTemplate(preset.id)
+            const baseWithoutExt = asset.fileName.replace(/\.[^.]+$/, '').replace(/-avedan$/i, '') || kind
+            const ext = (asset.fileName.split('.').pop() ?? 'jpg').replace(/^\.+/, '')
+            const fileName = renderFileName(template, {
+              original: baseWithoutExt,
+              index: 1,
+              kind,
+              preset: preset.id,
+              ext,
+            })
             const url = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(asset.blob) : ''
             if (!url) return
             const anchor = document.createElement('a')
             anchor.href = url
-            anchor.download = asset.fileName
+            anchor.download = fileName
             document.body.appendChild(anchor)
             anchor.click()
             anchor.remove()
@@ -201,6 +238,7 @@ export function KitView() {
           Packages all prepared files for <strong>{preset.name}</strong> into one ZIP — entirely in this browser, no
           upload. If you prefer, download each file individually above.
         </p>
+        <FileNamingField presetId={preset.id} onChange={setNamingTemplate} />
         <div className="step-actions" style={{ marginTop: '0.75rem' }}>
           <button
             type="button"

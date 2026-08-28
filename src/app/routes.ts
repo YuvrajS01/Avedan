@@ -1,4 +1,4 @@
-export const ROUTES = ['home', 'photo', 'signature', 'thumb', 'kit', 'forms'] as const
+export const ROUTES = ['home', 'photo', 'signature', 'thumb', 'kit', 'batch', 'document', 'forms'] as const
 
 export type Route = (typeof ROUTES)[number]
 
@@ -8,6 +8,8 @@ const ROUTE_BY_PATH: Record<string, Route> = {
   '/signature': 'signature',
   '/thumb': 'thumb',
   '/kit': 'kit',
+  '/batch': 'batch',
+  '/document': 'document',
   '/forms': 'forms',
 }
 
@@ -17,6 +19,8 @@ const PATH_BY_ROUTE: Record<Route, string> = {
   signature: '#/signature',
   thumb: '#/thumb',
   kit: '#/kit',
+  batch: '#/batch',
+  document: '#/document',
   forms: '#/forms',
 }
 
