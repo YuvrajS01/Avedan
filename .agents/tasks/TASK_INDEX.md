@@ -22,6 +22,11 @@
 | T018 | Worker offload of encode/optimize loop (V2) | T002, T003 | P2 |
 | T019 | Verified-preset registry preparation (V2) | T008, T017, T018 | P1 |
 | T020 | V2 manual verification pass (v0.2.0 gate) | T012–T019 | P0 |
+| T021 | V3 preset engine & data model (thumb + data-driven) | T019 | P0 |
+| T022 | V3 thumb impression preparation flow | T021 | P1 |
+| T023 | V3 requirement validation (preset-aware) | T021 | P1 |
+| T024 | V3 Application Kit view | T021, T022, T023 | P1 |
+| T025 | V3 kit export (ZIP / batch guidance) | T024 | P2 |
 
 ## Recommended sequence
 
@@ -30,3 +35,5 @@ T001 → T002 → T003 → T004/T006 → T007 → T005 → T008 → T009 → T01
 T004 and T006 can be developed independently after the shared processing primitives exist.
 
 MVP (T001–T010) complete 2026-08-22 (T011 gate passed, `v0.1.0-mvp`); V2 complete — T012–T019 engineering items done and the T020 manual verification gate passed 2026-08-24 (`v0.2.0`). Remaining backlog: owner-verified official presets (pure data entry into `seedPresets.ts`).
+
+V3 (Form Intelligence) complete 2026-08-26 on `feat/v3-form-intelligence`: T021 engine + T022 thumb flow + T023 validation + T024 kit view + T025 kit export — all done, 281 tests, typecheck/lint/build clean. Next is owner verification / v0.3.0 tag (manual on-device check + one verified official preset per D003/D019).

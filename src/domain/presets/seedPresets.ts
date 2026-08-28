@@ -1,5 +1,5 @@
 /**
- * Seed preset data (T008/T019).
+ * Seed preset data (T008/T019/T021).
  *
  * Every entry here is an ILLUSTRATIVE TEMPLATE (D019) — never a claim of
  * official requirements. Real exam/recruitment entries are added only after
@@ -13,11 +13,14 @@
  * 4. Record only what is stated: `format`, `pixelSize`, `aspectRatio`,
  *    `physicalSizeMm` + `dpi`, `fileSizeBytes` (min/max/target in bytes),
  *    `background` ('white' only where the form demands a white background).
+ *    V3: `thumbImpression` follows the same rules as `photo`/`signature`.
  * 5. Keep `authority` and `name` exactly as the authority names itself.
  * 6. Never guess missing values — omit them instead.
  *
  * The registry validates each entry against the schema at load time and
  * rejects duplicate ids; the Forms UI shows freshness from `lastVerified`.
+ * Application kits iterate over whichever of photo/signature/thumbImpression
+ * are present — no hardcoding (T021).
  */
 export const SEED_PRESETS: unknown[] = [
   {
@@ -93,6 +96,32 @@ export const SEED_PRESETS: unknown[] = [
       aspectRatio: { width: 7, height: 9 },
       fileSizeBytes: { max: 100 * 1024 },
       background: 'white',
+    },
+  },
+  {
+    id: 'example-thumb-kit',
+    name: 'Example application kit with thumb impression',
+    authority: 'Example Authority',
+    description:
+      'Illustrative template: 350 × 450 px JPG photo (20–50 KB), JPG signature (10–20 KB), and 240 × 240 px JPG left thumb impression (10–30 KB).',
+    lastVerified: '2026-08-20',
+    sourceUrl: 'https://example.gov/kit',
+    photo: {
+      format: 'jpeg',
+      pixelSize: { width: 350, height: 450 },
+      aspectRatio: { width: 7, height: 9 },
+      fileSizeBytes: { min: 20 * 1024, max: 50 * 1024 },
+      background: 'white',
+    },
+    signature: {
+      format: 'jpeg',
+      fileSizeBytes: { min: 10 * 1024, max: 20 * 1024 },
+    },
+    thumbImpression: {
+      format: 'jpeg',
+      pixelSize: { width: 240, height: 240 },
+      aspectRatio: { width: 1, height: 1 },
+      fileSizeBytes: { min: 10 * 1024, max: 30 * 1024 },
     },
   },
 ]

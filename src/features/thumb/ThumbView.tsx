@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  SIGNATURE_PROFILES,
+  THUMB_PROFILES,
   PROFILE_NOTE,
   describeRequirements,
-  findSignatureProfile,
+  findThumbProfile,
 } from '../../domain/requirements/profiles'
 import { findFormPreset, requirementsFromPreset } from '../../domain/presets/registry'
 import { useHashRoute } from '../../hooks/useHashRoute'
@@ -11,7 +11,6 @@ import type { ImageRequirements } from '../../domain/requirements/types'
 import type { ProcessedAsset } from '../../domain/jobs/result'
 import type { DrawableSource } from '../../processing/crop'
 import { ProcessedResult } from '../../components/ProcessedResult'
-import { DrawCanvas } from './DrawCanvas'
 import {
   loadPhotoSource,
   revokeObjectUrl,
@@ -21,10 +20,10 @@ import { trimToCanvas } from '../../processing/trim'
 import { encodeCanvas } from '../../processing/encode'
 import type { EncodableCanvas } from '../../processing/optimize'
 import { releaseSessionAssets } from '../../utils/session'
-import { processSignature } from './processSignature'
+import { processThumb } from './processThumb'
 import { setKitAsset } from '../../domain/kit/store'
 
-type Step = 'choose' | 'draw' | 'preview' | 'result'
+type Step = 'choose' | 'preview' | 'result'
 
 interface CustomSettings {
   width: string
@@ -35,10 +34,10 @@ interface CustomSettings {
 }
 
 const DEFAULT_CUSTOM: CustomSettings = {
-  width: '300',
-  height: '100',
+  width: '240',
+  height: '240',
   minKb: '',
-  maxKb: '20',
+  maxKb: '30',
   format: 'jpeg',
 }
 
@@ -65,13 +64,13 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
     id: 'manual',
     label: 'Manual',
     dimensions,
-    aspectRatio: width !== undefined && height !== undefined ? width / height : 3,
+    aspectRatio: width !== undefined && height !== undefined ? width / height : 1,
     format: custom.format,
     fileSize,
   }
 }
 
-export function SignatureView() {
+export function ThumbView() {
   const { presetId, navigate } = useHashRoute()
   const [step, setStep] = useState<Step>('choose')
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
@@ -85,7 +84,7 @@ export function SignatureView() {
 
   const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
   const presetProfile = useMemo(
-    () => (activePreset ? requirementsFromPreset(activePreset, 'signature') : undefined),
+    () => (activePreset ? requirementsFromPreset(activePreset, 'thumbImpression') : undefined),
     [activePreset],
   )
   const profile = useMemo(
@@ -99,7 +98,7 @@ export function SignatureView() {
     setCustom((current) => ({ ...current, ...patch }))
   }, [])
 
-  // Autofill manual fields from a Forms preset; edits take precedence (D035).
+  // Autofill manual fields from a Forms preset; edits take precedence (D035 pattern).
   useEffect(() => {
     if (!presetProfile) return
     setManualEdited(false)
@@ -112,7 +111,7 @@ export function SignatureView() {
       maxKb: presetProfile.fileSize?.maxBytes
         ? String(Math.round(presetProfile.fileSize.maxBytes / 1024))
         : '',
-      format: presetProfile.format ?? 'png',
+      format: presetProfile.format ?? 'jpeg',
     })
   }, [presetProfile])
 
@@ -155,43 +154,18 @@ export function SignatureView() {
     }
   }
 
-  const finishDraw = async (canvas: HTMLCanvasElement) => {
-    setBusy(true)
-    setError(null)
-    try {
-      const processed = await processSignature({
-        source: canvas as unknown as DrawableSource,
-        profile,
-        fileName: 'signature',
-      })
-      if (presetId) {
-        setKitAsset(presetId, 'signature', {
-          blob: processed.blob,
-          fileName: processed.fileName,
-          sizeBytes: processed.sizeBytes,
-        })
-      }
-      setResult(processed)
-      setStep('result')
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The signature could not be processed.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
   const processUploaded = async () => {
     if (!loaded) return
     setBusy(true)
     setError(null)
     try {
-      const processed = await processSignature({
-        source: loaded.source,
+      const processed = await processThumb({
+        source: loaded.source as unknown as DrawableSource,
         profile,
         fileName: loaded.fileName,
       })
       if (presetId) {
-        setKitAsset(presetId, 'signature', {
+        setKitAsset(presetId, 'thumbImpression', {
           blob: processed.blob,
           fileName: processed.fileName,
           sizeBytes: processed.sizeBytes,
@@ -200,7 +174,7 @@ export function SignatureView() {
       setResult(processed)
       setStep('result')
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The signature could not be processed.')
+      setError(cause instanceof Error ? cause.message : 'The thumb impression could not be processed.')
     } finally {
       setBusy(false)
     }
@@ -209,7 +183,7 @@ export function SignatureView() {
   const handlePresetSelect = (id: string) => {
     setPresetSelect(id)
     if (!id) return
-    const p = findSignatureProfile(id)
+    const p = findThumbProfile(id)
     if (!p) return
     setManualEdited(false)
     setCustom({
@@ -217,8 +191,14 @@ export function SignatureView() {
       height: p.dimensions ? String(p.dimensions.height) : '',
       minKb: p.fileSize?.minBytes ? String(Math.round(p.fileSize.minBytes / 1024)) : '',
       maxKb: p.fileSize?.maxBytes ? String(Math.round(p.fileSize.maxBytes / 1024)) : '',
-      format: p.format ?? 'png',
+      format: p.format ?? 'jpeg',
     })
+  }
+
+  const handleDrop: React.DragEventHandler<HTMLDivElement> = (event) => {
+    event.preventDefault()
+    const file = event.dataTransfer.files?.[0]
+    if (file) handleFile(file)
   }
 
   const requirementsPanel = (
@@ -232,7 +212,7 @@ export function SignatureView() {
             onChange={(event) => handlePresetSelect(event.target.value)}
           >
             <option value="">— Choose a preset to autofill —</option>
-            {SIGNATURE_PROFILES.map((option) => (
+            {THUMB_PROFILES.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
@@ -286,8 +266,8 @@ export function SignatureView() {
                 updateCustom({ format: event.target.value as CustomSettings['format'] })
               }
             >
-              <option value="png">PNG</option>
               <option value="jpeg">JPG</option>
+              <option value="png">PNG</option>
               <option value="webp">WebP</option>
             </select>
           </label>
@@ -303,10 +283,10 @@ export function SignatureView() {
   return (
     <>
       {step === 'choose' && (
-        <section className="view" aria-labelledby="signature-title">
-          <h1 id="signature-title">Prepare a signature</h1>
+        <section className="view" aria-labelledby="thumb-title">
+          <h1 id="thumb-title">Prepare a thumb impression</h1>
           <p className="lede">
-            Upload a photo of a signed paper, or draw a new signature.
+            Upload a clear scan or photo of your thumb impression on white paper. Ink should be dark and the impression well-inked.
           </p>
           {activePreset && (
             <div className="preset-context">
@@ -328,13 +308,31 @@ export function SignatureView() {
               <button
                 type="button"
                 className="button button-ghost"
-                onClick={() => navigate('signature')}
+                onClick={() => navigate('thumb')}
               >
                 Use generic settings instead
               </button>
             </div>
           )}
           {requirementsPanel}
+          <div
+            className="drop-zone card"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
+            aria-label="Thumb impression drop zone"
+          >
+            <span className="option-label">Upload thumb impression</span>
+            <span className="option-hint">JPG, PNG or WebP — drag and drop or click to choose</span>
+          </div>
           <ul className="option-grid">
             <li>
               <button
@@ -342,18 +340,8 @@ export function SignatureView() {
                 className="card option-card"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <span className="option-label">Upload signature</span>
-                <span className="option-hint">Use a photo of a signed paper</span>
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className="card option-card"
-                onClick={() => setStep('draw')}
-              >
-                <span className="option-label">Draw signature</span>
-                <span className="option-hint">Sign with finger, stylus or mouse</span>
+                <span className="option-label">Choose file</span>
+                <span className="option-hint">Use a scanned thumb print on white paper</span>
               </button>
             </li>
           </ul>
@@ -361,7 +349,7 @@ export function SignatureView() {
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            aria-label="Upload signature image"
+            aria-label="Upload thumb impression image"
             className="visually-hidden"
             onChange={(event) => {
               handleFile(event.target.files?.[0])
@@ -371,7 +359,7 @@ export function SignatureView() {
           {busy && (
             <p className="busy-note" role="status">
               <span className="spinner" aria-hidden="true" />
-              Opening your signature…
+              Opening your thumb impression…
             </p>
           )}
           {error && (
@@ -379,45 +367,30 @@ export function SignatureView() {
               {error}
             </p>
           )}
-        </section>
-      )}
-
-      {step === 'draw' && (
-        <section className="view" aria-labelledby="draw-title">
-          <h1 id="draw-title">Draw your signature</h1>
-          <DrawCanvas onFinish={finishDraw} onCancel={() => setStep('choose')} />
-          {busy && (
-            <p className="busy-note" role="status">
-              <span className="spinner" aria-hidden="true" />
-              Processing your signature…
-            </p>
-          )}
-          {error && (
-            <p className="error-note" role="alert">
-              {error}
-            </p>
-          )}
+          <p className="privacy-note">
+            Your thumb image stays on this device while you process it — nothing is uploaded.
+          </p>
         </section>
       )}
 
       {step === 'preview' && loaded && (
         <section className="view" aria-labelledby="preview-title">
-          <h1 id="preview-title">Check your signature</h1>
+          <h1 id="preview-title">Check your thumb impression</h1>
           <p className="lede">
-            Empty margins are trimmed automatically — this is what your
-            signature will look like. Target: <strong>{summary}</strong>
+            Empty margins are trimmed automatically — this is what your thumb impression will look like. Target:{' '}
+            <strong>{summary}</strong>
           </p>
           <div className="result-figure" style={{ marginInline: 'auto' }}>
             <img
               className="result-preview"
               src={loaded.previewUrl}
-              alt="Uploaded signature preview"
+              alt="Uploaded thumb impression preview"
             />
           </div>
           {busy && (
             <p className="busy-note" role="status">
               <span className="spinner" aria-hidden="true" />
-              Processing your signature…
+              Processing your thumb impression…
             </p>
           )}
           {error && (
@@ -450,7 +423,7 @@ export function SignatureView() {
         <ProcessedResult
           result={result}
           summary={summary}
-          noun="signature"
+          noun="thumb impression"
           onReset={reset}
           preset={activePreset ?? undefined}
         />

@@ -1,10 +1,13 @@
 import type { ProcessedAsset } from '../domain/jobs/result'
+import type { FormPreset } from '../domain/presets/schema'
 
 interface ProcessedResultProps {
   result: ProcessedAsset
   summary: string
   noun: string
   onReset: () => void
+  /** When validating against a form preset (T023), show preset context and disclaimer. */
+  preset?: FormPreset
 }
 
 const STATUS_MARK: Record<string, string> = {
@@ -13,7 +16,7 @@ const STATUS_MARK: Record<string, string> = {
   'not-run': '–',
 }
 
-export function ProcessedResult({ result, summary, noun, onReset }: ProcessedResultProps) {
+export function ProcessedResult({ result, summary, noun, onReset, preset }: ProcessedResultProps) {
   const { validation } = result
   const allPass = validation.status === 'pass'
 
@@ -40,6 +43,25 @@ export function ProcessedResult({ result, summary, noun, onReset }: ProcessedRes
       <p className="lede">
         Target: <strong>{summary}</strong>
       </p>
+      {preset && (
+        <div className="preset-context" style={{ marginBottom: '1rem' }}>
+          <p>
+            Validated against <strong>{preset.name}</strong> · {preset.authority}
+          </p>
+          <p className="profile-note">
+            Last verified {preset.lastVerified}
+            {preset.sourceUrl && (
+              <>
+                {' · '}
+                <a href={preset.sourceUrl} target="_blank" rel="noreferrer">
+                  Official source
+                </a>
+              </>
+            )}{' '}
+            — always confirm against the official source before submitting.
+          </p>
+        </div>
+      )}
       <div className="result-layout">
         <figure className="result-figure">
           <img className="result-preview" src={result.url} alt={`Processed ${noun} preview`} />

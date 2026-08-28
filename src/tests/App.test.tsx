@@ -16,7 +16,7 @@ describe('App shell', () => {
 
   it('renders navigation for all sections', () => {
     render(<App />)
-    for (const name of ['Home', 'Photo', 'Signature', 'Forms']) {
+    for (const name of ['Home', 'Photo', 'Signature', 'Thumb', 'Kit', 'Forms']) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument()
     }
   })
@@ -37,6 +37,24 @@ describe('App shell', () => {
     await user.click(screen.getByRole('button', { name: 'Signature' }))
     expect(
       screen.getByRole('heading', { name: 'Prepare a signature' }),
+    ).toBeInTheDocument()
+  })
+
+  it('switches to the thumb view when navigated', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Thumb' }))
+    expect(
+      screen.getByRole('heading', { name: 'Prepare a thumb impression' }),
+    ).toBeInTheDocument()
+  })
+
+  it('switches to the kit view when navigated', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    await user.click(screen.getByRole('button', { name: 'Kit' }))
+    expect(
+      screen.getByRole('heading', { name: 'Application kit' }),
     ).toBeInTheDocument()
   })
 

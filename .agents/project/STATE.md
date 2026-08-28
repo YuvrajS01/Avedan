@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.2.0 — V2 complete (T012–T019) and owner-verified (T020 gate, 2026-08-24)  
-**Last updated:** 2026-08-24  
-**Status:** Released as `v0.2.0`; remaining backlog: owner-verified official presets
+**Stage:** v0.3.0 — V3 Form Intelligence complete (T021–T025 done, 2026-08-26)  
+**Last updated:** 2026-08-26  
+**Status:** `feat/v3-form-intelligence` branch; V3 complete — engine + thumb flow + preset-aware validation + kit view + kit ZIP export (281 tests, typecheck/lint/build clean); V2 remains released as `v0.2.0`, ready for v0.3.0 tag after owner verification
 
 ## Product goal
 
@@ -43,14 +43,20 @@ Create a browser-based tool that prepares application photos and signatures to e
 - Worker offload of the encode/optimize loop (2026-08-22, T018/D044): photo and signature pipelines split into serializable cores (`computePhotoOutput`/`computeSignatureOutput`) shared verbatim by a module worker (`src/workers/process.worker.ts` + `protocol.ts` + `handleProcessRequest.ts`) and the main thread; `src/workers/client.ts` uses the worker only when supported, transfers an `ImageBitmap` via structured clone, and silently falls back to the identical in-thread pipeline otherwise. A 15 s watchdog (D046, field-fix for a "stuck on Preparing your photo…" report unreproducible in headless Chrome) bounds any silent worker so the flow can never hang. `defaultCanvasFactory` falls back to `OffscreenCanvas`; `encodeCanvas` supports `convertToBlob`. 245 tests passing; typecheck/lint/build pass (worker chunk emitted).
 - Verified-preset registry preparation (2026-08-22, T019/D045): `ImageRequirements` gained descriptive `physicalSizeMm`/`dpi`; `requirementsFromPreset` maps background ('white' only), physical size and DPI; photo page prefills physical fields + DPI + white-background toggle from presets (hash-route and dropdown) with manual-edit precedence intact; seed data extracted to documented `domain/presets/seedPresets.ts` with an owner verification checklist; new illustrative white-background template. Validation stays pixel-based (D043). 244 tests passing.
 - v0.2.0 release (2026-08-24): T020 manual verification gate passed by the product owner on real hardware (V2 capture-guidance suite + MVP regressions). 245 tests passing; typecheck/lint/build clean. Tagged `v0.2.0`.
+- V3 preset engine & data model (2026-08-26, T021/D047): schema extended to `photo | signature | thumbImpression` (spec parity), `validateFormPreset` and `requirementsFromPreset` handle thumbImpression identically, `FormsView` iterates data-driven over `PRESET_ASSET_KINDS` to render Photo/Signature/Thumb impression lines with shared freshness/source/disclaimer UI, one illustrative thumb-kit preset (`example-thumb-kit`: photo 350×450 white 20–50 KB + signature 10–20 KB + thumb 240×240 10–30 KB) satisfies the "one carefully selected example preset" rule without claiming authority. 250 tests passing; typecheck/lint/build clean.
+- V3 thumb impression flow (2026-08-26, T022/D048): dedicated `#/thumb` route + `ThumbView` (upload drag-drop → trimmed preview → result), `processThumb`/`computeThumbOutput` (trim → fit-within never upscale → flatten white → optimize with THUMB_ALLOWED_SCALES → validate `within`), worker protocol extended to `thumb`, `THUMB_PROFILES` (240×240 JPEG ≤30KB, 200×200 PNG ≤20KB), NavBar thumb icon, Forms cards now offer Prepare signature + Prepare thumb data-driven per preset. 257 tests passing; typecheck/lint/build clean.
+- V3 preset-aware validation (2026-08-26, T023/D049): `src/domain/presets/helpers.ts` (`requiredAssetKinds`, `assetLabel`, `dimensionModeForKind`, `presetKindsSummary`) and `ProcessedResult` now preset-aware (optional `preset` prop shows "Validated against {name} · {authority}" + lastVerified + Official source + always-confirm disclaimer). Photo/Signature/Thumb views forward `activePreset` to result. 263 tests passing; typecheck/lint/build clean.
+- V3 Application Kit view (2026-08-26, T024/D050): `#/kit?preset=id` via `KitView` (findFormPreset + presetFreshness, summary card with name/authority/year/lastVerified/freshness badge/source link/stale warning + disclaimer, required assets iterated data-driven via `requiredAssetKinds` + `requirementsFromPreset` + `describeRequirements` + `assetLabel` with Prepare CTAs to photo/signature/thumb + `?preset=id`; empty preset handled with Browse forms). `FormsView` adds View kit button, NavBar/Routes/App include kit. 269 tests passing; typecheck/lint/build clean.
+- V3 kit export (2026-08-26, T025/D051): `src/utils/zip.ts` minimal STORE ZIP (CRC32 + headers, ~2 KB, no deps) + `src/domain/kit/store.ts` session-local Map<presetId, Map<kind, asset>>; Photo/Signature/Thumb store to kit when `presetId` present; `KitView` shows per-asset Prepared/Not yet prepared + `preparedCount`, per-asset Download buttons, and Download kit ZIP card (collects prepared assets → blobToUint8Array → createZipBlob → object URL → download + Re-download link, handles empty/busy/error, STORE note, fallback to individual downloads). 281 tests passing; typecheck/lint/build clean (75 modules, 281 KB gz 84.5 KB).
 
 ## Not implemented yet (backlog)
 
-- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected.
+- Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source. One real verified preset can now be added to replace/extend `example-thumb-kit` after checking the official portal/notification (year/version, photo/signature/thumb fileSize/format/pixelSize, sourceUrl, lastVerified).
+- Future V3+ enhancements (see ROADMAP): batch CSV/institution mode, document/PDF utilities — scoped as new tasks.
 
 ## Current focus
 
-Owner workflow: verified official presets.
+V3 Form Intelligence **complete** (T021–T025) on `feat/v3-form-intelligence` branch (281 tests, typecheck/lint/build clean). Next is owner verification / v0.3.0 release gate (manual on-device check of photo/signature/thumb/kit + offline/privacy), or new feature scoping against ROADMAP.
 
 ## Current risks
 
@@ -62,7 +68,7 @@ Owner workflow: verified official presets.
 
 ## Next recommended task
 
-None queued for agents. The owner adds verified official presets to `src/domain/presets/seedPresets.ts` per its checklist; new feature work (thumb impressions, batch/ZIP export, PDF utilities) should be scoped against `.agents/docs/ROADMAP.md` and defined as a new task file first.
+None queued for agents. V3 complete — owner to verify flows on real device and add one manually verified official preset (per `.agents/tasks/T021–T025` checklists), then tag `v0.3.0`. New feature work should be scoped against `ROADMAP.md` and defined as a new task file first.
 
 ## Continuity rule
 

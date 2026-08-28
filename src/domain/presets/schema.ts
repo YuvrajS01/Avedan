@@ -23,7 +23,14 @@ export interface PresetRequirements {
   background?: BackgroundMode
 }
 
-export type PresetAssetKind = 'photo' | 'signature'
+export type PresetAssetKind = 'photo' | 'signature' | 'thumbImpression'
+
+/** Ordered asset kinds for data-driven iteration (V3). */
+export const PRESET_ASSET_KINDS: readonly PresetAssetKind[] = [
+  'photo',
+  'signature',
+  'thumbImpression',
+] as const
 
 export interface FormPreset {
   id: string
@@ -36,6 +43,7 @@ export interface FormPreset {
   sourceUrl?: string
   photo?: PresetRequirements
   signature?: PresetRequirements
+  thumbImpression?: PresetRequirements
 }
 
 function fail(field: string, expected: string): never {
@@ -166,9 +174,12 @@ export function validateFormPreset(value: unknown): FormPreset {
   if (record.signature !== undefined) {
     preset.signature = assertRequirements(record.signature, 'signature')
   }
+  if (record.thumbImpression !== undefined) {
+    preset.thumbImpression = assertRequirements(record.thumbImpression, 'thumbImpression')
+  }
 
-  if (!preset.photo && !preset.signature) {
-    fail('preset', 'at least one of photo or signature requirements')
+  if (!preset.photo && !preset.signature && !preset.thumbImpression) {
+    fail('preset', 'at least one of photo, signature, or thumbImpression requirements')
   }
 
   return preset
