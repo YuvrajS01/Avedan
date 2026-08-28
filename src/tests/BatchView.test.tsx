@@ -10,10 +10,11 @@ vi.mock('../features/batch/batchProcess', async (importOriginal) => {
   return {
     ...actual,
     processBatchPhotos: vi.fn(),
+    processBatch: vi.fn(),
   }
 })
 
-const mockedBatch = vi.mocked(batchProcessModule.processBatchPhotos)
+const mockedBatch = vi.mocked(batchProcessModule.processBatch)
 
 function fakeAsset(name: string): ProcessedAsset {
   return {
@@ -159,5 +160,37 @@ describe('BatchView (T026)', () => {
     await user.upload(photoInput, [new File(['a'], 'rahul.jpg', { type: 'image/jpeg' }), new File(['b'], 'extra.jpg', { type: 'image/jpeg' })])
     expect(await screen.findByText(/1 of 2 files matched/i)).toBeInTheDocument()
     expect(screen.getByText(/1 unmatched files/i)).toBeInTheDocument()
+  })
+
+  it('switches batch kind and processes with correct pipeline (T029)', async () => {
+    const user = userEvent.setup()
+    render(<BatchView />)
+    const kindSelect = screen.getByLabelText(/Batch asset kind/i) as HTMLSelectElement
+    await user.selectOptions(kindSelect, 'signature')
+    expect(screen.getByText(/Target:/i).textContent).toMatch(/300 × 100/i)
+    // Load preset dropdown should now show signature profiles
+    expect(screen.getByText(/Standard \(≤ 20 KB\)/i)).toBeInTheDocument()
+    const input = screen.getByLabelText(/Upload batch signatures/i) as HTMLInputElement
+    // Check that aria-label updated
+    expect(input).toBeInTheDocument()
+    // Process with mocked batch (signature)
+    mockedBatch.mockImplementation(async (files) =>
+      files.map((file, i) => ({ id: `${i}`, file, status: 'done' as const, asset: fakeAsset(file.name) })),
+    )
+    await user.upload(input, [new File(['x'], 'sig.jpg', { type: 'image/jpeg' })])
+    await user.click(screen.getByRole('button', { name: /process 1 signatures/i }))
+    expect(await screen.findByText(/1 of 1 passed/i)).toBeInTheDocument()
+    expect(mockedBatch).toHaveBeenCalled()
+    const callArgs = mockedBatch.mock.calls[mockedBatch.mock.calls.length - 1]
+    expect(callArgs[1]).toBe('signature')
+  })
+
+  it('switches to thumb kind and shows thumb target', async () => {
+    const user = userEvent.setup()
+    render(<BatchView />)
+    const kindSelect = screen.getByLabelText(/Batch asset kind/i) as HTMLSelectElement
+    await user.selectOptions(kindSelect, 'thumb')
+    expect(screen.getByText(/Target:/i).textContent).toMatch(/240 × 240/i)
+    expect(screen.getByText(/Standard \(≤ 30 KB\)/i)).toBeInTheDocument()
   })
 })

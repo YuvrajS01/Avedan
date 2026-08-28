@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   PHOTO_PROFILES,
+  SIGNATURE_PROFILES,
+  THUMB_PROFILES,
   PROFILE_NOTE,
   describeRequirements,
   findProfile,
+  findSignatureProfile,
+  findThumbProfile,
 } from '../../domain/requirements/profiles'
 import { findFormPreset, requirementsFromPreset } from '../../domain/presets/registry'
 import type { ImageRequirements } from '../../domain/requirements/types'
+import type { PresetAssetKind } from '../../domain/presets/schema'
 import { useHashRoute } from '../../hooks/useHashRoute'
 import { dimensionsFromPhysical } from '../../processing/geometry'
 import { createZipBlob, blobToUint8Array } from '../../utils/zip'
-import { processBatchPhotos, type BatchItem } from './batchProcess'
+import { processBatch, type BatchItem, type BatchKind } from './batchProcess'
 import { FileNamingField } from '../../components/FileNamingField'
 import {
   getNamingTemplate,
@@ -45,12 +50,52 @@ const DEFAULT_CUSTOM: CustomSettings = {
   dpi: '300',
 }
 
+const DEFAULT_CUSTOM_BY_KIND: Record<BatchKind, CustomSettings> = {
+  photo: DEFAULT_CUSTOM,
+  signature: {
+    width: '300',
+    height: '100',
+    minKb: '',
+    maxKb: '20',
+    format: 'jpeg',
+    whiteBg: false,
+    physWidth: '',
+    physHeight: '',
+    unit: 'mm',
+    dpi: '300',
+  },
+  thumb: {
+    width: '240',
+    height: '240',
+    minKb: '',
+    maxKb: '30',
+    format: 'jpeg',
+    whiteBg: false,
+    physWidth: '',
+    physHeight: '',
+    unit: 'mm',
+    dpi: '300',
+  },
+  thumbImpression: {
+    width: '240',
+    height: '240',
+    minKb: '',
+    maxKb: '30',
+    format: 'jpeg',
+    whiteBg: false,
+    physWidth: '',
+    physHeight: '',
+    unit: 'mm',
+    dpi: '300',
+  },
+}
+
 function toPositiveInt(value: string): number | undefined {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
 }
 
-function profileFromCustom(custom: CustomSettings): ImageRequirements {
+function profileFromCustom(custom: CustomSettings, kind: BatchKind = 'photo'): ImageRequirements {
   const width = toPositiveInt(custom.width)
   const height = toPositiveInt(custom.height)
   const dimensions =
@@ -65,11 +110,12 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
         }
       : undefined
 
+  const defaultAspect = kind === 'signature' ? 3 : kind === 'thumb' || kind === 'thumbImpression' ? 1 : 3 / 4
   return {
     id: 'manual',
     label: 'Manual',
     dimensions,
-    aspectRatio: width !== undefined && height !== undefined ? width / height : 3 / 4,
+    aspectRatio: width !== undefined && height !== undefined ? width / height : defaultAspect,
     format: custom.format,
     fileSize,
     background: custom.whiteBg ? 'white' : undefined,
@@ -78,6 +124,7 @@ function profileFromCustom(custom: CustomSettings): ImageRequirements {
 
 export function BatchView() {
   const { presetId, navigate } = useHashRoute()
+  const [batchKind, setBatchKind] = useState<BatchKind>('photo')
   const [custom, setCustom] = useState<CustomSettings>(DEFAULT_CUSTOM)
   const [presetSelect, setPresetSelect] = useState('')
   const [manualEdited, setManualEdited] = useState(false)
@@ -94,13 +141,17 @@ export function BatchView() {
   const datasetInputRef = useRef<HTMLInputElement>(null)
 
   const activePreset = useMemo(() => findFormPreset(presetId), [presetId])
+  const presetKind = useMemo(
+    () => (batchKind === 'thumb' ? 'thumbImpression' : (batchKind as PresetAssetKind)),
+    [batchKind],
+  )
   const presetProfile = useMemo(
-    () => (activePreset ? requirementsFromPreset(activePreset, 'photo') : undefined),
-    [activePreset],
+    () => (activePreset ? requirementsFromPreset(activePreset, presetKind) : undefined),
+    [activePreset, presetKind],
   )
   const profile = useMemo(
-    () => (presetProfile && !manualEdited ? presetProfile : profileFromCustom(custom)),
-    [presetProfile, manualEdited, custom],
+    () => (presetProfile && !manualEdited ? presetProfile : profileFromCustom(custom, batchKind)),
+    [presetProfile, manualEdited, custom, batchKind],
   )
   const summary = describeRequirements(profile)
 
@@ -155,6 +206,13 @@ export function BatchView() {
       dpi: dpi !== undefined ? String(dpi) : DEFAULT_CUSTOM.dpi,
     })
   }, [presetProfile])
+
+  useEffect(() => {
+    if (presetProfile) return
+    if (manualEdited) return
+    setCustom(DEFAULT_CUSTOM_BY_KIND[batchKind])
+    setPresetSelect('')
+  }, [batchKind, presetProfile, manualEdited])
 
   useEffect(() => {
     setNamingTemplate(getNamingTemplate(presetId))
@@ -223,7 +281,8 @@ export function BatchView() {
 
   const handleProcess = async () => {
     if (files.length === 0) {
-      setError('Add at least one photo first.')
+      const kindLabel = batchKind === 'photo' ? 'photo' : batchKind === 'signature' ? 'signature' : 'thumb impression'
+      setError(`Add at least one ${kindLabel} first.`)
       return
     }
     setBusy(true)
@@ -232,7 +291,7 @@ export function BatchView() {
     if (zipUrl && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(zipUrl)
     setZipUrl(null)
     try {
-      const batchResults = await processBatchPhotos(files, profile)
+      const batchResults = await processBatch(files, batchKind, profile)
       setResults(batchResults)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Batch processing failed.')
@@ -256,7 +315,7 @@ export function BatchView() {
   const handleDownloadZip = async () => {
     const successful = results.filter((item) => item.status === 'done' && item.asset)
     if (successful.length === 0) {
-      setError('No successful photos to ZIP yet.')
+      setError(`No successful ${kindLabel} to ZIP yet.`)
       return
     }
     setBusy(true)
@@ -274,7 +333,7 @@ export function BatchView() {
         const rendered = renderFileName(template, {
           original: originalBase,
           index: index + 1,
-          kind: 'photo',
+          kind: batchKind,
           preset: presetId ?? 'manual',
           ext,
           csv: csvRow,
@@ -292,7 +351,8 @@ export function BatchView() {
       if (zipUrl && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(zipUrl)
       setZipUrl(url)
       const presetPart = presetId ?? 'batch'
-      const name = `${presetPart}-photos-${successful.length}.zip`
+      const kindPart = batchKind === 'thumb' || batchKind === 'thumbImpression' ? 'thumb' : batchKind
+      const name = `${presetPart}-${kindPart}-${successful.length}.zip`
       setZipName(name)
       if (url) {
         const anchor = document.createElement('a')
@@ -312,7 +372,10 @@ export function BatchView() {
   const handlePresetSelect = (id: string) => {
     setPresetSelect(id)
     if (!id) return
-    const p = findProfile(id)
+    let p
+    if (batchKind === 'photo') p = findProfile(id)
+    else if (batchKind === 'signature') p = findSignatureProfile(id)
+    else p = findThumbProfile(id)
     if (!p) return
     setManualEdited(false)
     const physMm = p.physicalSizeMm
@@ -366,6 +429,18 @@ export function BatchView() {
           </div>
         )}
         <label className="field">
+          <span>Asset kind</span>
+          <select
+            value={batchKind}
+            onChange={(event) => setBatchKind(event.target.value as BatchKind)}
+            aria-label="Batch asset kind"
+          >
+            <option value="photo">Photo</option>
+            <option value="signature">Signature</option>
+            <option value="thumb">Thumb impression</option>
+          </select>
+        </label>
+        <label className="field">
           <span>Load preset</span>
           <select
             aria-label="Load preset"
@@ -373,7 +448,12 @@ export function BatchView() {
             onChange={(event) => handlePresetSelect(event.target.value)}
           >
             <option value="">— Choose a preset to autofill —</option>
-            {PHOTO_PROFILES.map((option) => (
+            {(batchKind === 'photo'
+              ? PHOTO_PROFILES
+              : batchKind === 'signature'
+                ? SIGNATURE_PROFILES
+                : THUMB_PROFILES
+            ).map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
               </option>
@@ -502,12 +582,17 @@ export function BatchView() {
   const successful = results.filter((item) => item.status === 'done' && item.asset).length
   const failed = results.filter((item) => item.status === 'error').length
 
+  const kindLabel = batchKind === 'photo' ? 'photos' : batchKind === 'signature' ? 'signatures' : 'thumb impressions'
+  const kindSingular = batchKind === 'photo' ? 'photo' : batchKind === 'signature' ? 'signature' : 'thumb impression'
+
   return (
     <section className="view" aria-labelledby="batch-title">
-      <h1 id="batch-title">Batch photos</h1>
+      <h1 id="batch-title">Batch {kindLabel}</h1>
       <p className="lede">
-        Prepare many photos at once with the same preset. Auto center-crop → resize → compress → validate, all in
-        your browser.
+        Prepare many {kindLabel} at once with the same preset.{' '}
+        {batchKind === 'photo'
+          ? 'Auto center-crop → resize → compress → validate, all in your browser.'
+          : 'Trim → fit within → compress → validate, all in your browser.'}
       </p>
 
       {requirementsPanel}
@@ -604,9 +689,9 @@ export function BatchView() {
             fileInputRef.current?.click()
           }
         }}
-        aria-label="Batch photo drop zone"
+        aria-label={`Batch ${kindSingular} drop zone`}
       >
-        <span className="option-label">Add photos</span>
+        <span className="option-label">Add {kindLabel}</span>
         <span className="option-hint">JPG, PNG or WebP — drag and drop or click to choose (multiple allowed)</span>
         {files.length > 0 && <span className="action-hint">{files.length} files queued</span>}
       </div>
@@ -616,7 +701,7 @@ export function BatchView() {
         type="file"
         accept="image/jpeg,image/png,image/webp"
         multiple
-        aria-label="Upload batch photos"
+        aria-label={`Upload batch ${kindLabel}`}
         className="visually-hidden"
         onChange={(event) => {
           if (event.target.files) handleFiles(event.target.files)
@@ -627,7 +712,10 @@ export function BatchView() {
       {files.length > 0 && (
         <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
           <p className="profile-note">
-            {files.length} files queued — auto center-crop will be applied per photo to match the target aspect ratio.
+            {files.length} files queued —{' '}
+            {batchKind === 'photo'
+              ? 'auto center-crop will be applied per photo to match the target aspect ratio.'
+              : 'trim and fit-within will be applied per file.'}
           </p>
           <ul className="preset-list" aria-label="Queued files">
             {files.map((file, index) => (
@@ -646,7 +734,7 @@ export function BatchView() {
               onClick={handleProcess}
               disabled={busy || files.length === 0}
             >
-              {busy ? 'Processing…' : `Process ${files.length} photos`}
+              {busy ? 'Processing…' : `Process ${files.length} ${kindLabel}`}
             </button>
           </div>
         </div>
@@ -669,7 +757,10 @@ export function BatchView() {
             <p className={failed === 0 ? 'validation-banner pass' : 'validation-banner attention'} role="status">
               {successful} of {results.length} passed · {failed} failed
             </p>
-            <p className="profile-note">Auto center-crop applied — check thumbnails before submitting.</p>
+            <p className="profile-note">
+              {batchKind === 'photo' ? 'Auto center-crop applied' : 'Trim and fit-within applied'} — check thumbnails
+              before submitting.
+            </p>
           </div>
 
           <ul className="preset-list" aria-label="Batch results">
@@ -727,8 +818,8 @@ export function BatchView() {
           <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
             <h3 style={{ margin: 0, fontSize: '1rem' }}>Download all</h3>
             <p className="profile-note">
-              ZIP of all successful photos — built in your browser (STORE, no recompression). Filenames follow your
-              naming template.
+              ZIP of all successful {kindLabel} — built in your browser (STORE, no recompression). Filenames follow
+              your naming template.
             </p>
             <FileNamingField presetId={presetId} onChange={setNamingTemplate} />
             <div className="step-actions" style={{ marginTop: '0.75rem' }}>

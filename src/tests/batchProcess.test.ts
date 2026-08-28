@@ -11,8 +11,18 @@ vi.mock('../features/photo/processPhoto', () => ({
   processPhoto: vi.fn(),
 }))
 
+vi.mock('../features/signature/processSignature', () => ({
+  processSignature: vi.fn(),
+}))
+
+vi.mock('../features/thumb/processThumb', () => ({
+  processThumb: vi.fn(),
+}))
+
 const mockedDecode = vi.mocked(decodeImage)
 let mockedProcess: ReturnType<typeof vi.fn>
+let mockedSignature: ReturnType<typeof vi.fn>
+let mockedThumb: ReturnType<typeof vi.fn>
 
 function fakeAsset(name: string): ProcessedAsset {
   return {
@@ -33,8 +43,14 @@ beforeEach(async () => {
   vi.clearAllMocks()
   const mod = await import('../features/photo/processPhoto')
   mockedProcess = vi.mocked(mod.processPhoto)
+  const modSig = await import('../features/signature/processSignature')
+  mockedSignature = vi.mocked(modSig.processSignature)
+  const modThumb = await import('../features/thumb/processThumb')
+  mockedThumb = vi.mocked(modThumb.processThumb)
   mockedDecode.mockResolvedValue({ width: 800, height: 600, getContext: () => null } as never)
   mockedProcess.mockImplementation(async ({ fileName }: { fileName: string }) => fakeAsset(fileName))
+  mockedSignature.mockImplementation(async ({ fileName }: { fileName: string }) => fakeAsset(fileName))
+  mockedThumb.mockImplementation(async ({ fileName }: { fileName: string }) => fakeAsset(fileName))
 })
 
 describe('processSinglePhoto (T026)', () => {
@@ -85,6 +101,34 @@ describe('processBatchPhotos (T026)', () => {
     expect(results.every((r) => r.status === 'done')).toBe(true)
     expect(callOrder).toEqual(['a.jpg', 'b.jpg', 'c.jpg'])
     expect(results[0].asset?.fileName).toBe('a.jpg-avedan.jpg')
+  })
+
+  it('delegates to photo processor for BatchKind photo (T029)', async () => {
+    const files = [new File(['a'], 'a.jpg', { type: 'image/jpeg' })]
+    const profile = { id: 't', label: 'T' }
+    const { processBatch } = await import('../features/batch/batchProcess')
+    const results = await processBatch(files, 'photo', profile)
+    expect(results[0].status).toBe('done')
+    expect(mockedProcess).toHaveBeenCalled()
+  })
+
+  it('delegates to signature processor for BatchKind signature (T029)', async () => {
+    const files = [new File(['a'], 'a.jpg', { type: 'image/jpeg' })]
+    const profile = { id: 't', label: 'T', dimensions: { width: 300, height: 100 }, format: 'jpeg' as const }
+    const { processBatch } = await import('../features/batch/batchProcess')
+    const results = await processBatch(files, 'signature', profile)
+    expect(results[0].status).toBe('done')
+    expect(mockedSignature).toHaveBeenCalled()
+    expect(mockedProcess).not.toHaveBeenCalled()
+  })
+
+  it('delegates to thumb processor for BatchKind thumb (T029)', async () => {
+    const files = [new File(['a'], 'a.jpg', { type: 'image/jpeg' })]
+    const profile = { id: 't', label: 'T', dimensions: { width: 240, height: 240 }, format: 'jpeg' as const }
+    const { processBatch } = await import('../features/batch/batchProcess')
+    const results = await processBatch(files, 'thumb', profile)
+    expect(results[0].status).toBe('done')
+    expect(mockedThumb).toHaveBeenCalled()
   })
 
   it('captures per-file errors without aborting the batch', async () => {

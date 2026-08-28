@@ -3,9 +3,9 @@
 ## Snapshot
 
 **Project:** Avedan  
-**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026–T028 done, 2026-08-28)  
+**Stage:** v0.4.0 — V4 Power User & Institution in progress (T026–T029 done, 2026-08-28)  
 **Last updated:** 2026-08-28  
-**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) + T028 CSV dataset (319 tests, D054) complete; local CSV parse/matching + `{csv.xxx}` naming, session-local, no upload
+**Status:** `feat/v4-power-user` branch; V3 released as `v0.3.0` (281 tests, 04ec8f0 → 756f037); V4 T026 batch (295 tests, D052) + T027 naming (308 tests, D053) + T028 CSV (319 tests, D054) + T029 batch sig/thumb (324 tests, D055) complete; kind switch + per-kind processor, `within` + trim, ZIP kind-aware
 
 ## Product goal
 
@@ -51,16 +51,17 @@ Create a browser-based tool that prepares application photos and signatures to e
 - V4 batch photo foundation (2026-08-28, T026/D052): `#/batch` route + `BatchView` (requirements panel same as Photo with preset `?preset=id` + manual precedence, multi-file `multiple` + drag-drop filter `image/jpeg|png|webp`, count, Clear, sequential `processBatchPhotos` via `processSinglePhoto` auto center-crop `computeCropRect` → `processPhoto` worker+watchdog, per-file rows with thumbnail via `asset.url`, dimensions/format/size, validation badge `Passed`/`Needs attention` + details, per-file Download, summary `X of Y passed`, Download all ZIP via `createZipBlob` STORE, busy/error, URL revoke on Clear/unmount, privacy note). `FormsView` adds Batch photos button per photo preset, NavBar batch icon, `batchProcess.test` + `BatchView.test` cover auto crop/sequential/error/progress + intake/queue/preset/ZIP. 295 tests passing; typecheck/lint/build clean (77 modules, 295 KB gz 87.3 KB), no new deps.
 - V4 configurable file naming (2026-08-28, T027/D053): `src/domain/naming/fileNaming.ts` (`sanitizeFileNamePart`, `renderFileName` `{original}` `{index}` `{kind}` `{preset}` `{ext}` with fallback `{original}-avedan` + ext append + sanitize, `dedupeFileNames` case-insensitive `-2`, `get/setNamingTemplate` per preset via `localStorage` `avedan-naming:${presetId}`) + `src/components/FileNamingField.tsx` (disclosure with input, live preview, tokens help, per-preset persist) + `BatchView`/`KitView` ZIPs now render via `renderFileName` + `dedupeFileNames` (original base from file/asset, index, kind, preset, ext) before `createZipBlob`, Kit single downloads also templated. 308 tests passing (13 fileNaming new); typecheck/lint/build clean, no new deps.
 - V4 institution dataset import (2026-08-28, T028/D054): `src/domain/dataset/csv.ts` (`parseCSV` quoted commas/`""`, trims/lowercases headers, `matchDatasetToFiles` basename case-insensitive, first-row-wins) + `src/domain/naming/fileNaming.ts` extended with `{csv.xxx}` (case-insensitive, sanitized) + `BatchView` dataset state (`dataset`/`datasetError`/`datasetMatch` memo, `handleDatasetFile` File.text→FileReader fallback, `parseCSV`, preview table first 5 rows, matched `X of Y files matched` + unmatched files/rows, `handleDownloadZip` passes `csvRow` to `renderFileName` for `{csv.id}` etc., `dedupeFileNames`). 319 tests passing (8 csv, 1 fileNaming csv token, 2 BatchView dataset); typecheck/lint/build clean (80 modules, 303 KB), no new deps, privacy-local.
+- V4 batch signature/thumb extension (2026-08-28, T029/D055): `src/features/batch/batchProcess.ts` now `processSingleSignature`/`processSingleThumb` + generic `processBatch(files, kind, profile)` sequential dispatch (`photo` via auto `computeCropRect`→`processPhoto`, `signature`/`thumb` via trim→fit-within→`processSignature`/`processThumb`, `within` + `THUMB_ALLOWED_SCALES`), `BatchView` now `batchKind` state (`photo` default, `DEFAULT_CUSTOM_BY_KIND`, `presetKind` memo, `profile` kind-aware, effect resets custom on kind switch, `handlePresetSelect` switches `PHOTO`/`SIGNATURE`/`THUMB_PROFILES`, `handleProcess`→`processBatch(files, batchKind)`, `handleDownloadZip` kind-aware, requirements panel `Asset kind` select + dynamic Load preset, heading/lede/drop-zone/process button/summary/ZIP/privacy note all dynamic via `kindLabel`/`kindSingular`). 324 tests passing (batchProcess +2, BatchView +2 kind-switch); typecheck/lint/build clean (80 modules, 305 KB), no new deps, no exam hardcoding.
 
 ## Not implemented yet (backlog)
 
-- V4 remainder (T029–T030): batch signature/thumb (reuse batch foundation, `within` + trim, kind switch, `THUMB_PROFILES`/`SIGNATURE_PROFILES`), document perspective correction (T030 deferred, no ML model, manual 4-corner fallback, pure canvas math).
+- V4 remainder (T030): document perspective correction (deferred, no ML model, manual 4-corner fallback, pure canvas math, `pixelSize` + fileSize optimizer, before/after preview, reset).
 - Manually verified official presets (D003/D019 **owner** workflow): pure data entry into `seedPresets.ts` following its checklist; no code changes expected. V3 keeps illustrative presets clearly labelled; never claim authority without a current official source.
 - Future V4+ enhancements (ROADMAP Phase 4/5): PDF generation/compression, OCR — scoped as new tasks only when product value is clear; do not become a generic document-management system without reason.
 
 ## Current focus
 
-V4 Power User & Institution: T026–T028 **complete** on `feat/v4-power-user` (319 tests, D052–D054). Next is T029 batch signature/thumb extension (reuse batch foundation, `within` validation, kind switch).
+V4 Power User & Institution: T026–T029 **complete** on `feat/v4-power-user` (324 tests, D052–D055). Next is T030 document perspective correction (deferred) — deterministic edge detection + 4-corner manual fallback + perspective transform via canvas, reuses `ImageRequirements` for final dimensions, same validation/ZIP path.
 
 ## Current risks
 
@@ -72,7 +73,7 @@ V4 Power User & Institution: T026–T028 **complete** on `feat/v4-power-user` (3
 
 ## Next recommended task
 
-T029 — V4 batch signature / thumb impression extension (P2, depends on T026). Reuse batch foundation to offer Photo / Signature / Thumb modes (kind switch, requirements panel per kind, dispatch to `computePhotoOutput` vs `computeSignatureOutput`/`computeThumbOutput`, `within` validation, trimmed thumbnails, ZIP with kind-aware filenames). See `.agents/tasks/T029-batch-signature-thumb.md` and TASK_INDEX.
+T030 — V4 document scan / perspective correction (deferred, P2, depends on T026). Local, opt-in document scan: edge detection (no model), 4-corner manual fallback, perspective transform via canvas (pure math, testable, no new deps), reuses `ImageRequirements` for final dimensions, same validation/ZIP path, before/after + reset, never auto-crops without confirmation. See `.agents/tasks/T030-document-scan.md` and TASK_INDEX.
 
 ## Continuity rule
 
