@@ -316,24 +316,22 @@ export function ThumbView() {
           )}
           {requirementsPanel}
           <div
-            className="drop-zone card"
+            className="intake-zone"
             onDragOver={(event) => event.preventDefault()}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                fileInputRef.current?.click()
-              }
-            }}
-            aria-label="Thumb impression drop zone"
           >
-            <span className="option-label">Upload thumb impression</span>
-            <span className="option-hint">JPG, PNG or WebP — drag and drop or click to choose</span>
+            <p className="intake-title">Drop your thumb impression here</p>
+            <button
+              type="button"
+              className="button button-primary"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload thumb impression
+            </button>
+            <p className="intake-alt">or drag and drop an image here</p>
+            <p className="option-hint">JPG, PNG or WebP — white paper, dark ink</p>
           </div>
-          <ul className="option-grid">
+          <ul className="option-grid" style={{ marginTop: '1rem' }}>
             <li>
               <button
                 type="button"

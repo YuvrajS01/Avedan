@@ -583,7 +583,6 @@ export function BatchView() {
   const failed = results.filter((item) => item.status === 'error').length
 
   const kindLabel = batchKind === 'photo' ? 'photos' : batchKind === 'signature' ? 'signatures' : 'thumb impressions'
-  const kindSingular = batchKind === 'photo' ? 'photo' : batchKind === 'signature' ? 'signature' : 'thumb impression'
 
   return (
     <section className="view" aria-labelledby="batch-title">
@@ -677,22 +676,20 @@ export function BatchView() {
       </details>
 
       <div
-        className="drop-zone card"
+        className="intake-zone"
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            fileInputRef.current?.click()
-          }
-        }}
-        aria-label={`Batch ${kindSingular} drop zone`}
       >
-        <span className="option-label">Add {kindLabel}</span>
-        <span className="option-hint">JPG, PNG or WebP — drag and drop or click to choose (multiple allowed)</span>
+        <p className="intake-title">Drop your {kindLabel} here</p>
+        <button
+          type="button"
+          className="button button-primary"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          Add {kindLabel}
+        </button>
+        <p className="intake-alt">or drag and drop images here (multiple allowed)</p>
+        <p className="option-hint">JPG, PNG or WebP — {kindLabel} on white paper</p>
         {files.length > 0 && <span className="action-hint">{files.length} files queued</span>}
       </div>
 
